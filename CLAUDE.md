@@ -44,7 +44,7 @@ Swift core tests run natively with `swift test`. Browser behavior is checked by 
 
 ## Dependencies
 
-Approved: JavaScriptKit, Lua 5.4 (vendored C sources), CodeMirror 6 and its legacy Lua mode, esbuild (bundling), Playwright (tests), Teal (vendored, milestone M7). Anything else needs a decision record and the owner's approval through a `needs-input` question.
+Approved: JavaScriptKit, Lua 5.4 (vendored C sources), CodeMirror 6 and its legacy Lua mode, esbuild (bundling), Playwright (tests), @bjorn3/browser_wasi_shim (the WASI shim JavaScriptKit's loader imports, `docs/decisions/002-wasm-build-and-packaging.md`), Teal (vendored, milestone M7). Anything else needs a decision record and the owner's approval through a `needs-input` question.
 
 ## Git and GitHub
 
