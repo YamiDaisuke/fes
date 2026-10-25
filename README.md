@@ -36,6 +36,6 @@ This compiles the Swift package to `App.wasm` and bundles the page into `web/dis
 npm run serve
 ```
 
-Open http://localhost:8000/ in Safari. You should see a blue screen, scaled up by a whole number to fit the window.
+Open http://localhost:8000/ in Safari. You should see a blue screen, scaled up by a whole number to fit the window, and two lines of Lua output at the top-left: `6 * 7 = 42` and `pcall caught: fail:1: boom`.
 
 To try it on the iPad, use the Network URL that esbuild prints (the iPad must be on the same Wi-Fi).

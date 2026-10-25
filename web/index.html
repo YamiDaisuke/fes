@@ -8,10 +8,12 @@
     html, body { margin: 0; height: 100%; background: #000; }
     body { display: grid; place-items: center; overflow: hidden; }
     canvas { image-rendering: pixelated; }
+    #lua { position: fixed; top: 0; left: 0; margin: 8px; color: #fff; font: 16px/1.4 monospace; }
   </style>
 </head>
 <body>
   <canvas id="screen" aria-label="FES screen"></canvas>
+  <pre id="lua"></pre>
   <script type="module" src="boot.js"></script>
 </body>
 </html>
