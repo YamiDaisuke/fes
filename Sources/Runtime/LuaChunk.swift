@@ -12,7 +12,13 @@ public func runLuaChunk(_ source: String, name: String) throws(LuaError) -> Stri
 
     guard luaL_loadbufferx(state, source, source.utf8.count, "=\(name)", "t") == LUA_OK,
           lua_pcallk(state, 0, 1, 0, 0, nil) == LUA_OK else {
-        throw LuaError(message: String(cString: luaL_tolstring(state, -1, nil)))
+        throw LuaError(message: topValueAsText(state))
     }
-    return String(cString: luaL_tolstring(state, -1, nil))
+    return topValueAsText(state)
+}
+
+private func topValueAsText(_ state: OpaquePointer) -> String {
+    var length = 0
+    let bytes = luaL_tolstring(state, -1, &length)!
+    return String(decoding: UnsafeRawBufferPointer(start: bytes, count: length), as: UTF8.self)
 }

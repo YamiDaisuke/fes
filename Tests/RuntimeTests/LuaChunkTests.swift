@@ -5,6 +5,10 @@ import Testing
     #expect(try runLuaChunk("return 6 * 7", name: "answer") == "42")
 }
 
+@Test func resultKeepsEmbeddedNulBytes() throws {
+    #expect(try runLuaChunk("return 'a\\0b'", name: "nul") == "a\u{0}b")
+}
+
 @Test func uncaughtErrorThrowsWithChunkNameAndLine() {
     let error = #expect(throws: LuaError.self) { try runLuaChunk("\nerror('boom')", name: "fail") }
     #expect(error?.message == "fail:2: boom")
