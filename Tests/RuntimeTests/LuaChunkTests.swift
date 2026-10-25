@@ -20,7 +20,7 @@ import Testing
 }
 
 @Test func nonStringErrorValueBecomesText() {
-    let error = #expect(throws: LuaError.self) { try runLuaChunk("error({})", name: "table") }
+    let error = #expect(throws: LuaError.self) { try runLuaChunk("error({})", name: "tableError") }
     #expect(error?.message.hasPrefix("table: ") == true)
 }
 
