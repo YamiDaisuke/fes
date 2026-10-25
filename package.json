@@ -1,0 +1,16 @@
+{
+  "name": "fes",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "scripts/build.sh",
+    "serve": "esbuild --servedir=web/dist --serve=8000"
+  },
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "0.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "esbuild": "0.28.2"
+  }
+}
