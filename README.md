@@ -6,7 +6,7 @@ Frank Entertainment System: a fantasy console for the browser on iPad. Swift com
 
 You need Swift 6.4.1, the Swift Wasm SDK for it, and Node 22 or later.
 
-On Linux or macOS, `scripts/setup.sh` installs Swift and the SDK, then the Node packages and Playwright's WebKit:
+On Linux (or on macOS once swiftly is installed), `scripts/setup.sh` installs Swift and the SDK, then the Node packages and Playwright's WebKit:
 
 ```
 bash scripts/setup.sh

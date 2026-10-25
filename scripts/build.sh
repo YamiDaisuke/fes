@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# A separate scratch path keeps native and wasm builds from invalidating each other (docs/decisions/002).
+# A separate scratch path keeps native and wasm builds from invalidating each other (docs/decisions/002-wasm-build-and-packaging.md).
 swift package --scratch-path .build/wasm --swift-sdk swift-6.4.1-RELEASE_wasm js -c release --output .build/js
 
 rm -rf web/dist
