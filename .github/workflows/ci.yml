@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v6
+        with:
+          path: .build
+          key: swift-${{ runner.os }}-${{ hashFiles('scripts/setup.sh', 'Package.resolved') }}
+          restore-keys: swift-${{ runner.os }}-
+      - name: Install Swift, the Wasm SDK, npm packages and WebKit
+        run: |
+          bash scripts/setup.sh
+          echo "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/bin" >> "$GITHUB_PATH"
+      - run: swift test
+      - run: npm run build
+      - run: npm run test:browser
+      - name: Publish main
+        if: github.event_name == 'push'
+        run: scripts/publish-pages.sh . web/dist
+      - name: Publish PR preview
+        if: github.event_name == 'pull_request'
+        run: scripts/publish-pages.sh pr/${{ github.event.number }} web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      pull-requests: write
+    environment:
+      name: github-pages
+      url: ${{ steps.preview.outputs.url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+      - uses: actions/deploy-pages@v5
+        id: deployment
+      - name: Work out the preview URL
+        id: preview
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          PR: ${{ github.event.number }}
+        run: |
+          url="${PAGE_URL%/}/"
+          if [ -n "$PR" ]; then url="${url}pr/$PR/"; fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Comment the preview link on the PR once
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.number }}
+          URL: ${{ steps.preview.outputs.url }}
+        run: |
+          already=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments?per_page=100" \
+            --jq 'any(.[]; .body | startswith("<!-- preview -->"))')
+          if [ "$already" = false ]; then
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -f body="<!-- preview -->
+          Preview: $URL"
+          fi

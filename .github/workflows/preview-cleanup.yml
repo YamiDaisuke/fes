@@ -1,0 +1,14 @@
+name: Preview cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  remove-preview:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - run: scripts/publish-pages.sh pr/${{ github.event.number }}
