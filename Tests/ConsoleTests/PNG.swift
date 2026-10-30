@@ -1,7 +1,12 @@
 // Uncompressed PNG: PNG spec https://www.w3.org/TR/png/, zlib RFC 1950, stored deflate blocks RFC 1951.
 func pngData(rgba: [UInt8], width: Int, height: Int) -> [UInt8] {
     var header = bigEndian(UInt32(width)) + bigEndian(UInt32(height))
-    header += [8, 6, 0, 0, 0]
+    let bitDepth: UInt8 = 8
+    let colorTypeRGBA: UInt8 = 6
+    let compressionMethod: UInt8 = 0
+    let filterMethod: UInt8 = 0
+    let noInterlace: UInt8 = 0
+    header += [bitDepth, colorTypeRGBA, compressionMethod, filterMethod, noInterlace]
 
     let rowLength = width * 4
     var scanlines: [UInt8] = []
@@ -10,14 +15,16 @@ func pngData(rgba: [UInt8], width: Int, height: Int) -> [UInt8] {
         scanlines += rgba[(y * rowLength)..<((y + 1) * rowLength)]
     }
 
-    return [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+    let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+    return pngSignature
         + chunk("IHDR", header)
         + chunk("IDAT", zlibStored(scanlines))
         + chunk("IEND", [])
 }
 
 private func zlibStored(_ data: [UInt8]) -> [UInt8] {
-    var out: [UInt8] = [0x78, 0x01]
+    let zlibHeaderNoCompression: [UInt8] = [0x78, 0x01]
+    var out = zlibHeaderNoCompression
     let maxBlockLength = 65_535
     var start = 0
     repeat {
