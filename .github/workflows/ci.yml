@@ -26,6 +26,8 @@ jobs:
           path: .build
           key: swift-${{ runner.os }}-${{ hashFiles('scripts/setup.sh', 'Package.resolved') }}
           restore-keys: swift-${{ runner.os }}-
+      - name: Install libcurl headers, which swiftly requires and the runner lacks
+        run: sudo apt-get update -q && sudo apt-get install -y -q libcurl4-openssl-dev
       - name: Install Swift, the Wasm SDK, npm packages and WebKit
         run: |
           bash scripts/setup.sh
