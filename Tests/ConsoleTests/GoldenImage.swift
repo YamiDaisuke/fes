@@ -18,7 +18,20 @@ func expectFrameMatchesGolden(
         return
     }
 
-    if FileManager.default.contents(atPath: goldenURL.path) == png {
+    guard let golden = FileManager.default.contents(atPath: goldenURL.path) else {
+        try png.write(to: actualURL)
+        Issue.record(
+            """
+            Golden \(goldenURL.path) is missing.
+            Actual frame written to \(actualURL.path).
+            Record it with FES_RECORD_GOLDENS=1 swift test.
+            """,
+            sourceLocation: sourceLocation
+        )
+        return
+    }
+
+    if golden == png {
         try? FileManager.default.removeItem(at: actualURL)
         return
     }
