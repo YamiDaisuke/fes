@@ -37,7 +37,7 @@ jobs:
       - run: swift test
       - run: npm run build
       - run: npm run test:browser
-      - name: Let the publish steps push, after untrusted build steps have run
+      - name: Give origin the write token only for the publish steps
         env:
           TOKEN: ${{ github.token }}
         run: git remote set-url origin "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY"
