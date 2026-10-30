@@ -7,8 +7,11 @@ public struct TileBank {
     public init() {}
 
     public func colorIndices(tile: Int, y: Int) -> [Int] {
-        let row = rows[rowIndex(tile: tile, y: y)]
-        return (0..<Self.tileSize).map { x in Int(row >> shift(x: x)) & 0b111 }
+        (0..<Self.tileSize).map { x in colorIndex(tile: tile, x: x, y: y) }
+    }
+
+    public func colorIndex(tile: Int, x: Int, y: Int) -> Int {
+        Int(rows[rowIndex(tile: tile, y: y)] >> shift(x: x)) & 0b111
     }
 
     public mutating func setPixel(tile: Int, x: Int, y: Int, color: Int) {
