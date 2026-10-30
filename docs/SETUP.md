@@ -6,7 +6,11 @@ One-time steps before the first `/continue`. All of these work from an iPhone or
 
 - **Branches**: add a rule for `main` that requires a pull request. This is the real guard against agents pushing to `main`; the deny rules in `.claude/settings.json` are only a second layer.
 - **General → Pull Requests**: allow squash merging, and turn **off** "Automatically delete head branches". The orchestrator needs merged branches for restacking and deletes them itself.
-- **Pages**: source "GitHub Actions" (T03 sets up the deploys).
+- **General → Danger Zone → Change visibility**: make the repo public. GitHub Pages on a private repo needs a paid plan; public also makes Actions minutes free. The Pages site is public either way: anyone with the URL can open `main` and every PR preview.
+- **Pages**: source "GitHub Actions".
+- **Environments → `github-pages` → Deployment branches and tags**: "No restriction". GitHub creates this environment allowing only `main` to deploy, which blocks PR previews. The environment appears once Pages is set to GitHub Actions, or after the first deploy attempt. A deploy job failing with "not allowed to deploy to github-pages due to environment protection rules" means this setting is missing.
+
+CI needs nothing else: no secrets, and the repo-wide "Workflow permissions" can stay read-only, because each workflow job declares the permissions it needs.
 
 ## Claude Code environment
 

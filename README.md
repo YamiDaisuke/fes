@@ -39,3 +39,14 @@ npm run serve
 Open http://localhost:8000/ in Safari. You should see a blue screen, scaled up by a whole number to fit the window, and two lines of Lua output at the top-left: `6 * 7 = 42` and `pcall caught: fail:1: boom`.
 
 To try it on the iPad, use the Network URL that esbuild prints (the iPad must be on the same Wi-Fi).
+
+## Test
+
+```
+swift test
+npm run build && npm run test:browser
+```
+
+`swift test` runs the Swift core tests natively. `test:browser` serves `web/dist/` and runs a Playwright smoke test in WebKit with an iPad profile.
+
+CI runs both on every PR and on `main`, then publishes to GitHub Pages: `main` at the site root, each PR at `/pr/<number>/`, linked from a comment on the PR. See `docs/decisions/003-ci-and-pr-previews.md`.
