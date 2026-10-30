@@ -14,7 +14,8 @@ public struct TileBank {
     public mutating func setPixel(tile: Int, x: Int, y: Int, color: Int) {
         let i = rowIndex(tile: tile, y: y)
         let shift = shift(x: x)
-        rows[i] = rows[i] & ~(UInt32(0b111) << shift) | UInt32(color & 0b111) << shift
+        let rowWithPixelCleared = rows[i] & ~(UInt32(0b111) << shift)
+        rows[i] = rowWithPixelCleared | (UInt32(color & 0b111) << shift)
     }
 
     private func rowIndex(tile: Int, y: Int) -> Int {
