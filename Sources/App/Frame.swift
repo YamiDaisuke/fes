@@ -9,7 +9,7 @@ nonisolated(unsafe) private var frameNumber = 0
 @c
 func frame() -> UnsafeRawPointer {
     scene.render(frame: frameNumber, into: &framebuffer)
-    frameNumber += 1
+    frameNumber &+= 1
     // Valid until the next frame(): framebuffer is a private global that is never copied or resized.
     return framebuffer.rgba.withUnsafeBytes { $0.baseAddress! }
 }
