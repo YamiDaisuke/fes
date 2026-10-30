@@ -38,6 +38,26 @@ private let blankRow = [0, 0, 0, 0, 0, 0, 0, 0]
     #expect(bank.colorIndices(tile: 0, y: 0) == [0, 1, 0, 0, 0, 0, 0, 0])
 }
 
+@Test func everyRowOfEveryTileHasItsOwnStorage() {
+    func pattern(tile: Int, y: Int) -> [Int] {
+        let rowNumber = tile * 8 + y
+        return (0..<8).map { x in (rowNumber >> (3 * x)) & 0b111 }
+    }
+    var bank = TileBank()
+    for tile in 0..<256 {
+        for y in 0..<8 {
+            for (x, color) in pattern(tile: tile, y: y).enumerated() {
+                bank.setPixel(tile: tile, x: x, y: y, color: color)
+            }
+        }
+    }
+    for tile in 0..<256 {
+        for y in 0..<8 {
+            #expect(bank.colorIndices(tile: tile, y: y) == pattern(tile: tile, y: y))
+        }
+    }
+}
+
 @Test func tileAndRowIndicesWrap() {
     var bank = TileBank()
     bank.setPixel(tile: 256, x: 8, y: 8, color: 3)
