@@ -28,6 +28,7 @@ let package = Package(
                 .product(name: "JavaScriptKit", package: "JavaScriptKit"),
             ]
         ),
+        .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
         .testTarget(name: "RuntimeTests", dependencies: ["Runtime"]),
     ]
 )
