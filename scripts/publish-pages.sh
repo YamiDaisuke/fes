@@ -41,7 +41,7 @@ for attempt in 1 2 3 4 5; do
     commit -q --allow-empty -m "Publish $site_path"
   git fetch -q "$site" HEAD
   git push --force-with-lease="gh-pages:$expected" origin FETCH_HEAD:refs/heads/gh-pages && exit 0
-  sleep $((attempt * 5))
+  if (( attempt < 5 )); then sleep $((attempt * 5)); fi
 done
 echo "gh-pages kept changing; gave up after 5 attempts" >&2
 exit 1
