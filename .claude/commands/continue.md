@@ -12,7 +12,7 @@ Owner's instructions for this run, if any (for example a point to stop at), take
 - If the repo has no stage labels yet, run Bootstrap from `docs/WORKFLOW.md` and continue.
 - Load state: open task issues with labels and their latest marker comments, open PRs with their bases, recently merged PRs.
 - Fix drift: a label that disagrees with the latest marker, a merged PR whose issue is still open, a ready PR missing its label.
-- Restack after any merges since last time (WORKFLOW → Stacking), then delete the merged branches.
+- Handle any merges since last time (WORKFLOW → Stacking → After a merge). Repeat this check before every dispatch, not only here.
 - Remove `needs-input` from any issue where the owner has replied after the latest question.
 
 ## 2. Loop
@@ -24,9 +24,9 @@ Repeat until nothing is actionable:
    2. A task mid-pipeline, lowest number first. Finish what's started before starting more.
    3. The next `todo` task whose dependencies allow a base (WORKFLOW → Stacking) while under the stack cap.
    Skip anything with `needs-input`.
-2. Dispatch the agent for its stage with the Agent tool: `architect`, `coder`, `qa` or `reviewer`. Give it the issue number, PR number, branch, base and round. Agents run one at a time; they share the working tree.
+2. Check for new merges (WORKFLOW → After a merge). Dispatch the agent for its stage with the Agent tool: `architect`, `coder`, `qa` or `reviewer`. Give it the issue number, PR number, branch, base and round. Agents run one at a time; they share the working tree.
 3. When it returns, confirm its marker comment exists on GitHub. If it doesn't, the stage didn't happen: retry once, then stop and report.
-4. Move the label according to the result, apply round limits, mark ready when both QA and review passed on the latest commit, restack descendants after any fix lower in the stack.
+4. Move the label according to the result, apply round limits, add a newly opened PR to the top of the stack, mark ready when both QA and review passed on the latest commit, restack descendants after any fix lower in the stack.
 5. Append one line to the `Progress` issue.
 
 If an agent asked the owner a question and the owner is here in the session, ask them directly with AskUserQuestion, post their answer on the issue so it's recorded, and continue. Otherwise move on.

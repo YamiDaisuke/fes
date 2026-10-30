@@ -5,7 +5,7 @@ One-time steps before the first `/continue`. All of these work from an iPhone or
 ## Repo settings (github.com in Safari → the repo → Settings)
 
 - **Branches**: add a rule for `main` that requires a pull request. This is the real guard against agents pushing to `main`; the deny rules in `.claude/settings.json` are only a second layer.
-- **General → Pull Requests**: allow squash merging, and turn **off** "Automatically delete head branches". The orchestrator needs merged branches for restacking and deletes them itself.
+- **General → Pull Requests**: allow squash merging, and turn **on** "Automatically delete head branches". Task PRs form a native stack (`docs/decisions/005-native-stacked-prs.md`): merge from the stack, and GitHub retargets the PRs above.
 - **Pages**: source "GitHub Actions" (T03 sets up the deploys).
 
 ## Claude Code environment
@@ -31,5 +31,5 @@ The first run bootstraps labels, milestones and issues, then starts T01. Re-run 
 ## Your part
 
 - **Questions**: issues labeled `needs-input`. Answer in a comment; the GitHub app works.
-- **Reviews**: PRs move to "ready for review" only after QA and code review passed. Review bottom of the stack first, try each from its preview link, comment or request changes, merge when happy. The next `/continue` handles your comments and restacks after merges.
+- **Reviews**: PRs move to "ready for review" only after QA and code review passed. Review bottom of the stack first, try each from its preview link, comment or request changes. Merge from the PR's stack view: merging a PR also merges every unmerged PR below it. The next `/continue` handles your comments and restacks after merges.
 - **Progress**: the `Progress` issue has a one-line log of every stage. Pin it for easy access.
