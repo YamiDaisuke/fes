@@ -17,6 +17,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -35,6 +37,10 @@ jobs:
       - run: swift test
       - run: npm run build
       - run: npm run test:browser
+      - name: Let the publish steps push, after untrusted build steps have run
+        env:
+          TOKEN: ${{ github.token }}
+        run: git remote set-url origin "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY"
       - name: Publish main
         if: github.event_name == 'push'
         run: scripts/publish-pages.sh . web/dist
