@@ -52,6 +52,11 @@ private func sceneFrame(scrollX: Int, scrollY: Int) -> Framebuffer {
     #expect(sceneFrame(scrollX: 492, scrollY: 500) == remainder)
 }
 
+@Test func extremeScrollWrapsInsteadOfOverflowing() {
+    #expect(sceneFrame(scrollX: Int.max, scrollY: Int.max) == sceneFrame(scrollX: 255, scrollY: 255))
+    #expect(sceneFrame(scrollX: Int.min, scrollY: Int.min) == sceneFrame(scrollX: 0, scrollY: 0))
+}
+
 @Test func framebufferStoresPixelsAsRGBARowMajor() {
     var frame = Framebuffer()
     frame.setPixel(x: 2, y: 1, to: Color(red: 10, green: 20, blue: 30))
