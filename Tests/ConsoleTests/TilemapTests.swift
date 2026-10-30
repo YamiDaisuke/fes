@@ -7,6 +7,8 @@ import Testing
     #expect(map[column: 31, row: 0] == Tilemap.Cell(tile: 9, palette: 2))
     #expect(map[column: 63, row: -32] == Tilemap.Cell(tile: 9, palette: 2))
     #expect(map[column: 30, row: 0] == Tilemap.Cell(tile: 0, palette: 0))
+    map[column: -1, row: -1] = Tilemap.Cell(tile: 4, palette: 1)
+    #expect(map[column: 31, row: 31] == Tilemap.Cell(tile: 4, palette: 1))
 }
 
 @Test func cellTileAndPaletteWrapToTheirBitWidths() {
