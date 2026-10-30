@@ -34,8 +34,8 @@ private let blankRow = [0, 0, 0, 0, 0, 0, 0, 0]
 
 @Test func colorAboveSevenKeepsItsLowThreeBits() {
     var bank = TileBank()
-    bank.setPixel(tile: 0, x: 0, y: 0, color: 9)
-    #expect(bank.colorIndices(tile: 0, y: 0)[0] == 1)
+    bank.setPixel(tile: 0, x: 1, y: 0, color: 9)
+    #expect(bank.colorIndices(tile: 0, y: 0) == [0, 1, 0, 0, 0, 0, 0, 0])
 }
 
 @Test func tileAndRowIndicesWrap() {
