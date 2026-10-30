@@ -53,7 +53,8 @@ test("frame 60 of the test scene matches the native golden", async ({ page }) =>
   await expect.poll(() => page.evaluate(() => window.queuedAnimationFrames())).toBe(1);
 
   const browser = await page.evaluate(() => {
-    window.runAnimationFrames(61);
+    const framesZeroThroughSixty = 61;
+    window.runAnimationFrames(framesZeroThroughSixty);
     const canvas = document.getElementById("screen");
     return Array.from(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data);
   });
