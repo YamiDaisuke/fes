@@ -32,6 +32,10 @@ The calls don't draw. They write the console's hardware state, and the PPU rende
 - So `camera()` in the middle of `_draw` also scrolls the map back to 0, 0. Until the window layer (M4), draw HUD sprites with the camera still set, at `cx + x, cy + y`, where `cx, cy` is the camera position.
 - The map repeats every 256 pixels in both directions. Sprites don't wrap.
 
+## Budgets
+
+Each frame's `_update` + `_draw` may run 500,000 Lua instructions (placeholder), and the main chunk + `_init` together get the same. Going over stops the cart with `main.lua:N: CPU budget exceeded`, and `pcall` cannot catch it. Lua memory is capped at 8 MiB (placeholder). An allocation over the cap is a memory error: `pcall` sees `not enough memory`, and an uncaught one shows `memory budget exceeded` with no line. Recursion that goes too deep shows `stack overflow`.
+
 ## cls
 
 `cls()`
