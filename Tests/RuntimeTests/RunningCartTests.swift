@@ -1,7 +1,8 @@
+import Console
 import Runtime
 import Testing
 
-private func firstErrorLine(_ cart: RunningCart) -> String? {
+func firstErrorLine(_ cart: RunningCart) -> String? {
     cart.error?.split(separator: "\n").first.map(String.init)
 }
 
@@ -12,7 +13,7 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
           x = 1 + speed
         end
         """)
-    cart.runFrame()
+    cart.runFrame(input: Input())
     #expect(firstErrorLine(cart) == "main.lua:3: attempt to perform arithmetic on a nil value (local 'speed')")
 }
 
@@ -28,8 +29,8 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
           if draws == 2 then error(log, 0) end
         end
         """)
-    cart.runFrame()
-    cart.runFrame()
+    cart.runFrame(input: Input())
+    cart.runFrame(input: Input())
     #expect(firstErrorLine(cart) == "main init update draw update draw")
 }
 
@@ -41,27 +42,27 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
           error("n=" .. n, 0)
         end
         """)
-    cart.runFrame()
-    cart.runFrame()
+    cart.runFrame(input: Input())
+    cart.runFrame(input: Input())
     #expect(firstErrorLine(cart) == "n=1")
 }
 
 @Test func missingCallbacksAreSkipped() {
     let cart = RunningCart(mainLua: "")
-    cart.runFrame()
-    cart.runFrame()
+    cart.runFrame(input: Input())
+    cart.runFrame(input: Input())
     #expect(cart.error == nil)
 }
 
 @Test func nonFunctionCallbackIsAnError() {
     let cart = RunningCart(mainLua: "_update = 5")
-    cart.runFrame()
+    cart.runFrame(input: Input())
     #expect(cart.error?.contains("attempt to call a number value") == true)
 }
 
 @Test func strictGlobalsMetatableDoesNotBreakCallbackLookup() {
     let cart = RunningCart(mainLua: #"setmetatable(_G, {__index = function(_, k) error("undefined " .. k) end})"#)
-    cart.runFrame()
+    cart.runFrame(input: Input())
     #expect(cart.error == nil)
 }
 
@@ -143,7 +144,7 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
           load(source)
         end
         """)
-    cart.runFrame()
+    cart.runFrame(input: Input())
     #expect(firstErrorLine(cart) == "main.lua:3: bad argument #1 to 'load' (function expected, got nil)")
 }
 
