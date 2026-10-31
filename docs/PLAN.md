@@ -123,6 +123,14 @@ Accept: installed to Home Screen, works in airplane mode; export then import res
 
 Master palette choice with the owner; palette editor; tile editor (pencil, fill, picker, flip, copy/paste); sprite sheet saved in the cart and used by `spr`.
 
+Image import (owner request): drop a PNG or JPEG sprite/tile sheet exported from Pixquare (or any pixel-art tool) and it becomes tile memory, ready for `spr` and the map.
+- The browser decodes the image (JS does what the browser does best); Swift validates and converts it. The image is untrusted input, so validation is never cut.
+- The sheet is read as a grid of 8×8 tiles, at most 256 per bank.
+- If the image breaks the console's limits, the import is rejected with a report that highlights each offending tile and the rule it breaks: more than 8 colors in a tile, colors that don't fit a sub-palette, too many tiles, or a size that isn't a multiple of 8. Nothing is changed silently; the owner fixes the art in Pixquare and imports again.
+- Optional per import: adopt the image's colors (up to 64) as the master palette, instead of mapping onto the existing one.
+- Not planned: importing a whole level image into a tilemap, or auto-reducing colors.
+- JPEG compression smears colors, so JPEGs will usually fail the limits; the import report should say that PNG is the format to export.
+
 ## M4 — Map and scene editor (outline)
 
 Second background layer and window layer in the PPU; map editor for both layers; scene objects (named entities with type and position, readable from Lua); `map` API; map sizes decided with the owner.
