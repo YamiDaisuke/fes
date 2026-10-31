@@ -5,8 +5,9 @@ The functions a cart's Lua code can call. Each call is added by the task that ne
 ## Rules for every call
 
 - Number arguments accept Lua numbers and numeric strings (`"5"`). Anything else is an error: `main.lua:12: bad argument #1 to 'spr' (number expected, got string)`. A missing argument says `got no value`.
-- NaN and infinity are errors: `bad argument #2 to 'spr' (finite number expected)`.
+- NaN and infinity are errors: `bad argument #2 to 'spr' (finite number expected)`, except in `btn`/`btnp`, which return false.
 - Numbers are floored, not truncated: `1.9` is 1 and `-0.5` is -1. Keep fractional positions in your own variables; `x = x + 0.5` moves the sprite every other frame.
+- Every number passes through a float, so integers beyond ±2^53 aren't exact: `spr(math.maxinteger, 0, 0)` draws tile 0, not 255.
 - Out-of-range values wrap to their field instead of failing:
 
   | Field | Range |
@@ -61,7 +62,7 @@ spr(0, px, py, 2, facing_left)
 
 `btn(i) -> boolean`
 
-True while button `i` is held. `i` is a number from the button table; anything outside 0–7 returns false. `btn()` with no argument is an error.
+True while button `i` is held. `i` is a number from the button table; anything outside 0–7, including NaN and infinity, returns false. `btn()` with no argument is an error.
 
 ```lua
 if btn(1) then px = px + 1 end
