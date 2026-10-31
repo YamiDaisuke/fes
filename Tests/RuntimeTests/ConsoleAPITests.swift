@@ -110,7 +110,7 @@ import Testing
 @Test func aCartWhoseBindingRaisedIsStillDeallocated() {
     weak var weakCart: RunningCart?
     do {
-        let cart = RunningCart(mainLua: "pcall(spr) pcall(mset, 0, 0) pcall(btn) pcall(camera, 0/0)")
+        let cart = RunningCart(mainLua: "pcall(spr) pcall(mset, 0, 0) pcall(mget) pcall(btn) pcall(btnp) pcall(camera, 0/0)")
         weakCart = cart
     }
     #expect(weakCart == nil)
@@ -140,7 +140,7 @@ import Testing
         end
         """)
     var input = Input()
-    input.beginFrame(held: 1 << Button.a.rawValue)
+    input.beginFrame(held: 1 << Button.a.rawValue | 1 << Button.left.rawValue | 1 << Button.select.rawValue)
     cart.runFrame(input: input)
     #expect(firstErrorLine(cart) == "true false false false false true")
 }
