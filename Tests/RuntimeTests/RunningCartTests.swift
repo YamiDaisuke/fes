@@ -140,3 +140,14 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
     cart.runFrame()
     #expect(firstErrorLine(cart) == "main.lua:3: bad argument #1 to 'load' (function expected, got nil)")
 }
+
+@Test func errorMessageKeepsTheTextAfterANulByte() {
+    let cart = RunningCart(mainLua: #"error("a\0b", 0)"#)
+    #expect(firstErrorLine(cart) == "a\u{0}b")
+}
+
+@Test func longErrorIsCutAndSaysHowLongItWas() {
+    let cart = RunningCart(mainLua: #"error(string.rep("A", 100000), 0)"#)
+    #expect(cart.error?.hasPrefix(String(repeating: "A", count: 8192) + "\n[cut: first 8192 of ") == true)
+    #expect(cart.error?.utf8.count ?? 0 < 8300)
+}
