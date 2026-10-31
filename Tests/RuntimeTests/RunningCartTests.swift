@@ -80,6 +80,12 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
     #expect(firstErrorLine(cart) == "(error object is a table value)")
 }
 
+@Test func errorObjectWithTostringIsShownWithItsTraceback() {
+    let cart = RunningCart(mainLua: #"error(setmetatable({}, {__tostring = function() return "boom" end}))"#)
+    #expect(firstErrorLine(cart) == "boom")
+    #expect(cart.error?.contains("stack traceback:") == true)
+}
+
 @Test func erroringTostringOnErrorObjectDoesNotAbort() {
     let cart = RunningCart(mainLua: #"error(setmetatable({}, {__tostring = function() error("inner", 0) end}))"#)
     #expect(cart.error?.contains("inner") == true)

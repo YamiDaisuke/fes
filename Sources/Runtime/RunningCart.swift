@@ -64,12 +64,13 @@ public final class RunningCart {
 }
 
 private func appendTraceback(_ state: OpaquePointer?) -> Int32 {
-    if lua_tolstring(state, 1, nil) == nil {
-        if luaL_callmeta(state, 1, "__tostring") != 0, lua_type(state, -1) == LUA_TSTRING {
-            return 1
+    let isStringOrNumber = lua_tolstring(state, 1, nil) != nil
+    if !isStringOrNumber {
+        let tostringGaveString = luaL_callmeta(state, 1, "__tostring") != 0 && lua_type(state, -1) == LUA_TSTRING
+        if !tostringGaveString {
+            let typeName = String(cString: lua_typename(state, lua_type(state, 1)))
+            lua_pushstring(state, "(error object is a \(typeName) value)")
         }
-        let typeName = String(cString: lua_typename(state, lua_type(state, 1)))
-        lua_pushstring(state, "(error object is a \(typeName) value)")
     }
     lua_pushstring(state, "\n")
     luaL_traceback(state, state, nil, 1)
