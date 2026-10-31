@@ -1,4 +1,5 @@
 import { init } from "../.build/js/index.js";
+import { listenForInput, buttonsForFrame } from "./input.js";
 
 const canvas = document.getElementById("screen");
 
@@ -13,9 +14,10 @@ fitCanvas();
 addEventListener("resize", fitCanvas);
 
 const context = canvas.getContext("2d");
+listenForInput(document.getElementById("pad"));
 
 function drawFrame() {
-  const address = instance.exports.frame();
+  const address = instance.exports.frame(buttonsForFrame());
   // Memory growth detaches the old buffer, so take a fresh view every frame.
   const pixels = new Uint8ClampedArray(instance.exports.memory.buffer, address, canvas.width * canvas.height * 4);
   context.putImageData(new ImageData(pixels, canvas.width, canvas.height), 0, 0);
