@@ -16,8 +16,7 @@ func openSandbox(_ state: OpaquePointer) {
     lua_getglobal(state, "load")
     lua_pushcclosure(state, loadTextOnly, 1)
     lua_setglobal(state, "load")
-    let script = removeUnsafeGlobals
-    guard luaL_loadbufferx(state, script, script.utf8.count, "=sandbox", "t") == LUA_OK,
+    guard luaL_loadbufferx(state, removeUnsafeGlobals, removeUnsafeGlobals.utf8.count, "=sandbox", "t") == LUA_OK,
           lua_pcallk(state, 0, 0, 0, 0, nil) == LUA_OK else {
         fatalError("sandbox setup failed: \(String(cString: lua_tolstring(state, -1, nil)!))")
     }
