@@ -20,8 +20,8 @@ public struct TestScene {
                 ppu.background[column: column, row: row] = Tilemap.Cell(tile: column / 4, palette: row / 4)
             }
         }
-        for y in 0..<8 {
-            for x in 0..<8 {
+        for y in 0..<TileBank.tileSize {
+            for x in 0..<TileBank.tileSize {
                 ppu.spriteTiles.setPixel(tile: indicatorTile, x: x, y: y, color: 7)
             }
         }
