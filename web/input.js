@@ -32,14 +32,10 @@ function buttonsAt(x, y) {
   return control.dataset.buttons.split(" ").reduce((bits, name) => bits | BUTTON_BITS[name], 0);
 }
 
-function press(bits) {
-  pressedSinceLastFrame |= bits;
-}
-
 function trackPointer(event) {
   const bits = buttonsAt(event.clientX, event.clientY);
   pointerButtons.set(event.pointerId, bits);
-  press(bits);
+  pressedSinceLastFrame |= bits;
 }
 
 function releasePointer(event) {
@@ -49,10 +45,10 @@ function releasePointer(event) {
 export function listenForInput(overlay) {
   addEventListener("keydown", (event) => {
     const button = KEY_BUTTONS[event.code];
-    if (!button) return;
+    if (!button || event.metaKey || event.ctrlKey || event.altKey) return;
     event.preventDefault();
     heldKeys.add(event.code);
-    press(BUTTON_BITS[button]);
+    pressedSinceLastFrame |= BUTTON_BITS[button];
   });
   addEventListener("keyup", (event) => {
     if (!KEY_BUTTONS[event.code]) return;
