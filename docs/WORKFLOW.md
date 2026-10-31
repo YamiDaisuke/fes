@@ -91,24 +91,30 @@ Three rounds of code↔QA or code↔review per task. On the fourth failure, stop
 
 ## Stacking
 
-Tasks stack so building never waits on the owner's review.
+Tasks stack so building never waits on the owner's review. Open task PRs form one GitHub native stack (`docs/decisions/005-native-stacked-prs.md`): a single chain from `main` up, where each PR is based on the branch of the PR below it.
 
-- A task's base is its dependency's branch if that PR isn't merged yet, otherwise `main`. With several dependencies, base on the one not yet merged; if more than one is unmerged, wait until at most one is.
+- A new task's base is the branch of the top PR in the stack, or `main` when nothing is unmerged. Its dependencies are then always below it. When the coder opens the draft PR, the orchestrator adds it to the top of the stack (see GitHub commands). With no stack yet, the first two PRs create one.
 - **Stack cap: 5 unmerged PRs.** When reached, only work that doesn't add to the stack continues (questions, fixes, human changes). Then stop and report.
-- Owner setting: leave "Automatically delete head branches" off. The orchestrator deletes merged branches itself after restacking, because it needs them for the rebase.
+- The owner merges from the stack: merging a PR merges every unmerged PR below it, and GitHub retargets the layers above. A layer can't land in a parent branch that already merged.
+- Owner setting: "Automatically delete head branches" on. Cloud sessions can't delete branches, and nothing needs a merged branch.
 
-### Restack after a merge
+### After a merge
 
-When a PR merges (squash or otherwise), for each PR that was based on it:
+Check before every stage, not only at the start of a run: `gh api 'repos/{owner}/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page=10'`. For each merged PR:
 
-```
-git fetch origin
-git rebase --onto origin/main origin/<merged-branch> <child-branch>
-git push --force-with-lease origin <child-branch>
-gh api -X PATCH repos/{owner}/{repo}/pulls/<child-pr> -f base=main
-```
+1. Read the stack (`stacks?pull_request=<next PR>`). The lowest open layer should now be based on `main`.
+2. If the owner squash-merged, the open layers still carry the merged commits. Rebase the lowest open layer past them, using the merged PR's head SHA (`pulls/<merged>` → `head.sha`), since its branch may be deleted:
 
-Then repeat for that child's own children (`git rebase <child-branch> <grandchild-branch>`), and finally delete the merged branch. Conflicts during a restack go to the coder with the conflict as the task.
+   ```
+   git fetch origin
+   git rebase --onto origin/main <merged-head-sha> <lowest-open-branch>
+   git push --force-with-lease origin <lowest-open-branch>
+   ```
+
+   Then rebase each layer above onto the one below, as in the next section.
+3. Close the merged task's issue if GitHub didn't, and remove its stage label.
+
+Conflicts during a restack go to the coder with the conflict as the task.
 
 ### Restack after a fix lower in the stack
 
@@ -160,6 +166,9 @@ Claude Code cloud sessions (what runs from the phone) block GitHub's GraphQL API
 | Open draft PR | `gh api repos/{owner}/{repo}/pulls -f title=... -f head=<branch> -f base=<base> -F draft=true -F body=@pr.md` |
 | PR, its files and review comments | `gh api repos/{owner}/{repo}/pulls/N` · `.../pulls/N/files` · `.../pulls/N/comments` |
 | Change PR base | `gh api -X PATCH repos/{owner}/{repo}/pulls/N -f base=main` |
+| Find the stack a PR is in | `gh api 'repos/{owner}/{repo}/stacks?pull_request=N'` (`[]` when none) |
+| Create a stack (bottom to top) | `echo '{"pull_requests":[19,20]}' \| gh api -X POST repos/{owner}/{repo}/stacks --input -` |
+| Add PRs to the top of a stack | `echo '{"pull_requests":[23]}' \| gh api -X POST repos/{owner}/{repo}/stacks/<number>/add --input -` |
 | Post a review | `gh api repos/{owner}/{repo}/pulls/N/reviews --input review.json` (event `COMMENT`) |
 | Reply to an inline comment | `gh api repos/{owner}/{repo}/pulls/N/comments/<id>/replies -f body=...` |
 | Mark ready for review | `gh api -X POST repos/{owner}/{repo}/pulls/N/ccr/ready_for_review` |

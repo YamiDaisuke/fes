@@ -5,7 +5,7 @@ One-time steps before the first `/continue`. All of these work from an iPhone or
 ## Repo settings (github.com in Safari → the repo → Settings)
 
 - **Branches**: add a rule for `main` that requires a pull request. This is the real guard against agents pushing to `main`; the deny rules in `.claude/settings.json` are only a second layer.
-- **General → Pull Requests**: allow squash merging, and turn **off** "Automatically delete head branches". The orchestrator needs merged branches for restacking and deletes them itself.
+- **General → Pull Requests**: allow squash merging, and turn **on** "Automatically delete head branches". Task PRs form a native stack (`docs/decisions/005-native-stacked-prs.md`): merge from the stack, and GitHub retargets the PRs above.
 - **General → Danger Zone → Change visibility**: make the repo public. GitHub Pages on a private repo needs a paid plan; public also makes Actions minutes free. The Pages site is public either way: anyone with the URL can open `main` and every PR preview.
 - **Pages**: source "GitHub Actions".
 - **Environments → `github-pages` → Deployment branches and tags**: "Selected branches and tags", with two branch rules: `*` for `main`, and `refs/pull/*/merge` for PR previews (keep the `main` rule or remove it; `*` covers it). Rules are matched against the run's `GITHUB_REF`, which for a PR is `refs/pull/<n>/merge`, and `*` never matches `/`. GitHub creates this environment allowing only `main`, which blocks PR previews. Don't choose "No restriction": an environment without branch rules makes Pages fall back to accepting deployments only from `main` ([deploy-pages security notes](https://github.com/actions/deploy-pages#security-considerations)). The environment appears once Pages is set to GitHub Actions, or after the first deploy attempt. A deploy job that fails with "not allowed to deploy to github-pages due to environment protection rules" or "Invalid deployment branch and no branch protection rules set in the environment" means one of these rules is missing.
@@ -35,5 +35,5 @@ The first run bootstraps labels, milestones and issues, then starts T01. Re-run 
 ## Your part
 
 - **Questions**: issues labeled `needs-input`. Answer in a comment; the GitHub app works.
-- **Reviews**: PRs move to "ready for review" only after QA and code review passed. Review bottom of the stack first, try each from its preview link, comment or request changes, merge when happy. The next `/continue` handles your comments and restacks after merges.
+- **Reviews**: PRs move to "ready for review" only after QA and code review passed. Review bottom of the stack first, try each from its preview link, comment or request changes. Merge from the PR's stack view: merging a PR also merges every unmerged PR below it. The next `/continue` handles your comments and restacks after merges.
 - **Progress**: the `Progress` issue has a one-line log of every stage. Pin it for easy access.
