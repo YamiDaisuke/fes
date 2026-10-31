@@ -30,12 +30,18 @@
     #system button { width: 88px; height: 32px; border-radius: 16px; }
     #face { display: flex; gap: 16px; }
     #face button { width: 72px; height: 72px; border-radius: 50%; }
-    #lua { position: fixed; top: 0; left: 0; margin: 8px; color: #fff; font: 16px/1.4 monospace; }
+    #cart-error {
+      position: fixed; top: 0; left: 0; right: 0; margin: 0;
+      padding: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
+      color: #fff; background: rgb(0 0 0 / 0.75); font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+      max-height: 40vh; overflow: auto;
+    }
+    #cart-error:empty { display: none; }
   </style>
 </head>
 <body>
   <canvas id="screen" aria-label="FES screen"></canvas>
-  <pre id="lua"></pre>
+  <pre id="cart-error" role="alert"></pre>
   <div id="pad" role="group" aria-label="Controller">
     <div id="dpad">
       <div data-buttons="up left" aria-hidden="true"></div>

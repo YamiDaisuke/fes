@@ -36,7 +36,7 @@ This compiles the Swift package to `App.wasm` and bundles the page into `web/dis
 npm run serve
 ```
 
-Open http://localhost:8000/ in Safari. You should see a blue screen, scaled up by a whole number to fit the window, and two lines of Lua output at the top-left: `6 * 7 = 42` and `pcall caught: fail:1: boom`.
+Open http://localhost:8000/ in Safari. You should see the scrolling test scene, scaled up by a whole number to fit the window, with the touch controller over it. After about 2 seconds the embedded test cart hits its deliberate error, and a dark bar at the top shows `main.lua:8: attempt to perform arithmetic on a nil value (global 'speed')` and its stack traceback. The scene keeps running underneath.
 
 To try it on the iPad, use the Network URL that esbuild prints (the iPad must be on the same Wi-Fi).
 
