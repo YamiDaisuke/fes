@@ -8,6 +8,17 @@ function fitCanvas() {
   canvas.style.height = `${canvas.height * scale}px`;
 }
 
-await init();
+const { instance } = await init();
 fitCanvas();
 addEventListener("resize", fitCanvas);
+
+const context = canvas.getContext("2d");
+
+function drawFrame() {
+  const address = instance.exports.frame();
+  // Memory growth detaches the old buffer, so take a fresh view every frame.
+  const pixels = new Uint8ClampedArray(instance.exports.memory.buffer, address, canvas.width * canvas.height * 4);
+  context.putImageData(new ImageData(pixels, canvas.width, canvas.height), 0, 0);
+  requestAnimationFrame(drawFrame);
+}
+requestAnimationFrame(drawFrame);
