@@ -1,4 +1,5 @@
 import CLua
+import Console
 
 private let messageHandlerIndex: Int32 = 1
 private let globalsIndex: Int32 = 2
@@ -6,11 +7,15 @@ private let maxErrorBytes = 8192
 
 public final class RunningCart {
     public private(set) var error: String?
+    public internal(set) var ppu = PPU()
+    var nextSpriteSlot = 0
+    private(set) var input = Input()
     private let state: OpaquePointer
 
     public init(mainLua: String) {
         state = luaL_newstate()!
         openSandbox(state)
+        registerConsoleAPI(state, cart: self)
         lua_pushcclosure(state, appendTraceback, 0)
         lua_getglobal(state, "_G")
 
@@ -26,7 +31,8 @@ public final class RunningCart {
         lua_close(state)
     }
 
-    public func runFrame() {
+    public func runFrame(input: Input) {
+        self.input = input
         callGlobal("_update")
         callGlobal("_draw")
     }

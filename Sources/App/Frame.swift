@@ -14,7 +14,7 @@ nonisolated(unsafe) private var isErrorShown = false
 @c
 func frame(heldButtons: UInt32) -> UnsafeRawPointer {
     input.beginFrame(held: UInt8(truncatingIfNeeded: heldButtons))
-    cart.runFrame()
+    cart.runFrame(input: input)
     if let error = cart.error, !isErrorShown {
         JSObject.global.document.getElementById("cart-error").textContent = .string(error)
         isErrorShown = true
