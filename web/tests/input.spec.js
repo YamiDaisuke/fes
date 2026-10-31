@@ -65,7 +65,7 @@ test("a held button shows its press frame, then stays held", async ({ page }) =>
   expect(await litNames(page)).toEqual([]);
 });
 
-test("the D-pad and A can be held at once with two fingers", async ({ page }) => {
+test("two fingers hold the D-pad and A at once, and lifting or cancelling one releases only its buttons", async ({ page }) => {
   await touch(page, "pointerdown", "right", 1);
   await touch(page, "pointerdown", "a", 2);
   await runFrames(page, 1);
@@ -74,6 +74,10 @@ test("the D-pad and A can be held at once with two fingers", async ({ page }) =>
   await touch(page, "pointerup", "right", 1);
   await runFrames(page, 1);
   expect(await litNames(page)).toEqual(["a"]);
+
+  await touch(page, "pointercancel", "a", 2);
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual([]);
 });
 
 test("a finger sliding across the D-pad moves the press", async ({ page }) => {
@@ -88,16 +92,6 @@ test("a finger sliding across the D-pad moves the press", async ({ page }) => {
   await touch(page, "pointermove", "down right", 1);
   await runFrames(page, 1);
   expect(await litNames(page)).toEqual(["right", "down"]);
-});
-
-test("a cancelled touch releases its buttons", async ({ page }) => {
-  await touch(page, "pointerdown", "a", 1);
-  await runFrames(page, 1);
-  expect(await litNames(page)).toEqual(["a"]);
-
-  await touch(page, "pointercancel", "a", 1);
-  await runFrames(page, 1);
-  expect(await litNames(page)).toEqual([]);
 });
 
 test("keys map to buttons and losing focus releases held keys", async ({ page }) => {
