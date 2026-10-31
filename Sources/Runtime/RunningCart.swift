@@ -10,18 +10,25 @@ public final class RunningCart {
     public internal(set) var ppu: PPU
     var nextSpriteSlot = 0
     private(set) var input = Input()
+    private let meter = UnsafeMutablePointer<BudgetMeter>.allocate(capacity: 1)
     private let state: OpaquePointer
 
     public init(mainLua: String, ppu: PPU = PPU()) {
         self.ppu = ppu
-        state = luaL_newstate()!
+        meter.initialize(to: BudgetMeter())
+        state = newStateWithinBudget(meter: meter)
         openSandbox(state)
         registerConsoleAPI(state, cart: self)
         lua_pushcclosure(state, appendTraceback, 0)
         lua_getglobal(state, "_G")
 
-        guard luaL_loadbufferx(state, mainLua, mainLua.utf8.count, "=main.lua", "t") == LUA_OK else {
-            stopWithErrorOnTop()
+        meter.pointee.instructionsLeft = Budgets.instructionsPerFrame
+        startCountingInstructions(state)
+        meter.pointee.isMemoryCapped = true
+        let loadStatus = luaL_loadbufferx(state, mainLua, mainLua.utf8.count, "=main.lua", "t")
+        meter.pointee.isMemoryCapped = false
+        guard loadStatus == LUA_OK else {
+            stop(status: loadStatus)
             return
         }
         callFunctionOnTop()
@@ -30,10 +37,12 @@ public final class RunningCart {
 
     deinit {
         lua_close(state)
+        meter.deallocate()
     }
 
     public func runFrame(input: Input) {
         self.input = input
+        meter.pointee.instructionsLeft = Budgets.instructionsPerFrame
         callGlobal("_update")
         callGlobal("_draw")
     }
@@ -50,14 +59,19 @@ public final class RunningCart {
     }
 
     private func callFunctionOnTop() {
-        if lua_pcallk(state, 0, 0, messageHandlerIndex, 0, nil) != LUA_OK {
-            stopWithErrorOnTop()
+        meter.pointee.isMemoryCapped = true
+        let status = lua_pcallk(state, 0, 0, messageHandlerIndex, 0, nil)
+        meter.pointee.isMemoryCapped = false
+        if status != LUA_OK {
+            stop(status: status)
         }
     }
 
-    private func stopWithErrorOnTop() {
+    private func stop(status: Int32) {
         var length = 0
-        if let bytes = lua_tolstring(state, -1, &length) {
+        if status == LUA_ERRMEM {
+            error = "memory budget exceeded"
+        } else if let bytes = lua_tolstring(state, -1, &length) {
             let shownBytes = UnsafeRawBufferPointer(start: bytes, count: min(length, maxErrorBytes))
             error = String(decoding: shownBytes, as: UTF8.self)
             if length > maxErrorBytes {
