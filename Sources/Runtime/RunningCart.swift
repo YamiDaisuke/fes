@@ -2,6 +2,7 @@ import CLua
 
 private let messageHandlerIndex: Int32 = 1
 private let globalsIndex: Int32 = 2
+private let maxErrorBytes = 8192
 
 public final class RunningCart {
     public private(set) var error: String?
@@ -48,8 +49,13 @@ public final class RunningCart {
     }
 
     private func stopWithErrorOnTop() {
-        if let message = lua_tolstring(state, -1, nil) {
-            error = String(cString: message)
+        var length = 0
+        if let bytes = lua_tolstring(state, -1, &length) {
+            let shownBytes = UnsafeRawBufferPointer(start: bytes, count: min(length, maxErrorBytes))
+            error = String(decoding: shownBytes, as: UTF8.self)
+            if length > maxErrorBytes {
+                error! += "\n[cut: first \(maxErrorBytes) of \(length) bytes shown]"
+            }
         } else {
             error = "(error object is not a string)"
         }
@@ -58,15 +64,15 @@ public final class RunningCart {
 }
 
 private func appendTraceback(_ state: OpaquePointer?) -> Int32 {
-    var message = lua_tolstring(state, 1, nil)
-    if message == nil {
+    if lua_tolstring(state, 1, nil) == nil {
         if luaL_callmeta(state, 1, "__tostring") != 0, lua_type(state, -1) == LUA_TSTRING {
             return 1
         }
         let typeName = String(cString: lua_typename(state, lua_type(state, 1)))
         lua_pushstring(state, "(error object is a \(typeName) value)")
-        message = lua_tolstring(state, -1, nil)
     }
-    luaL_traceback(state, state, message, 1)
+    lua_pushstring(state, "\n")
+    luaL_traceback(state, state, nil, 1)
+    lua_concat(state, 3)
     return 1
 }
