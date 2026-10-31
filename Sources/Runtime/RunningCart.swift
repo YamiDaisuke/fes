@@ -7,7 +7,7 @@ private let maxErrorBytes = 8192
 
 public final class RunningCart {
     public private(set) var error: String?
-    public internal(set) var ppu = PPU()
+    public internal(set) var ppu: PPU
     var nextSpriteSlot = 0
     private(set) var input = Input()
     private let state: OpaquePointer
