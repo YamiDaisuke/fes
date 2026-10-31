@@ -1,0 +1,19 @@
+name: Preview cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+# Same group as ci.yml, so closing a PR cancels its running build before the preview is removed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  remove-preview:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - run: scripts/publish-pages.sh pr/${{ github.event.number }}

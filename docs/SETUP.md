@@ -6,7 +6,11 @@ One-time steps before the first `/continue`. All of these work from an iPhone or
 
 - **Branches**: add a rule for `main` that requires a pull request. This is the real guard against agents pushing to `main`; the deny rules in `.claude/settings.json` are only a second layer.
 - **General → Pull Requests**: allow squash merging, and turn **off** "Automatically delete head branches". The orchestrator needs merged branches for restacking and deletes them itself.
-- **Pages**: source "GitHub Actions" (T03 sets up the deploys).
+- **General → Danger Zone → Change visibility**: make the repo public. GitHub Pages on a private repo needs a paid plan; public also makes Actions minutes free. The Pages site is public either way: anyone with the URL can open `main` and every PR preview.
+- **Pages**: source "GitHub Actions".
+- **Environments → `github-pages` → Deployment branches and tags**: "Selected branches and tags", with two branch rules: `*` for `main`, and `refs/pull/*/merge` for PR previews (keep the `main` rule or remove it; `*` covers it). Rules are matched against the run's `GITHUB_REF`, which for a PR is `refs/pull/<n>/merge`, and `*` never matches `/`. GitHub creates this environment allowing only `main`, which blocks PR previews. Don't choose "No restriction": an environment without branch rules makes Pages fall back to accepting deployments only from `main` ([deploy-pages security notes](https://github.com/actions/deploy-pages#security-considerations)). The environment appears once Pages is set to GitHub Actions, or after the first deploy attempt. A deploy job that fails with "not allowed to deploy to github-pages due to environment protection rules" or "Invalid deployment branch and no branch protection rules set in the environment" means one of these rules is missing.
+
+CI needs nothing else: no secrets, and the repo-wide "Workflow permissions" can stay read-only, because each workflow job declares the permissions it needs.
 
 ## Claude Code environment
 
