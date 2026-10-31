@@ -23,7 +23,6 @@ public struct PPU {
         let mapHeightMask = Tilemap.rows * size - 1
         let mapY = (y + (scrollY & mapHeightMask)) & mapHeightMask
         var colorIndices: [Int] = []
-        colorIndices.reserveCapacity(Screen.width)
         for x in 0..<Screen.width {
             let mapX = (x + (scrollX & mapWidthMask)) & mapWidthMask
             let cell = background[column: mapX / size, row: mapY / size]
@@ -41,7 +40,8 @@ public struct PPU {
         let drawOrder = behind.reversed() + front.reversed()
         let lastPixel = TileBank.tileSize - 1
         for sprite in drawOrder {
-            let row = sprite.isFlippedVertically ? lastPixel - (y - sprite.y) : y - sprite.y
+            let rowFromTop = y - sprite.y
+            let row = sprite.isFlippedVertically ? lastPixel - rowFromTop : rowFromTop
             for column in 0...lastPixel {
                 let x = sprite.x + column
                 if x < 0 || x >= Screen.width { continue }
