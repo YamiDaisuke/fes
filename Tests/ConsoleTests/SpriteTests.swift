@@ -30,7 +30,7 @@ private func frameWithSpriteTiles(_ ppu: PPU) -> Framebuffer {
 }
 
 @Test func spriteColorZeroShowsTheBackground() throws {
-    var ppu = TestScene().ppu
+    var ppu = ppuWithPatternBackground()
     for i in 0..<8 {
         ppu.sprites[i] = Sprite(x: 4 + i * 23, y: 4 + i * 17, tile: cornerTriangle, palette: i)
     }
@@ -49,7 +49,7 @@ private func frameWithSpriteTiles(_ ppu: PPU) -> Framebuffer {
 }
 
 @Test func spritePriorityAndTableOrderMatchGolden() throws {
-    var ppu = TestScene().ppu
+    var ppu = ppuWithPatternBackground()
     ppu.sprites[0] = Sprite(x: 44, y: 12, tile: solid, palette: 1)
     ppu.sprites[1] = Sprite(x: 4, y: 4, tile: solid, palette: 2, isBehindBackground: true)
     ppu.sprites[2] = Sprite(x: 60, y: 40, tile: solid, palette: 3)
