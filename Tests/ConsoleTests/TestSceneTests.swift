@@ -1,4 +1,5 @@
 import Console
+import GoldenImage
 import Testing
 
 @Test func testSceneAtFrame60MatchesGolden() throws {
