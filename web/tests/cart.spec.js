@@ -1,7 +1,19 @@
 import { test, expect } from "@playwright/test";
 import { openPaused, runFrames } from "./frames.js";
 
-test("the test cart's runtime error appears with its line on frame 120", async ({ page }) => {
+test("a cart's runtime error appears with its line on frame 120", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = `function _init()
+  frames = 0
+end
+
+function _update()
+  frames = frames + 1
+  if frames == 120 then
+    frames = frames + speed
+  end
+end`;
+  });
   await openPaused(page);
   const cartError = page.locator("#cart-error");
 
