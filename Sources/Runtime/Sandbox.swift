@@ -1,8 +1,8 @@
 import CLua
 
 private let removeUnsafeGlobals = "dofile, loadfile, print, warn, string.dump = nil, nil, nil, nil, nil"
-// LUA_REGISTRYINDEX and lua_upvalueindex(1) spelled out: Swift doesn't import those C macros.
-let luaRegistryIndex = -LUAI_MAXSTACK - 1000
+// LUA_REGISTRYINDEX and lua_upvalueindex(1) spelled out: Swift doesn't import those C macros, and sees luaconf.h's LUAI_MAXSTACK, not fes_lua_user.h's (decision 012).
+let luaRegistryIndex = -FES_LUA_STACK_SLOTS - 1000
 let firstUpvalueIndex = luaRegistryIndex - 1
 
 func openSandbox(_ state: OpaquePointer) {
