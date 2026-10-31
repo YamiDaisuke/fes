@@ -94,11 +94,53 @@ test("a finger sliding across the D-pad moves the press", async ({ page }) => {
   expect(await litNames(page)).toEqual(["right", "down"]);
 });
 
-test("keys map to buttons and losing focus releases held keys", async ({ page }) => {
+const KEY_BUTTONS = {
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  KeyX: "a",
+  KeyZ: "b",
+  Enter: "start",
+  ShiftLeft: "select",
+  ShiftRight: "select",
+};
+
+async function keydownWasPrevented(page, init) {
+  return page.evaluate(
+    (init) => !window.dispatchEvent(new KeyboardEvent("keydown", { ...init, cancelable: true })),
+    init,
+  );
+}
+
+test("each mapped key lights its button while held and releases it on keyup", async ({ page }) => {
+  for (const [code, name] of Object.entries(KEY_BUTTONS)) {
+    await page.keyboard.down(code);
+    await runFrames(page, 2);
+    expect(await litNames(page), `holding ${code}`).toEqual([name]);
+    await page.keyboard.up(code);
+    await runFrames(page, 1);
+    expect(await litNames(page), `after releasing ${code}`).toEqual([]);
+  }
+});
+
+test("unmapped keys and Cmd shortcuts press nothing and keep their default action", async ({ page }) => {
+  expect(await keydownWasPrevented(page, { code: "KeyQ" })).toBe(false);
+  expect(await keydownWasPrevented(page, { code: "KeyX", metaKey: true })).toBe(false);
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual([]);
+});
+
+test("losing focus releases held keys and fingers", async ({ page }) => {
   await page.keyboard.down("ArrowLeft");
   await page.keyboard.down("KeyX");
+  await touch(page, "pointerdown", "right", 1);
   await runFrames(page, 2);
-  expect(await litNames(page)).toEqual(["left", "a"]);
+  expect(await litNames(page)).toEqual(["left", "right", "a"]);
+
+  await page.keyboard.up("ArrowLeft");
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual(["right", "a"]);
 
   await page.evaluate(() => window.dispatchEvent(new Event("blur")));
   await runFrames(page, 1);
