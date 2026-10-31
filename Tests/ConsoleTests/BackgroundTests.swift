@@ -1,4 +1,5 @@
 import Console
+import GoldenImage
 import Testing
 
 private func sceneFrame(scrollX: Int, scrollY: Int) -> Framebuffer {

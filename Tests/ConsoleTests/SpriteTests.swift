@@ -1,4 +1,5 @@
 import Console
+import GoldenImage
 import Testing
 
 private let cornerTriangle = 1
