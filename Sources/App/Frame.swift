@@ -7,7 +7,7 @@ nonisolated(unsafe) private var scene = TestScene()
 nonisolated(unsafe) private var framebuffer = Framebuffer()
 nonisolated(unsafe) private var frameNumber = 0
 nonisolated(unsafe) private var input = Input()
-nonisolated(unsafe) private let cart = RunningCart(mainLua: testCartMainLua)
+nonisolated(unsafe) private let cart = RunningCart(mainLua: JSObject.global.testCartMainLua.string ?? testCartMainLua)
 nonisolated(unsafe) private var isErrorShown = false
 
 @_expose(wasm, "frame")
