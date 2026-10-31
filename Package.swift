@@ -40,7 +40,8 @@ let package = Package(
                 ], .when(platforms: [.wasi])),
             ]
         ),
-        .testTarget(name: "ConsoleTests", dependencies: ["Console"], exclude: ["Golden"]),
-        .testTarget(name: "RuntimeTests", dependencies: ["Runtime", "Console"]),
+        .target(name: "GoldenImage", dependencies: ["Console"], path: "Tests/GoldenImage"),
+        .testTarget(name: "ConsoleTests", dependencies: ["Console", "GoldenImage"], exclude: ["Golden"]),
+        .testTarget(name: "RuntimeTests", dependencies: ["Runtime", "Console", "GoldenImage"], exclude: ["Golden"]),
     ]
 )

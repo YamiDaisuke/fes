@@ -4,7 +4,7 @@ import { inflateSync } from "node:zlib";
 import { openPaused, runFrames } from "./frames.js";
 
 function readGoldenRGBA(name) {
-  const png = readFileSync(new URL(`../../Tests/ConsoleTests/Golden/${name}.png`, import.meta.url));
+  const png = readFileSync(new URL(`../../Tests/RuntimeTests/Golden/${name}.png`, import.meta.url));
   let width = 0;
   const compressed = [];
   for (let offset = 8; offset < png.length; ) {
@@ -37,17 +37,34 @@ function firstMismatch(browser, golden, width) {
   return null;
 }
 
-test("frame 60 of the test scene matches the native golden", async ({ page }) => {
-  await openPaused(page);
-  const framesZeroThroughSixty = 61;
-  await runFrames(page, framesZeroThroughSixty);
-
+async function expectCanvasMatchesGolden(page, name) {
   const browser = await page.evaluate(() => {
     const canvas = document.getElementById("screen");
     return Array.from(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data);
   });
-  const golden = readGoldenRGBA("test-scene-frame-60");
+  const golden = readGoldenRGBA(name);
 
   expect(browser.length).toBe(golden.rgba.length);
   expect(firstMismatch(browser, golden.rgba, golden.width)).toBeNull();
+}
+
+test("the demo's first frame matches the native golden", async ({ page }) => {
+  await openPaused(page);
+  await runFrames(page, 1);
+  await expectCanvasMatchesGolden(page, "demo-start");
+});
+
+test("holding the down-right D-pad corner for 60 frames walks the player and scrolls the room, matching the native golden", async ({ page }) => {
+  await openPaused(page);
+  const corner = page.locator('[data-buttons="down right"]');
+  const box = await corner.boundingBox();
+  await corner.dispatchEvent("pointerdown", {
+    pointerId: 1,
+    pointerType: "touch",
+    isPrimary: true,
+    clientX: box.x + box.width / 2,
+    clientY: box.y + box.height / 2,
+  });
+  await runFrames(page, 60);
+  await expectCanvasMatchesGolden(page, "demo-after-60-frames-down-right");
 });
