@@ -21,10 +21,12 @@ public struct PPU {
         let size = TileBank.tileSize
         let mapWidthMask = Tilemap.columns * size - 1
         let mapHeightMask = Tilemap.rows * size - 1
-        let mapY = (y + (scrollY & mapHeightMask)) & mapHeightMask
+        let wrappedScrollX = scrollX & mapWidthMask
+        let wrappedScrollY = scrollY & mapHeightMask
+        let mapY = (y + wrappedScrollY) & mapHeightMask
         var colorIndices: [Int] = []
         for x in 0..<Screen.width {
-            let mapX = (x + (scrollX & mapWidthMask)) & mapWidthMask
+            let mapX = (x + wrappedScrollX) & mapWidthMask
             let cell = background[column: mapX / size, row: mapY / size]
             let index = backgroundTiles.colorIndex(tile: cell.tile, x: mapX % size, y: mapY % size)
             framebuffer.setPixel(x: x, y: y, to: backgroundPalettes.color(palette: cell.palette, index: index))
@@ -37,9 +39,9 @@ public struct PPU {
         let onScanline = sprites.sprites(onScanline: y)
         let behind = onScanline.filter { $0.isBehindBackground }
         let front = onScanline.filter { !$0.isBehindBackground }
-        let drawOrder = behind.reversed() + front.reversed()
+        let backToFront = behind.reversed() + front.reversed()
         let lastPixel = TileBank.tileSize - 1
-        for sprite in drawOrder {
+        for sprite in backToFront {
             let rowFromTop = y - sprite.y
             let row = sprite.isFlippedVertically ? lastPixel - rowFromTop : rowFromTop
             for column in 0...lastPixel {
