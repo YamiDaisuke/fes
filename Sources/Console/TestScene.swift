@@ -1,6 +1,13 @@
 public struct TestScene {
     public private(set) var ppu = PPU()
 
+    private let indicatorTile = 0
+    private let indicatorRowX = 50
+    private let indicatorRowY = 8
+    private let indicatorSpacing = 12
+    private let heldPalette = 0
+    private let pressedPalette = 1
+
     public init() {
         for tile in 0..<8 {
             for y in 0..<8 {
@@ -16,11 +23,21 @@ public struct TestScene {
                 ppu.background[column: column, row: row] = Tilemap.Cell(tile: column / 4, palette: row / 4)
             }
         }
+        for y in 0..<TileBank.tileSize {
+            for x in 0..<TileBank.tileSize {
+                ppu.spriteTiles.setPixel(tile: indicatorTile, x: x, y: y, color: 7)
+            }
+        }
     }
 
-    public mutating func render(frame: Int, into framebuffer: inout Framebuffer) {
+    public mutating func render(frame: Int, input: Input, into framebuffer: inout Framebuffer) {
         ppu.scrollX = frame
         ppu.scrollY = frame
+        for button in Button.allCases {
+            let palette = input.wasPressedThisFrame(button) ? pressedPalette : heldPalette
+            let indicator = Sprite(x: indicatorRowX + button.rawValue * indicatorSpacing, y: indicatorRowY, tile: indicatorTile, palette: palette)
+            ppu.sprites[button.rawValue] = input.isHeld(button) ? indicator : nil
+        }
         ppu.render(into: &framebuffer)
     }
 }
