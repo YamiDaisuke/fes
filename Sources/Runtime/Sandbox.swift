@@ -2,8 +2,8 @@ import CLua
 
 private let removeUnsafeGlobals = "dofile, loadfile, print, warn, string.dump = nil, nil, nil, nil, nil"
 // LUA_REGISTRYINDEX and lua_upvalueindex(1) spelled out: Swift doesn't import those C macros.
-private let luaRegistryIndex = -LUAI_MAXSTACK - 1000
-private let loadAnyModeUpvalueIndex = luaRegistryIndex - 1
+let luaRegistryIndex = -LUAI_MAXSTACK - 1000
+let firstUpvalueIndex = luaRegistryIndex - 1
 
 func openSandbox(_ state: OpaquePointer) {
     luaL_requiref(state, "_G", luaopen_base, 1)
@@ -23,7 +23,7 @@ func openSandbox(_ state: OpaquePointer) {
 }
 
 private func loadTextOnly(_ state: OpaquePointer?) -> Int32 {
-    let loadAnyMode = lua_tocfunction(state, loadAnyModeUpvalueIndex)!
+    let loadAnyMode = lua_tocfunction(state, firstUpvalueIndex)!
     if lua_gettop(state) < 3 {
         lua_settop(state, 3)
     }

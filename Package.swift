@@ -24,7 +24,7 @@ let package = Package(
                 .linkedLibrary("setjmp", .when(platforms: [.wasi])),
             ]
         ),
-        .target(name: "Runtime", dependencies: ["CLua"]),
+        .target(name: "Runtime", dependencies: ["CLua", "Console"]),
         .executableTarget(
             name: "App",
             dependencies: [
@@ -41,6 +41,6 @@ let package = Package(
             ]
         ),
         .testTarget(name: "ConsoleTests", dependencies: ["Console"], exclude: ["Golden"]),
-        .testTarget(name: "RuntimeTests", dependencies: ["Runtime"]),
+        .testTarget(name: "RuntimeTests", dependencies: ["Runtime", "Console"]),
     ]
 )
