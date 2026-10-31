@@ -129,3 +129,14 @@ private func firstErrorLine(_ cart: RunningCart) -> String? {
         """)
     #expect(cart.error == nil)
 }
+
+@Test func loadArgumentErrorPointsAtTheCartLine() {
+    let cart = RunningCart(mainLua: """
+        function _update()
+          local source
+          load(source)
+        end
+        """)
+    cart.runFrame()
+    #expect(firstErrorLine(cart) == "main.lua:3: bad argument #1 to 'load' (function expected, got nil)")
+}
