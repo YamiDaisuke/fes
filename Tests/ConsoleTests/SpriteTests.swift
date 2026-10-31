@@ -74,3 +74,32 @@ private func frameWithSpriteTiles(_ ppu: PPU) -> Framebuffer {
     wrapped.sprites[0] = Sprite(x: -1, y: 0, tile: solid, palette: 7)
     #expect(frameWithSpriteTiles(extreme) == frameWithSpriteTiles(wrapped))
 }
+
+private func rgba(_ frame: Framebuffer, x: Int, y: Int) -> [UInt8] {
+    let offset = (y * Screen.width + x) * 4
+    return Array(frame.rgba[offset..<(offset + 4)])
+}
+
+private func rgba(_ color: Color) -> [UInt8] {
+    [color.red, color.green, color.blue, 255]
+}
+
+@Test func spritesDrawFromTheSpriteBanksNotTheBackgroundBanks() {
+    var ppu = PPU()
+    ppu.spritePalettes.setMasterIndex(40, palette: 0, index: 7)
+    ppu.spritePalettes.setMasterIndex(41, palette: 0, index: 0)
+    ppu.background[column: 2, row: 0] = Tilemap.Cell(tile: solid, palette: 0)
+    ppu.sprites[0] = Sprite(x: 0, y: 0, tile: solid, palette: 0)
+    let frame = frameWithSpriteTiles(ppu)
+    #expect(rgba(frame, x: 0, y: 0) == rgba(MasterPalette.colors[40]))
+    #expect(rgba(frame, x: 16, y: 0) == rgba(MasterPalette.colors[0]))
+}
+
+@Test func backgroundScrollDoesNotMoveSprites() {
+    var unscrolled = PPU()
+    unscrolled.sprites[0] = Sprite(x: 40, y: 60, tile: cornerTriangle, palette: 7)
+    var scrolled = unscrolled
+    scrolled.scrollX = 13
+    scrolled.scrollY = 5
+    #expect(frameWithSpriteTiles(scrolled) == frameWithSpriteTiles(unscrolled))
+}
