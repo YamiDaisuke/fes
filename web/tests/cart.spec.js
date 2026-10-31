@@ -15,3 +15,23 @@ test("the test cart's runtime error appears with its line on frame 120", async (
     "main.lua:8: attempt to perform arithmetic on a nil value (global 'speed')\nstack traceback:",
   );
 });
+
+test("a long error wraps and scrolls inside a bar that stays above the controls", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = `error(string.rep("A", 3000) .. string.rep("\\nline", 200), 0)`;
+  });
+  await openPaused(page);
+  await runFrames(page, 1);
+
+  const bar = await page.locator("#cart-error").evaluate((bar) => ({
+    scrollWidth: bar.scrollWidth,
+    clientWidth: bar.clientWidth,
+    scrollHeight: bar.scrollHeight,
+    clientHeight: bar.clientHeight,
+    bottom: bar.getBoundingClientRect().bottom,
+  }));
+  const controlsTop = await page.locator("#pad").evaluate((pad) => pad.getBoundingClientRect().top);
+  expect(bar.scrollWidth).toBe(bar.clientWidth);
+  expect(bar.scrollHeight).toBeGreaterThan(bar.clientHeight);
+  expect(bar.bottom).toBeLessThan(controlsTop);
+});
