@@ -18,6 +18,9 @@ const recursingCarts = {
   "nested pcall": `
     local function f() local ok, message = pcall(f) error(message, 0) end
     function _update() f() end`,
+  "load calling a reader that loads again": `
+    local function f() local chunk, message = load(function() f() return nil end) if not chunk then error(message, 0) end end
+    function _update() f() end`,
 };
 
 for (const [name, mainLua] of Object.entries(recursingCarts)) {
