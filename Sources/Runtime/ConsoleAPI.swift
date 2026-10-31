@@ -1,7 +1,7 @@
 import CLua
 import Console
 
-// Bindings read every argument before fetching the cart: a failed check longjmps past Swift releases (docs/decisions/011-console-api-v0.md).
+// Read every argument, then fetch the cart; nothing after the fetch may raise: a Lua error longjmps past Swift releases (docs/decisions/011-console-api-v0.md).
 func registerConsoleAPI(_ state: OpaquePointer, cart: RunningCart) {
     let bindings: [(String, lua_CFunction)] = [
         ("cls", cls),
@@ -82,7 +82,8 @@ private func mset(_ state: OpaquePointer?) -> Int32 {
 private func mget(_ state: OpaquePointer?) -> Int32 {
     let column = checkWrappedInteger(state, 1)
     let row = checkWrappedInteger(state, 2)
-    let cell = runningCart(state).ppu.background[column: column, row: row]
+    let cart = runningCart(state)
+    let cell = cart.ppu.background[column: column, row: row]
     lua_pushinteger(state, lua_Integer(cell.tile))
     lua_pushinteger(state, lua_Integer(cell.palette))
     return 2
@@ -101,7 +102,7 @@ private func checkFlooredNumber(_ state: OpaquePointer?, _ index: Int32) -> Doub
     let number = luaL_checknumber(state, index)
     guard number.isFinite else {
         // luaL_argerror longjmps to the cart's lua_pcall, so the return below never runs.
-        luaL_argerror(state, index, "finite number expected")
+        luaL_argerror(state, index, cString("finite number expected"))
         return 0
     }
     return number.rounded(.down)
@@ -124,6 +125,11 @@ private func optionalBoolean(_ state: OpaquePointer?, _ index: Int32) -> Bool {
 
 private func checkButton(_ state: OpaquePointer?, _ index: Int32) -> Button? {
     Int(exactly: luaL_checknumber(state, index).rounded(.down)).flatMap { Button(rawValue: $0) }
+}
+
+// An implicit String-to-C conversion allocates at -Onone, and the longjmp skips its release.
+private func cString(_ text: StaticString) -> UnsafePointer<CChar> {
+    UnsafeRawPointer(text.utf8Start).assumingMemoryBound(to: CChar.self)
 }
 
 private func isAbsent(_ state: OpaquePointer?, _ index: Int32) -> Bool {
