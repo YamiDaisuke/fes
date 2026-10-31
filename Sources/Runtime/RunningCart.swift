@@ -12,7 +12,8 @@ public final class RunningCart {
     private(set) var input = Input()
     private let state: OpaquePointer
 
-    public init(mainLua: String) {
+    public init(mainLua: String, ppu: PPU = PPU()) {
+        self.ppu = ppu
         state = luaL_newstate()!
         openSandbox(state)
         registerConsoleAPI(state, cart: self)
