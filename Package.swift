@@ -33,6 +33,7 @@ let package = Package(
                 .product(name: "JavaScriptKit", package: "JavaScriptKit"),
             ],
             linkerSettings: [
+                // wasm-ld rejects a --global-base below the stack size under --stack-first, and the Swift driver otherwise passes 4096.
                 .unsafeFlags([
                     "-Xlinker", "-z", "-Xlinker", "stack-size=\(wasmStackBytes)",
                     "-Xlinker", "--stack-first", "-Xlinker", "--global-base=\(wasmStackBytes)",
