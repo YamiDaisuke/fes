@@ -2,6 +2,9 @@ public struct TestScene {
     public private(set) var ppu = PPU()
 
     private let indicatorTile = 0
+    private let indicatorRowX = 50
+    private let indicatorRowY = 8
+    private let indicatorSpacing = 12
     private let heldPalette = 0
     private let pressedPalette = 1
 
@@ -32,7 +35,7 @@ public struct TestScene {
         ppu.scrollY = frame
         for button in Button.allCases {
             let palette = input.wasPressedThisFrame(button) ? pressedPalette : heldPalette
-            let indicator = Sprite(x: 50 + button.rawValue * 12, y: 8, tile: indicatorTile, palette: palette)
+            let indicator = Sprite(x: indicatorRowX + button.rawValue * indicatorSpacing, y: indicatorRowY, tile: indicatorTile, palette: palette)
             ppu.sprites[button.rawValue] = input.isHeld(button) ? indicator : nil
         }
         ppu.render(into: &framebuffer)
