@@ -47,6 +47,8 @@ swift test
 npm run build && npm run test:browser
 ```
 
-`swift test` runs the Swift core tests natively. `test:browser` serves `web/dist/` and runs a Playwright smoke test in WebKit with an iPad profile.
+`swift test` runs the Swift core tests natively. Rendering tests compare frames with the PNGs in `Tests/ConsoleTests/Golden/`; a mismatch writes `<name>.actual.png` beside the golden so you can compare the two. To re-record goldens after an intended change, run `FES_RECORD_GOLDENS=1 swift test` (it fails on purpose), check the new PNGs and commit them.
+
+`test:browser` serves `web/dist/` and runs a Playwright smoke test in WebKit with an iPad profile.
 
 CI runs both on every PR and on `main`, then publishes to GitHub Pages: `main` at the site root, each PR at `/pr/<number>/`, linked from a comment on the PR. See `docs/decisions/003-ci-and-pr-previews.md`.
