@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "scripts/build.sh",
-    "serve": "esbuild --servedir=web/dist --serve=8000"
+    "serve": "esbuild --servedir=web/dist --serve=8000",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@bjorn3/browser_wasi_shim": "0.3.0"
