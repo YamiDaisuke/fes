@@ -17,7 +17,13 @@ const context = canvas.getContext("2d");
 listenForInput(document.getElementById("pad"));
 
 function drawFrame() {
-  const address = instance.exports.frame(buttonsForFrame());
+  let address;
+  try {
+    address = instance.exports.frame(buttonsForFrame());
+  } catch (error) {
+    document.getElementById("cart-error").textContent = `FES stopped: ${error}\nReload the page to start again.`;
+    throw error;
+  }
   // Memory growth detaches the old buffer, so take a fresh view every frame.
   const pixels = new Uint8ClampedArray(instance.exports.memory.buffer, address, canvas.width * canvas.height * 4);
   context.putImageData(new ImageData(pixels, canvas.width, canvas.height), 0, 0);
