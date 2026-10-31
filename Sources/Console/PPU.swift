@@ -1,30 +1,56 @@
 public struct PPU {
-    public var tiles = TileBank()
-    public var palettes = PaletteBank()
+    public var backgroundTiles = TileBank()
+    public var backgroundPalettes = PaletteBank()
+    public var spriteTiles = TileBank()
+    public var spritePalettes = PaletteBank()
     public var background = Tilemap()
+    public var sprites = SpriteTable()
     public var scrollX = 0
     public var scrollY = 0
 
     public init() {}
 
     public func render(into framebuffer: inout Framebuffer) {
-        let mapWidthMask = Tilemap.columns * TileBank.tileSize - 1
-        let mapHeightMask = Tilemap.rows * TileBank.tileSize - 1
-        let wrappedScrollX = scrollX & mapWidthMask
-        let wrappedScrollY = scrollY & mapHeightMask
         for y in 0..<Screen.height {
-            for x in 0..<Screen.width {
-                let mapX = (x + wrappedScrollX) & mapWidthMask
-                let mapY = (y + wrappedScrollY) & mapHeightMask
-                framebuffer.setPixel(x: x, y: y, to: backgroundColor(mapX: mapX, mapY: mapY))
-            }
+            let backgroundIndices = drawBackground(scanline: y, into: &framebuffer)
+            drawSprites(scanline: y, over: backgroundIndices, into: &framebuffer)
         }
     }
 
-    private func backgroundColor(mapX: Int, mapY: Int) -> Color {
+    private func drawBackground(scanline y: Int, into framebuffer: inout Framebuffer) -> [Int] {
         let size = TileBank.tileSize
-        let cell = background[column: mapX / size, row: mapY / size]
-        let index = tiles.colorIndex(tile: cell.tile, x: mapX % size, y: mapY % size)
-        return palettes.color(palette: cell.palette, index: index)
+        let mapWidthMask = Tilemap.columns * size - 1
+        let mapHeightMask = Tilemap.rows * size - 1
+        let mapY = (y + (scrollY & mapHeightMask)) & mapHeightMask
+        var colorIndices: [Int] = []
+        colorIndices.reserveCapacity(Screen.width)
+        for x in 0..<Screen.width {
+            let mapX = (x + (scrollX & mapWidthMask)) & mapWidthMask
+            let cell = background[column: mapX / size, row: mapY / size]
+            let index = backgroundTiles.colorIndex(tile: cell.tile, x: mapX % size, y: mapY % size)
+            framebuffer.setPixel(x: x, y: y, to: backgroundPalettes.color(palette: cell.palette, index: index))
+            colorIndices.append(index)
+        }
+        return colorIndices
+    }
+
+    private func drawSprites(scanline y: Int, over backgroundIndices: [Int], into framebuffer: inout Framebuffer) {
+        let onScanline = sprites.sprites(onScanline: y)
+        let behind = onScanline.filter { $0.isBehindBackground }
+        let front = onScanline.filter { !$0.isBehindBackground }
+        let drawOrder = behind.reversed() + front.reversed()
+        let lastPixel = TileBank.tileSize - 1
+        for sprite in drawOrder {
+            let row = sprite.isFlippedVertically ? lastPixel - (y - sprite.y) : y - sprite.y
+            for column in 0...lastPixel {
+                let x = sprite.x + column
+                if x < 0 || x >= Screen.width { continue }
+                if sprite.isBehindBackground && backgroundIndices[x] != 0 { continue }
+                let tileX = sprite.isFlippedHorizontally ? lastPixel - column : column
+                let index = spriteTiles.colorIndex(tile: sprite.tile, x: tileX, y: row)
+                if index == 0 { continue }
+                framebuffer.setPixel(x: x, y: y, to: spritePalettes.color(palette: sprite.palette, index: index))
+            }
+        }
     }
 }

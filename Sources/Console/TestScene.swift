@@ -7,7 +7,7 @@ public struct TestScene {
                 for x in 0..<8 {
                     let isGridLine = x == 0 || y == 0
                     let color = isGridLine ? 0 : (x < y ? tile : 7 - tile)
-                    ppu.tiles.setPixel(tile: tile, x: x, y: y, color: color)
+                    ppu.backgroundTiles.setPixel(tile: tile, x: x, y: y, color: color)
                 }
             }
         }
