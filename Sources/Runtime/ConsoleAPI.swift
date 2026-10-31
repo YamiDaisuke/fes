@@ -1,7 +1,7 @@
 import CLua
 import Console
 
-// Every binding reads all its arguments before fetching the cart: a failed check longjmps past Swift releases, docs/decisions/011-console-api-v0.md
+// Bindings read every argument before fetching the cart: a failed check longjmps past Swift releases (docs/decisions/011-console-api-v0.md).
 func registerConsoleAPI(_ state: OpaquePointer, cart: RunningCart) {
     let bindings: [(String, lua_CFunction)] = [
         ("cls", cls),
