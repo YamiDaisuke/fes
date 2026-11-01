@@ -36,6 +36,8 @@ The calls don't draw. They write the console's hardware state, and the PPU rende
 
 Each frame's `_update` + `_draw` may run 500,000 Lua instructions (placeholder), and the main chunk + `_init` together get the same. Going over stops the cart with `main.lua:N: CPU budget exceeded`, and `pcall` cannot catch it. Lua memory is capped at 8 MiB (placeholder). An allocation over the cap is a memory error: `pcall` sees `not enough memory`, and an uncaught one shows `memory budget exceeded` with no line. Recursion that goes too deep shows `stack overflow`.
 
+Two things Lua allows are refused, because Lua turns the instruction count off while they run, so a loop in them could freeze the console. `setmetatable` raises `main.lua:N: __gc metamethods are not allowed` for a metatable with any `__gc` field, so carts have no finalizers; adding `__gc` to a metatable after `setmetatable` does nothing, as in standard Lua. Once the budget is spent, `xpcall` no longer calls its message handler: it returns `false` and the budget error unchanged, and the cart stops at its next instruction.
+
 ## cls
 
 `cls()`
