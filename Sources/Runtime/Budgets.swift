@@ -65,3 +65,22 @@ private func allocateWithinBudget(
     meter.pointee.bytesInUse = meter.pointee.bytesInUse - oldBytes + newBytes
     return resized
 }
+
+func xpcallWithinBudget(_ state: OpaquePointer?) -> Int32 {
+    let xpcall = lua_tocfunction(state, firstUpvalueIndex)!
+    luaL_checktype(state, 2, LUA_TFUNCTION)
+    lua_pushvalue(state, 2)
+    lua_pushcclosure(state, handleUnlessOutOfInstructions, 1)
+    lua_copy(state, -1, 2)
+    lua_settop(state, -2)
+    return xpcall(state)
+}
+
+private func handleUnlessOutOfInstructions(_ state: OpaquePointer?) -> Int32 {
+    // Lua turns hooks off inside the hook, so a handler called for the budget error would run unmetered (decision 012).
+    guard meter(state).pointee.instructionsLeft > 0 else { return 1 }
+    lua_pushvalue(state, firstUpvalueIndex)
+    lua_pushvalue(state, 1)
+    lua_callk(state, 1, 1, 0, nil)
+    return 1
+}

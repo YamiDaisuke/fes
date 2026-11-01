@@ -89,3 +89,52 @@ import Testing
     cart.runFrame(input: Input())
     #expect(cart.error == nil)
 }
+
+@Test func setmetatableRefusesAFinalizerAtTheCartsLine() {
+    let cart = RunningCart(mainLua: """
+        local mt = {}
+        rawset(mt, "__gc", function() while true do end end)
+        setmetatable({}, mt)
+        """)
+    #expect(firstErrorLine(cart) == "main.lua:3: __gc metamethods are not allowed")
+}
+
+@Test func setmetatableRefusesAPlaceholderFinalizerThatCouldBeSwappedLater() {
+    let cart = RunningCart(mainLua: "setmetatable({}, {__gc = false})")
+    #expect(firstErrorLine(cart) == "main.lua:1: __gc metamethods are not allowed")
+}
+
+@Test func finalizerAddedAfterSetmetatableNeverRuns() {
+    let cart = RunningCart(mainLua: """
+        local function loop() while true do end end
+        local mt = {}
+        local t = setmetatable({}, mt)
+        mt.__gc = loop
+        getmetatable("").__gc = loop
+        t = nil
+        collectgarbage()
+        """)
+    #expect(cart.error == nil)
+}
+
+@Test(arguments: [
+    "xpcall(function() while true do end end, function(m) while true do end end)",
+    "xpcall(error, function(m) while true do end end)",
+])
+func xpcallHandlerCannotRunOnceTheBudgetIsSpent(update: String) {
+    let cart = RunningCart(mainLua: "function _update() \(update) end")
+    cart.runFrame(input: Input())
+    #expect(firstErrorLine(cart) == "main.lua:1: CPU budget exceeded")
+}
+
+@Test func xpcallUnderBudgetCallsTheHandlerPassesArgumentsAndYields() {
+    let cart = RunningCart(mainLua: """
+        local ok, m = xpcall(error, function(m) return m .. "!" end, "boom", 0)
+        if ok or m ~= "boom!" then error("handler not called", 0) end
+        local ok, a, b = xpcall(function(x, y) return y, x end, tostring, 1, 2)
+        if not ok or a ~= 2 or b ~= 1 then error("results lost", 0) end
+        local step = coroutine.wrap(function() xpcall(coroutine.yield, tostring, "yielded") end)
+        if step() ~= "yielded" then error("yield lost", 0) end
+        """)
+    #expect(cart.error == nil)
+}
