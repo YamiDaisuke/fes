@@ -22,7 +22,7 @@ public final class RunningCart {
         lua_pushcclosure(state, appendTraceback, 0)
         lua_getglobal(state, "_G")
 
-        meter.pointee.instructionsLeft = Budgets.instructionsPerFrame
+        meter.pointee.startPeriod()
         startCountingInstructions(state)
         meter.pointee.isMemoryCapped = true
         let loadStatus = luaL_loadbufferx(state, mainLua, mainLua.utf8.count, "=main.lua", "t")
@@ -42,7 +42,7 @@ public final class RunningCart {
 
     public func runFrame(input: Input) {
         self.input = input
-        meter.pointee.instructionsLeft = Budgets.instructionsPerFrame
+        meter.pointee.startPeriod()
         callGlobal("_update")
         callGlobal("_draw")
     }
@@ -64,6 +64,8 @@ public final class RunningCart {
         meter.pointee.isMemoryCapped = false
         if status != LUA_OK {
             stop(status: status)
+        } else if meter.pointee.instructionsLeft <= 0 {
+            error = "CPU budget exceeded"
         }
     }
 

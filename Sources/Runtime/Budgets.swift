@@ -10,23 +10,34 @@ import WASILibc
 public enum Budgets {
     public static let instructionsPerFrame = 500_000
     public static let memoryBytes: UInt = 8 << 20
+    public static let wallTimePerPeriod: Duration = .milliseconds(250)
 }
 
 struct BudgetMeter {
     var instructionsLeft = 0
+    var deadline = ContinuousClock.now
+    var hookEventsUntilClockCheck = hookEventsPerClockCheck
     var bytesInUse: UInt = 0
     var isMemoryCapped = false
+
+    mutating func startPeriod() {
+        instructionsLeft = Budgets.instructionsPerFrame
+        deadline = .now + Budgets.wallTimePerPeriod
+    }
 }
 
 // A small step, not the whole budget: each coroutine keeps its own hook counter (decision 012).
 private let instructionsPerHookCall: Int32 = 1000
+
+// Each clock read goes through the WASI shim's clock_time_get, which builds a BigInt and a DataView, too slow for every call.
+private let hookEventsPerClockCheck = 16
 
 func newStateWithinBudget(meter: UnsafeMutablePointer<BudgetMeter>) -> OpaquePointer {
     lua_newstate(allocateWithinBudget, meter)!
 }
 
 func startCountingInstructions(_ state: OpaquePointer) {
-    lua_sethook(state, chargeInstructions, LUA_MASKCOUNT, instructionsPerHookCall)
+    lua_sethook(state, enforceCPUBudget, LUA_MASKCOUNT | LUA_MASKCALL, instructionsPerHookCall)
 }
 
 private func meter(_ state: OpaquePointer?) -> UnsafeMutablePointer<BudgetMeter> {
@@ -35,15 +46,37 @@ private func meter(_ state: OpaquePointer?) -> UnsafeMutablePointer<BudgetMeter>
     return data!.assumingMemoryBound(to: BudgetMeter.self)
 }
 
-private func chargeInstructions(_ state: OpaquePointer?, _ debug: UnsafeMutablePointer<lua_Debug>?) {
+private func enforceCPUBudget(_ state: OpaquePointer?, _ debug: UnsafeMutablePointer<lua_Debug>?) {
     let meter = meter(state)
-    meter.pointee.instructionsLeft -= Int(instructionsPerHookCall)
+    let isCountEvent = debug!.pointee.event == LUA_HOOKCOUNT
+    if isCountEvent {
+        meter.pointee.instructionsLeft -= Int(instructionsPerHookCall)
+    }
+    meter.pointee.hookEventsUntilClockCheck -= 1
+    if meter.pointee.hookEventsUntilClockCheck == 0 {
+        meter.pointee.hookEventsUntilClockCheck = hookEventsPerClockCheck
+        if ContinuousClock.now >= meter.pointee.deadline {
+            meter.pointee.instructionsLeft = 0
+        }
+    }
     guard meter.pointee.instructionsLeft <= 0 else { return }
-    lua_sethook(state, chargeInstructions, LUA_MASKCOUNT, 1)
-    luaL_where(state, 0)
+    // A call event fires before the callee runs, so level 1 is the line that made the call.
+    pushWhereOfNearestLine(state, fromLevel: isCountEvent ? 0 : 1)
     lua_pushstring(state, cString("CPU budget exceeded"))
     lua_concat(state, 2)
     _ = lua_error(state)
+}
+
+// Library C code calls C functions too, such as string.rep closing its buffer, so the caller may have no line.
+private func pushWhereOfNearestLine(_ state: OpaquePointer?, fromLevel firstLevel: Int32) {
+    var level = firstLevel
+    var frame = lua_Debug()
+    while lua_getstack(state, level, &frame) != 0 {
+        lua_getinfo(state, "l", &frame)
+        if frame.currentline > 0 { break }
+        level += 1
+    }
+    luaL_where(state, level)
 }
 
 private func allocateWithinBudget(
