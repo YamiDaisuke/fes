@@ -2,12 +2,13 @@ import Console
 import Foundation
 import Testing
 
-func expectFrameMatchesGolden(
+public func expectFrameMatchesGolden(
     _ frame: Framebuffer,
     named name: String,
+    filePath: StaticString = #filePath,
     sourceLocation: SourceLocation = #_sourceLocation
 ) throws {
-    let goldenDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Golden")
+    let goldenDirectory = URL(fileURLWithPath: "\(filePath)").deletingLastPathComponent().appendingPathComponent("Golden")
     let goldenURL = goldenDirectory.appendingPathComponent("\(name).png")
     let actualURL = goldenDirectory.appendingPathComponent("\(name).actual.png")
     let png = Data(pngData(rgba: frame.rgba, width: Screen.width, height: Screen.height))

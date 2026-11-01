@@ -36,7 +36,7 @@ This compiles the Swift package to `App.wasm` and bundles the page into `web/dis
 npm run serve
 ```
 
-Open http://localhost:8000/ in Safari. You should see the scrolling test scene, scaled up by a whole number to fit the window, with the touch controller over it. After about 2 seconds the embedded test cart hits its deliberate error, and a dark bar at the top shows `main.lua:8: attempt to perform arithmetic on a nil value (global 'speed')` and its stack traceback. The scene keeps running underneath.
+Open http://localhost:8000/ in Safari. You should see the demo cart, scaled up by a whole number to fit the window, with the touch controller over it: a sprite in a walled room of bricks. The D-pad or the arrow keys walk it, the view follows, and A (or Z) changes its colors.
 
 To try it on the iPad, use the Network URL that esbuild prints (the iPad must be on the same Wi-Fi).
 
@@ -47,7 +47,7 @@ swift test
 npm run build && npm run test:browser
 ```
 
-`swift test` runs the Swift core tests natively. Rendering tests compare frames with the PNGs in `Tests/ConsoleTests/Golden/`; a mismatch writes `<name>.actual.png` beside the golden so you can compare the two. To re-record goldens after an intended change, run `FES_RECORD_GOLDENS=1 swift test` (it fails on purpose), check the new PNGs and commit them.
+`swift test` runs the Swift core tests natively. Rendering tests compare frames with the PNGs in each test target's `Golden/` folder (`Tests/ConsoleTests/Golden/`, `Tests/RuntimeTests/Golden/`); a mismatch writes `<name>.actual.png` beside the golden so you can compare the two. To re-record goldens after an intended change, run `FES_RECORD_GOLDENS=1 swift test` (it fails on purpose), check the new PNGs and commit them.
 
 `test:browser` serves `web/dist/` and runs a Playwright smoke test in WebKit with an iPad profile.
 

@@ -1,8 +1,9 @@
 import Console
+import GoldenImage
 import Testing
 
 private func sceneFrame(scrollX: Int, scrollY: Int) -> Framebuffer {
-    var ppu = TestScene().ppu
+    var ppu = ppuWithPatternBackground()
     ppu.scrollX = scrollX
     ppu.scrollY = scrollY
     var frame = Framebuffer()

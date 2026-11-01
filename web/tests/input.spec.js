@@ -3,21 +3,30 @@ import { openPaused, runFrames } from "./frames.js";
 
 const BUTTONS_IN_BIT_ORDER = ["left", "right", "up", "down", "a", "b", "start", "select"];
 
-async function litIndicators(page) {
-  return page.evaluate((names) => {
+const INDICATOR_CART = `
+function _draw()
+  cls()
+  for b = 0, 7 do
+    if btn(b) then spr(0, 50 + b * 12, 8, btnp(b) and 1 or 0) end
+  end
+end`;
+
+async function indicatorBoxes(page) {
+  return page.evaluate(() => {
     const context = document.getElementById("screen").getContext("2d");
-    const lit = {};
-    names.forEach((name, slot) => {
-      const box = context.getImageData(50 + slot * 12, 8, 8, 8).data;
-      const color = box.slice(0, 4).join(",");
-      let isSolid = true;
-      for (let i = 0; i < box.length; i += 4) {
-        if (box.slice(i, i + 4).join(",") !== color) isSolid = false;
-      }
-      if (isSolid) lit[name] = color;
-    });
-    return lit;
-  }, BUTTONS_IN_BIT_ORDER);
+    return Array.from({ length: 8 }, (_, slot) => context.getImageData(50 + slot * 12, 8, 8, 8).data.join(","));
+  });
+}
+
+let unlitBoxes;
+
+async function litIndicators(page) {
+  const boxes = await indicatorBoxes(page);
+  const lit = {};
+  BUTTONS_IN_BIT_ORDER.forEach((name, slot) => {
+    if (boxes[slot] !== unlitBoxes[slot]) lit[name] = boxes[slot];
+  });
+  return lit;
 }
 
 async function litNames(page) {
@@ -37,7 +46,10 @@ async function touch(page, type, buttons, pointerId) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript((mainLua) => { window.testCartMainLua = mainLua; }, INDICATOR_CART);
   await openPaused(page);
+  await runFrames(page, 1);
+  unlitBoxes = await indicatorBoxes(page);
 });
 
 test("each overlay button lights its own indicator for one frame when tapped", async ({ page }) => {
@@ -53,12 +65,12 @@ test("each overlay button lights its own indicator for one frame when tapped", a
 test("a held button shows its press frame, then stays held", async ({ page }) => {
   await touch(page, "pointerdown", "a", 1);
   await runFrames(page, 1);
-  const pressedColor = (await litIndicators(page)).a;
+  const pressedBox = (await litIndicators(page)).a;
   await runFrames(page, 1);
-  const heldColor = (await litIndicators(page)).a;
-  expect(pressedColor).toBeDefined();
-  expect(heldColor).toBeDefined();
-  expect(heldColor).not.toBe(pressedColor);
+  const heldBox = (await litIndicators(page)).a;
+  expect(pressedBox).toBeDefined();
+  expect(heldBox).toBeDefined();
+  expect(heldBox).not.toBe(pressedBox);
 
   await touch(page, "pointerup", "a", 1);
   await runFrames(page, 1);
@@ -99,8 +111,8 @@ const KEY_BUTTONS = {
   ArrowRight: "right",
   ArrowUp: "up",
   ArrowDown: "down",
-  KeyX: "a",
-  KeyZ: "b",
+  KeyZ: "a",
+  KeyX: "b",
   Enter: "start",
   ShiftLeft: "select",
   ShiftRight: "select",
@@ -133,7 +145,7 @@ test("unmapped keys and Cmd shortcuts press nothing and keep their default actio
 
 test("losing focus releases held keys and fingers", async ({ page }) => {
   await page.keyboard.down("ArrowLeft");
-  await page.keyboard.down("KeyX");
+  await page.keyboard.down("KeyZ");
   await touch(page, "pointerdown", "right", 1);
   await runFrames(page, 2);
   expect(await litNames(page)).toEqual(["left", "right", "a"]);
