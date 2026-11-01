@@ -31,6 +31,32 @@ import Testing
     #expect(firstErrorLine(cart)?.hasSuffix("CPU budget exceeded") == true)
 }
 
+@Test(arguments: [
+    "function _update() return pcall(spin) end",
+    "return pcall(spin)",
+])
+func budgetErrorCaughtByATailCalledPcallStillStopsTheCart(tail: String) {
+    let cart = RunningCart(mainLua: "local function spin() while true do end end\n" + tail)
+    cart.runFrame(input: Input())
+    #expect(cart.error == "CPU budget exceeded")
+}
+
+@Test func oneCoroutineResumePerFrameCannotSwallowTheBudget() {
+    let cart = RunningCart(mainLua: """
+        function _update() coroutine.resume(coroutine.create(function() while true do end end)) end
+        """)
+    cart.runFrame(input: Input())
+    #expect(cart.error == "CPU budget exceeded")
+}
+
+@Test func heavyLibraryCallsInALoopStopAtTheDeadline() {
+    let cart = RunningCart(mainLua: """
+        function _update() for i = 1, 2000 do local s = string.rep("x", 1000000) end end
+        """)
+    cart.runFrame(input: Input())
+    #expect(firstErrorLine(cart) == "main.lua:1: CPU budget exceeded")
+}
+
 @Test func newCoroutinesDoNotGetAFreshBudget() {
     let cart = RunningCart(mainLua: """
         local function loop() while true do end end
@@ -124,7 +150,7 @@ import Testing
 func xpcallHandlerCannotRunOnceTheBudgetIsSpent(update: String) {
     let cart = RunningCart(mainLua: "function _update() \(update) end")
     cart.runFrame(input: Input())
-    #expect(firstErrorLine(cart) == "main.lua:1: CPU budget exceeded")
+    #expect(cart.error == "CPU budget exceeded")
 }
 
 @Test func xpcallUnderBudgetCallsTheHandlerPassesArgumentsAndYields() {
