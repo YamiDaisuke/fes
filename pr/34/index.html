@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FES</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; }
+    body { display: grid; place-items: center; overflow: hidden; }
+    canvas { image-rendering: pixelated; }
+    #pad {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      display: flex; justify-content: space-between; align-items: end;
+      padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+      pointer-events: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #pad > div { pointer-events: auto; }
+    #pad button {
+      border: 0; padding: 0; color: #fff; font: 600 16px system-ui, sans-serif;
+      background: rgb(255 255 255 / 0.25);
+    }
+    #dpad { display: grid; grid-template: repeat(3, 56px) / repeat(3, 56px); }
+    #dpad button { border-radius: 8px; }
+    #system { display: flex; gap: 16px; }
+    #system button { width: 88px; height: 32px; border-radius: 16px; }
+    #face { display: flex; gap: 16px; }
+    #face button { width: 72px; height: 72px; border-radius: 50%; }
+    #cart-error {
+      position: fixed; top: 0; left: 0; right: 0; margin: 0;
+      padding: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
+      color: #fff; background: rgb(0 0 0 / 0.75); font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+      max-height: 40vh; overflow: auto;
+    }
+    #cart-error:empty { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="screen" aria-label="FES screen"></canvas>
+  <pre id="cart-error" role="alert"></pre>
+  <div id="pad" role="group" aria-label="Controller">
+    <div id="dpad">
+      <div data-buttons="up left" aria-hidden="true"></div>
+      <button type="button" tabindex="-1" data-buttons="up" aria-label="Up">↑</button>
+      <div data-buttons="up right" aria-hidden="true"></div>
+      <button type="button" tabindex="-1" data-buttons="left" aria-label="Left">←</button>
+      <div></div>
+      <button type="button" tabindex="-1" data-buttons="right" aria-label="Right">→</button>
+      <div data-buttons="down left" aria-hidden="true"></div>
+      <button type="button" tabindex="-1" data-buttons="down" aria-label="Down">↓</button>
+      <div data-buttons="down right" aria-hidden="true"></div>
+    </div>
+    <div id="system">
+      <button type="button" tabindex="-1" data-buttons="select">Select</button>
+      <button type="button" tabindex="-1" data-buttons="start">Start</button>
+    </div>
+    <div id="face">
+      <button type="button" tabindex="-1" data-buttons="b">B</button>
+      <button type="button" tabindex="-1" data-buttons="a">A</button>
+    </div>
+  </div>
+  <script type="module" src="boot.js"></script>
+</body>
+</html>
