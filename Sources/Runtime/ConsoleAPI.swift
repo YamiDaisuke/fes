@@ -128,7 +128,7 @@ private func checkButton(_ state: OpaquePointer?, _ index: Int32) -> Button? {
 }
 
 // An implicit String-to-C conversion allocates at -Onone, and the longjmp skips its release.
-private func cString(_ text: StaticString) -> UnsafePointer<CChar> {
+func cString(_ text: StaticString) -> UnsafePointer<CChar> {
     UnsafeRawPointer(text.utf8Start).assumingMemoryBound(to: CChar.self)
 }
 
