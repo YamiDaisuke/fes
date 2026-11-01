@@ -4,6 +4,8 @@ import { openPaused, runFrames } from "./frames.js";
 const runawayCarts = [
   ["an infinite loop in _update", "function _update() while true do end end", "main.lua:1: CPU budget exceeded\nstack traceback:"],
   ["a __call cycle", "function _update() local t = {} setmetatable(t, {__call = t}) t() end", "main.lua:1: stack overflow"],
+  ["an endless __gc finalizer", "function _update() setmetatable({}, {__gc = function() while true do end end}) collectgarbage() end", "main.lua:1: __gc metamethods are not allowed"],
+  ["an endless xpcall handler", "function _update() xpcall(error, function() while true do end end) end", "main.lua:1: CPU budget exceeded\nstack traceback:"],
   ["a 2 GB string.rep", `function _update() s = string.rep("x", 2e9) end`, "memory budget exceeded"],
 ];
 
