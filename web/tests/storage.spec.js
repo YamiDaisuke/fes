@@ -13,6 +13,16 @@ async function saveAs(page, name) {
   await expect(page.locator("#cart-status")).toHaveText(`Saved ${name}.`);
 }
 
+async function loadExpectingQuestion(page, name, question) {
+  const questions = [];
+  page.once("dialog", (dialog) => {
+    questions.push(dialog.message());
+    dialog.dismiss();
+  });
+  await page.locator("#cart-list").getByRole("button", { name }).click();
+  await expect.poll(() => questions).toEqual([question]);
+}
+
 test("a saved cart's code runs when it is loaded on another page", async ({ context, page }) => {
   await page.addInitScript(() => {
     window.testCartMainLua = 'error("from saved cart")';
@@ -48,19 +58,40 @@ test("loading over unsaved code asks first, and cancelling keeps the edit", asyn
   const editor = page.locator(".cm-content");
   await editor.fill("-- edited");
 
-  const questions = [];
-  page.once("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.dismiss();
-  });
-  await page.locator("#cart-list").getByRole("button", { name: "Mine" }).click();
-  await expect.poll(() => questions).toEqual(["Discard unsaved changes to Mine?"]);
+  await loadExpectingQuestion(page, "Mine", "Discard unsaved changes to Mine?");
   await expect(editor).toHaveText("-- edited");
 
   page.once("dialog", (dialog) => dialog.accept());
   await page.locator("#cart-list").getByRole("button", { name: "Mine" }).click();
   await expect(page.locator("#cart-status")).toHaveText("Loaded Mine.");
   await expect(editor).toHaveText("-- saved");
+});
+
+test("loading over an edited boot cart asks first, even before any save on this page", async ({ context, page }) => {
+  await openBooted(page);
+  await saveAs(page, "Mine");
+
+  const secondPage = await context.newPage();
+  await openBooted(secondPage);
+  await secondPage.locator(".cm-content").fill("-- my edit to the demo");
+  await loadExpectingQuestion(secondPage, "Mine", "Discard unsaved changes to Demo?");
+  await expect(secondPage.locator(".cm-content")).toHaveText("-- my edit to the demo");
+});
+
+test("code typed while a save is running stays unsaved", async ({ page }) => {
+  await page.addInitScript(() => {
+    const close = FileSystemWritableFileStream.prototype.close;
+    FileSystemWritableFileStream.prototype.close = async function () {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return close.call(this);
+    };
+  });
+  await openBooted(page);
+  await page.locator("#cart-name").fill("Mine");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator(".cm-content").fill("-- typed during the save");
+  await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
+  await loadExpectingQuestion(page, "Mine", "Discard unsaved changes to Mine?");
 });
 
 test("a cart whose cart.json can't be read is listed as damaged, and choosing it names the file", async ({ page }) => {
