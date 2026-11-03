@@ -10,8 +10,10 @@ func keepUnsavedCodeCopy() {
         } else {
             _ = try storage.throwing.writeUnsavedCode!(UnsavedCode(folder: cartFolder, name: cart.name, mainLua: cart.mainLua).text)
         }
+    } catch let error as JSException {
+        showStatus("Can't keep a copy of unsaved code: \(error.thrownValue)")
     } catch {
-        showStatus("Can't keep a copy of unsaved code: \((error as! JSException).thrownValue)")
+        showStatus("Can't keep a copy of unsaved code: \(error)")
     }
 }
 
