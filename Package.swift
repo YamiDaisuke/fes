@@ -8,6 +8,7 @@ let luaUserHeader = "-DLUA_USER_H=\"../fes_lua_user.h\""
 
 let package = Package(
     name: "FES",
+    platforms: [.macOS(.v13)],
     dependencies: [
         .package(url: "https://github.com/swiftwasm/JavaScriptKit", exact: "0.61.0"),
     ],
