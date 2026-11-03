@@ -1,4 +1,4 @@
-public struct Tilemap {
+public struct Tilemap: Equatable {
     public static let columns = 32
     public static let rows = 32
 
