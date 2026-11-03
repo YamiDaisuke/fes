@@ -19,3 +19,4 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - CPU and memory errors give no hint of which budget number was hit or how close the cart came: there is no usage display yet; revisit with the owner's limits.
 - Saving a cart writes its files one at a time (cart.json last), so a failure partway leaves a mix of new and old files in the folder: OPFS has no multi-file transaction or portable directory move (decision 014); revisit with M6's content-addressed store.
 - The recovery copy holds only main.lua and only one cart per origin: the code editor is the only editor and M6 brings history; revisit in M3 when tiles and maps become editable.
+- Code typed before the restore prompt shows is replaced without asking when the user accepts it (T13b QA-2): the window is the OPFS cart listing at boot, a few milliseconds on an iPad; revisit if anyone hits it.
