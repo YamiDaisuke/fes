@@ -28,7 +28,7 @@ import Testing
         end
         """)
     cart.runFrame(input: Input())
-    #expect(firstErrorLine(cart)?.hasSuffix("CPU budget exceeded") == true)
+    #expect(firstErrorLine(cart) == "main.lua:2: CPU budget exceeded")
 }
 
 @Test(arguments: [
