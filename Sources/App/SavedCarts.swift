@@ -32,7 +32,7 @@ func startSavedCarts() {
     }
 }
 
-func saveCart() async {
+private func saveCart() async {
     let name = nameInput.value.string ?? ""
     if let problem = nameProblem(name) {
         showStatus("Can't save: \(problem)")
@@ -56,7 +56,7 @@ func saveCart() async {
     await refreshCartList()
 }
 
-func refreshCartList() async {
+private func refreshCartList() async {
     let folders: [String]
     do {
         folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { $0.string! }
@@ -82,7 +82,7 @@ func refreshCartList() async {
     }
 }
 
-func loadCart(folder: String) async {
+private func loadCart(folder: String) async {
     var files: [String: String] = [:]
     for file in Cart.fileNames {
         do {
