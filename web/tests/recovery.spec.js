@@ -23,6 +23,7 @@ function recordDialogs(page, answer) {
 
 async function reloadUntilCartsListed(page) {
   await page.reload();
+  // FES offers the copy in the same microtask run that draws the cart list.
   await expect(page.locator("#cart-list button")).not.toHaveCount(0);
 }
 

@@ -26,6 +26,7 @@ func startSavedCarts() {
     showCartName()
     _ = saveButton.addEventListener("click", saveClicked)
     _ = cartList.addEventListener("click", cartListClicked)
+    // Read before the first await, so code typed while the carts are listed can't replace the copy before it is offered.
     let unsavedCodeText = readUnsavedCodeText()
     Task {
         _ = try? await awaitStorage(storage.requestPersistentStorage())
