@@ -23,9 +23,10 @@ nonisolated(unsafe) private let cartListClicked = JSClosure { arguments in
 }
 
 func startSavedCarts() {
-    nameInput.value = .string(cart.name)
+    showCartName()
     _ = saveButton.addEventListener("click", saveClicked)
     _ = cartList.addEventListener("click", cartListClicked)
+    let unsavedCodeText = readUnsavedCodeText()
     Task {
         _ = try? await awaitStorage(storage.requestPersistentStorage())
         do {
@@ -34,6 +35,7 @@ func startSavedCarts() {
             saveButton.disabled = .boolean(true)
             showStatus("Saving is unavailable (Private Browsing?)")
         }
+        await offerUnsavedCode(unsavedCodeText)
     }
 }
 
@@ -60,6 +62,7 @@ private func saveCart() async {
         return
     }
     lastSavedCart = saving
+    keepUnsavedCodeCopy()
     showStatus("Saved \(name).")
     try? await refreshCartList()
 }
@@ -87,28 +90,42 @@ private func loadCart(folder: String) async {
     if cart != lastSavedCart && JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") != .boolean(true) {
         return
     }
+    guard let loaded = await readSavedCart(folder: folder) else {
+        return
+    }
+    openCart(loaded, folder: folder)
+    showStatus("Loaded \(loaded.name).")
+}
+
+func readSavedCart(folder: String) async -> Cart? {
     var files: [String: String] = [:]
     for file in Cart.fileNames {
         do {
             files[file] = try await awaitStorage(storage.readCartFile(folder, file)).string
         } catch {
             showStatus("Can't read \(file): \(error.thrownValue)")
-            return
+            return nil
         }
     }
-    let loaded: Cart
     do {
-        loaded = try Cart(files: files)
+        return try Cart(files: files)
     } catch {
         showStatus("Can't load: \(error)")
-        return
+        return nil
     }
-    cart = loaded
-    lastSavedCart = loaded
+}
+
+func openCart(_ opened: Cart, folder: String) {
+    cart = opened
+    lastSavedCart = opened
     cartFolder = folder
-    showCodeInEditor(loaded.mainLua)
-    nameInput.value = .string(loaded.name)
-    showStatus("Loaded \(loaded.name).")
+    showCodeInEditor(opened.mainLua)
+    showCartName()
+    keepUnsavedCodeCopy()
+}
+
+func showCartName() {
+    nameInput.value = .string(cart.name)
 }
 
 private func savedCartName(folder: String) async -> String? {
@@ -127,6 +144,6 @@ private func newFolderName() -> String {
     return String(repeating: "0", count: 16 - digits.count) + digits
 }
 
-private func showStatus(_ message: String) {
+func showStatus(_ message: String) {
     cartStatus.textContent = .string(message)
 }

@@ -11,6 +11,7 @@ nonisolated(unsafe) private let codeEditor = JSObject.global.fesCodeEditor
 
 nonisolated(unsafe) private let codeChanged = JSClosure { arguments in
     cart.mainLua = arguments[0].string!
+    keepUnsavedCodeCopy()
     return .undefined
 }
 

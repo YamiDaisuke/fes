@@ -38,3 +38,15 @@ export async function writeCartFile(folder, name, text) {
 export async function requestPersistentStorage() {
   return navigator.storage.persist();
 }
+
+export function readUnsavedCode() {
+  return localStorage.getItem("fes-unsaved-code");
+}
+
+export function writeUnsavedCode(text) {
+  localStorage.setItem("fes-unsaved-code", text);
+}
+
+export function removeUnsavedCode() {
+  localStorage.removeItem("fes-unsaved-code");
+}
