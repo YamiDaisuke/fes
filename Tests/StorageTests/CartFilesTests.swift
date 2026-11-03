@@ -124,3 +124,22 @@ private func refusal(cartJSON: String) -> String? {
     #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \" \\t \"}") == "cart.json: the name is empty")
 }
 
+
+@Test func nameLengthIsCountedInCharactersUpToSixtyFour() throws {
+    let accentedE = "e\u{301}"
+    var cart = sampleCart()
+    cart.name = String(repeating: accentedE, count: 64)
+    #expect(try Cart(files: cart.files).name == cart.name)
+    cart.name += accentedE
+    #expect(refusal(cart.files) == "cart.json: the name is longer than 64 characters")
+}
+
+@Test func nameWithALineBreakIsRefused() {
+    #expect(
+        refusal(cartJSON: "{\"format\": 1, \"name\": \"a\\nb\"}")
+            == "cart.json: the name contains a line break or control character")
+}
+
+@Test func formatBelowOneIsRefused() {
+    #expect(refusal(cartJSON: "{\"format\": 0, \"name\": \"Room\"}") == "cart.json: format 0 is not valid")
+}
