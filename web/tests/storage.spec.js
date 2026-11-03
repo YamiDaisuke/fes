@@ -12,9 +12,9 @@ test("a saved cart's code runs when it is loaded on another page", async ({ cont
   });
   await openBooted(page);
   await page.locator("#cart-name").fill("Saved");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Saved.");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-list button")).toHaveCount(1);
 
   const secondPage = await context.newPage();
@@ -28,7 +28,7 @@ test("a saved cart's code runs when it is loaded on another page", async ({ cont
 test("an empty name is refused and nothing is saved", async ({ page }) => {
   await openBooted(page);
   await page.locator("#cart-name").fill("  ");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Can't save: the name is empty");
   await page.reload();
   await expect(page.locator("#cart-status")).toBeEmpty();
@@ -38,7 +38,7 @@ test("an empty name is refused and nothing is saved", async ({ page }) => {
 test("loading a cart with a damaged map names the file and line and keeps the current cart", async ({ page }) => {
   await openBooted(page);
   await page.locator("#cart-name").fill("Room");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Room.");
   await page.evaluate(async () => {
     const [folder] = await fesStorage.listCartFolders();
@@ -63,7 +63,7 @@ ephemeralTest("without OPFS saving is unavailable and the console still boots cl
   await page.goto("/");
 
   await expect(page.locator("#cart-status")).toHaveText("Saving is unavailable (Private Browsing?)");
-  await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Save", exact: true })).toBeDisabled();
   await expect
     .poll(() =>
       page.evaluate(() => {
