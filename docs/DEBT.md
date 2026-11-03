@@ -7,7 +7,7 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - Background tilemap is a fixed 32×32 cells: map dimensions are a SPEC open decision the owner takes in M4; revisit then (change Tilemap.columns/rows, keep powers of two, re-record goldens).
 - One console frame per requestAnimationFrame callback: Safari on iPad delivers rAF at 60 Hz by default, but with the "Prefer Page Rendering Updates near 60fps" feature flag off ProMotion iPads call it at 120 Hz and the game runs at double speed; revisit when input or the cart runtime needs real-time pacing (fixed timestep driven by rAF timestamps).
 - The touch overlay is a plain placeholder look and is always shown, even with a hardware keyboard: the owner styles it; revisit at the owner's review of T08 or with T13's editor chrome.
-- Keyboard input is read on window and mapped keys call preventDefault everywhere except in an `<input>`: there is no editor yet; revisit in T13 when the code editor needs those keys.
+- Keyboard input is read on window and mapped keys call preventDefault everywhere except while focus is in the carts panel, where every key goes to the page: there is no editor yet; revisit in T13 when the code editor needs those keys.
 - The overlay buttons listen only for pointer events, not `click`, so VoiceOver and Switch Control activation does nothing: it is a placeholder pad; revisit with the T15 PWA work or when the owner restyles the overlay.
 - The boot cart's main.lua is `window.testCartMainLua` instead of the demo's when the page sets it, so Playwright specs can run their own code without OPFS: there is no editor to type it in; revisit in T13.
 - The boot cart's graphics are Swift string art in Runtime/DemoCart.swift: there is no sprite editor to author them as cart files; revisit in M3.
@@ -19,3 +19,5 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - When the budget runs out and a `<close>` handler then loops, the error shows `CPU budget exceeded` with no line (T11 QA-7): the cart still stops at once, so the owner deferred finding where the line is lost; revisit with the owner's limits, alongside the usage display.
 - CPU and memory errors give no hint of which budget number was hit or how close the cart came: there is no usage display yet; revisit with the owner's limits.
 - Saving a cart writes its files one at a time (cart.json last), so a failure partway leaves a mix of new and old files in the folder: OPFS has no multi-file transaction or portable directory move (decision 014); revisit with M6's content-addressed store.
+- Loading a cart replaces the open one without asking: there is no editor, so nothing is unsaved; revisit in T13 (confirm or save before load).
+- The carts panel sits over the top-right corner of the game screen (T12b QA-2): it is a placeholder look; revisit in T13 when the editor chrome lays out the page.

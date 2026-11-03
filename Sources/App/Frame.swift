@@ -3,7 +3,7 @@ import JavaScriptKit
 import Runtime
 import Storage
 
-// The wasm build is single-threaded and only the JS frame loop calls frame().
+// Single-threaded wasm: frame() and the storage tasks run on the JS event loop, never at the same time.
 nonisolated(unsafe) private var framebuffer = Framebuffer()
 nonisolated(unsafe) private var input = Input()
 nonisolated(unsafe) var cart = demoCart()
