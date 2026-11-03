@@ -86,7 +86,7 @@ test("code whose saved cart can't be read is restored as a new cart", async ({ p
 
   await page.reload();
   await expect(page.locator("#cart-status")).toHaveText(
-    "Restored unsaved code of Mine as a new cart: its saved files couldn't be read.",
+    "Restored unsaved code of Mine as a new cart: its saved cart couldn't be read or was renamed.",
   );
   await expect(page.locator(".cm-content")).toHaveText("-- edited");
   await saveAs(page, "Mine");
@@ -102,4 +102,23 @@ test("a malformed copy is removed without asking", async ({ page }) => {
   await reloadUntilCartsListed(page);
   expect(questions).toEqual([]);
   expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+});
+
+test("a copy whose folder now holds another cart is restored as a new cart", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Mine");
+  const [mineFolder] = await page.evaluate(() => fesStorage.listCartFolders());
+  await page.evaluate((folder) => {
+    fesStorage.writeUnsavedCode(JSON.stringify({ folder, name: "Other", mainLua: "-- other's edit" }));
+  }, mineFolder);
+  recordDialogs(page, "accept");
+
+  await page.reload();
+  await expect(page.locator("#cart-status")).toHaveText(
+    "Restored unsaved code of Other as a new cart: its saved cart couldn't be read or was renamed.",
+  );
+  await expect(page.locator("#cart-name")).toHaveValue("Other");
+  await saveAs(page, "Other");
+  expect(await page.evaluate(() => fesStorage.listCartFolders())).toHaveLength(2);
+  expect(await page.evaluate((folder) => fesStorage.readCartFile(folder, "main.lua"), mineFolder)).toBe("-- original");
 });

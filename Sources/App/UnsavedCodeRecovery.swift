@@ -29,16 +29,17 @@ func offerUnsavedCode(_ text: String?) async {
         keepUnsavedCodeCopy()
         return
     }
-    if let folder = copy.folder, let saved = await readSavedCart(folder: folder) {
+    if let folder = copy.folder, let saved = await readSavedCart(folder: folder), saved.name == copy.name {
         openCart(saved, folder: folder)
+        showStatus("Restored unsaved changes to \(copy.name).")
+    } else if copy.folder == nil {
+        cart.name = copy.name
+        cartFolder = nil
         showStatus("Restored unsaved changes to \(copy.name).")
     } else {
         cart.name = copy.name
         cartFolder = nil
-        showStatus(
-            copy.folder == nil
-                ? "Restored unsaved changes to \(copy.name)."
-                : "Restored unsaved code of \(copy.name) as a new cart: its saved files couldn't be read.")
+        showStatus("Restored unsaved code of \(copy.name) as a new cart: its saved cart couldn't be read or was renamed.")
     }
     cart.mainLua = copy.mainLua
     showCodeInEditor(cart.mainLua)
