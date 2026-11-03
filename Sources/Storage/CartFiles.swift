@@ -14,12 +14,12 @@ private struct CartJSON: Codable {
 
 extension Cart {
     public init(files: [String: String]) throws(CartFileError) {
-        let json = try parseCartJSON(try fileText("cart.json", in: files))
+        let json = try parseCartJSON(fileText("cart.json", in: files))
         self.init(name: json.name, mainLua: try fileText("main.lua", in: files))
-        backgroundTiles = try parseTileSheet(try fileText("background.tiles", in: files), file: "background.tiles")
-        spriteTiles = try parseTileSheet(try fileText("sprites.tiles", in: files), file: "sprites.tiles")
-        (backgroundPalettes, spritePalettes) = try parsePalettes(try fileText("palettes.pal", in: files), file: "palettes.pal")
-        background = try parseMap(try fileText("map.map", in: files), file: "map.map")
+        backgroundTiles = try parseTileSheet(fileText("background.tiles", in: files), file: "background.tiles")
+        spriteTiles = try parseTileSheet(fileText("sprites.tiles", in: files), file: "sprites.tiles")
+        (backgroundPalettes, spritePalettes) = try parsePalettes(fileText("palettes.pal", in: files), file: "palettes.pal")
+        background = try parseMap(fileText("map.map", in: files), file: "map.map")
     }
 
     public var files: [String: String] {

@@ -1,7 +1,6 @@
 import Console
 
 private let lineCount = 2 * PaletteBank.paletteCount
-private let highestMasterIndex = 63
 
 func paletteText(background: PaletteBank, sprites: PaletteBank) -> String {
     var text = ""
@@ -22,7 +21,7 @@ func parsePalettes(_ text: String, file: String) throws(CartFileError) -> (backg
         let fields = try spaceSeparatedFields(
             line, count: PaletteBank.colorsPerPalette, file: file, lineNumber: lineIndex + 1, what: "entries")
         for (index, field) in fields.enumerated() {
-            guard field.count == 2, let master = hexValue(field), master <= highestMasterIndex else {
+            guard field.count == 2, let master = hexValue(field), master < MasterPalette.colors.count else {
                 throw CartFileError(
                     file: file, line: lineIndex + 1,
                     reason: "entry \(index + 1): expected a master index 00–3f, found \(field)")
