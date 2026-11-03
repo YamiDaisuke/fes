@@ -28,7 +28,12 @@ func startSavedCarts() {
     _ = cartList.addEventListener("click", cartListClicked)
     Task {
         _ = try? await awaitStorage(storage.requestPersistentStorage())
-        await refreshCartList()
+        do {
+            try await refreshCartList()
+        } catch {
+            saveButton.disabled = .boolean(true)
+            showStatus("Saving is unavailable (Private Browsing?)")
+        }
     }
 }
 
@@ -53,23 +58,16 @@ private func saveCart() async {
         return
     }
     showStatus("Saved \(name).")
-    await refreshCartList()
+    try? await refreshCartList()
 }
 
-private func refreshCartList() async {
-    let folders: [String]
-    do {
-        folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { $0.string! }
-    } catch {
-        saveButton.disabled = .boolean(true)
-        showStatus("Saving is unavailable (Private Browsing?)")
-        return
-    }
+private func refreshCartList() async throws(JSException) {
+    let folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { $0.string! }
     var entries: [(folder: String, name: String)] = []
     for folder in folders {
         entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
     }
-    entries.sort { $0.name < $1.name }
+    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
     cartList.textContent = ""
     for entry in entries {
         let button = document.createElement("button")
