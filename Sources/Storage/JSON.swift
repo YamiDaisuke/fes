@@ -1,9 +1,7 @@
-indirect enum JSONValue {
-    case object([String: JSONValue])
-    case array([JSONValue])
+enum JSONValue {
     case string(String)
     case number(String)
-    case trueFalseOrNull
+    case otherValue
 }
 
 struct JSONError: Error {
@@ -17,14 +15,13 @@ private let deepestNesting = 64
 
 func parseJSONObject(_ text: String) throws(JSONError) -> [String: JSONValue] {
     var reader = JSONReader(scalars: Array(text.unicodeScalars))
-    let value = try reader.value(depth: 0)
-    reader.skipWhitespace()
-    guard reader.isAtEnd else {
-        throw .notValid
-    }
-    guard case .object(let fields) = value else {
+    guard reader.consumeAfterWhitespace("{") else {
+        _ = try reader.value(depth: 0)
+        try reader.expectEnd()
         throw JSONError(reason: "expected a JSON object")
     }
+    let fields = try reader.objectFields(depth: 0)
+    try reader.expectEnd()
     return fields
 }
 
@@ -57,6 +54,13 @@ private struct JSONReader {
     mutating func skipWhitespace() {
         while !isAtEnd, [" ", "\t", "\n", "\r"].contains(scalars[index]) {
             index += 1
+        }
+    }
+
+    mutating func expectEnd() throws(JSONError) {
+        skipWhitespace()
+        guard isAtEnd else {
+            throw .notValid
         }
     }
 
@@ -93,17 +97,19 @@ private struct JSONReader {
         }
         skipWhitespace()
         if consume("{") {
-            return .object(try objectFields(depth: depth))
+            _ = try objectFields(depth: depth)
+            return .otherValue
         }
         if consume("[") {
-            return .array(try arrayElements(depth: depth))
+            try arrayElements(depth: depth)
+            return .otherValue
         }
         if consume("\"") {
             return .string(try stringRest())
         }
         for word in ["true", "false", "null"] where scalars[index...].starts(with: word.unicodeScalars) {
             index += word.unicodeScalars.count
-            return .trueFalseOrNull
+            return .otherValue
         }
         return .number(try number())
     }
@@ -126,16 +132,14 @@ private struct JSONReader {
         return fields
     }
 
-    mutating func arrayElements(depth: Int) throws(JSONError) -> [JSONValue] {
-        var elements: [JSONValue] = []
+    mutating func arrayElements(depth: Int) throws(JSONError) {
         if consumeAfterWhitespace("]") {
-            return elements
+            return
         }
         repeat {
-            elements.append(try value(depth: depth + 1))
+            _ = try value(depth: depth + 1)
         } while consumeAfterWhitespace(",")
         try expectAfterWhitespace("]")
-        return elements
     }
 
     mutating func stringRest() throws(JSONError) -> String {
