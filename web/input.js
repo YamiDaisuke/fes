@@ -42,18 +42,22 @@ function releasePointer(event) {
   pointerButtons.delete(event.pointerId);
 }
 
+function isPageKey(event) {
+  const isTextField = event.target.isContentEditable || event.target.matches("input, textarea");
+  const isButtonPress = event.code === "Enter" && event.target.matches("button");
+  return isTextField || isButtonPress;
+}
+
 export function listenForInput(overlay) {
   addEventListener("keydown", (event) => {
     const button = KEY_BUTTONS[event.code];
-    if (!button || event.target.closest("#carts") || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (!button || isPageKey(event) || event.metaKey || event.ctrlKey || event.altKey) return;
     event.preventDefault();
     heldKeys.add(event.code);
     pressedSinceLastFrame |= BUTTON_BITS[button];
   });
   addEventListener("keyup", (event) => {
-    if (!KEY_BUTTONS[event.code]) return;
-    event.preventDefault();
-    heldKeys.delete(event.code);
+    if (heldKeys.delete(event.code)) event.preventDefault();
   });
   overlay.addEventListener("pointerdown", trackPointer);
   addEventListener("pointermove", (event) => {
