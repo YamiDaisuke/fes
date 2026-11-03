@@ -23,7 +23,7 @@ public final class RunningCart {
         lua_getglobal(state, "_G")
 
         meter.pointee.startPeriod()
-        startCountingInstructions(state)
+        startEnforcingCPUBudget(state)
         meter.pointee.isMemoryCapped = true
         let loadStatus = luaL_loadbufferx(state, mainLua, mainLua.utf8.count, "=main.lua", "t")
         meter.pointee.isMemoryCapped = false

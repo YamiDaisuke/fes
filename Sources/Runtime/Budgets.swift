@@ -36,7 +36,7 @@ func newStateWithinBudget(meter: UnsafeMutablePointer<BudgetMeter>) -> OpaquePoi
     lua_newstate(allocateWithinBudget, meter)!
 }
 
-func startCountingInstructions(_ state: OpaquePointer) {
+func startEnforcingCPUBudget(_ state: OpaquePointer) {
     lua_sethook(state, enforceCPUBudget, LUA_MASKCOUNT | LUA_MASKCALL, instructionsPerHookCall)
 }
 
