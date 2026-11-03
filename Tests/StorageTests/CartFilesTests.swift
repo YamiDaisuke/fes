@@ -101,6 +101,12 @@ private func refusal(cartJSON: String) -> String? {
     #expect(refusal(files) == "sprites.tiles line 128: expected 128 lines, found 127")
 }
 
+@Test func sheetSeparatedByLoneCarriageReturnsIsRefused() {
+    var files = sampleCart().files
+    files["background.tiles"] = files["background.tiles"]!.replacing("\n", with: "\r")
+    #expect(refusal(files) == "background.tiles line 2: expected 128 lines, found 1")
+}
+
 @Test func missingFileIsRefused() {
     var files = sampleCart().files
     files["map.map"] = nil

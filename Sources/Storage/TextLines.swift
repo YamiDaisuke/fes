@@ -1,5 +1,5 @@
 func textLines(_ text: String, count: Int, file: String) throws(CartFileError) -> [Substring] {
-    var lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+    var lines = text.split(omittingEmptySubsequences: false, whereSeparator: { $0 == "\n" || $0 == "\r\n" })
     if lines.last == "" {
         lines.removeLast()
     }
