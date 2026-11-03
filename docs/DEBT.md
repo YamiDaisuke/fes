@@ -1,16 +1,16 @@
 # Debt
 
 Deliberate shortcuts, one line each: what, why, when to revisit.
-- App.wasm ships without wasm-opt (9.1 MB, 2.4 MB gzipped): binaryen isn't installed or approved; revisit in T15 when offline first-load size matters.
+- App.wasm ships without wasm-opt (19.8 MB, 5.3 MB gzipped, of which FoundationEssentials' JSON is about 9.3 MB, 2.3 MB gzipped): binaryen isn't installed or approved; revisit in T15 when offline first-load size matters.
 - A cancelled pending deploy leaves its PR's check cancelled and can skip that PR's first preview comment: the `pages` concurrency group keeps only one pending job, so restacking three or more PRs cancels some; revisit if restacks often leave PRs without a preview link.
 - Master palette is a generated 2-bit-per-channel placeholder: the owner picks the curated 64 colors (SPEC open decision); revisit at the start of M3.
 - Background tilemap is a fixed 32×32 cells: map dimensions are a SPEC open decision the owner takes in M4; revisit then (change Tilemap.columns/rows, keep powers of two, re-record goldens).
 - One console frame per requestAnimationFrame callback: Safari on iPad delivers rAF at 60 Hz by default, but with the "Prefer Page Rendering Updates near 60fps" feature flag off ProMotion iPads call it at 120 Hz and the game runs at double speed; revisit when input or the cart runtime needs real-time pacing (fixed timestep driven by rAF timestamps).
 - The touch overlay is a plain placeholder look and is always shown, even with a hardware keyboard: the owner styles it; revisit at the owner's review of T08 or with T13's editor chrome.
-- Keyboard input is read on window and mapped keys call preventDefault: there is no editor yet; revisit in T13 when the code editor needs those keys.
+- Keyboard input is read on window and mapped keys call preventDefault everywhere except in an `<input>`: there is no editor yet; revisit in T13 when the code editor needs those keys.
 - The overlay buttons listen only for pointer events, not `click`, so VoiceOver and Switch Control activation does nothing: it is a placeholder pad; revisit with the T15 PWA work or when the owner restyles the overlay.
-- App runs `window.testCartMainLua` instead of the embedded demo cart when the page sets it, so Playwright specs can run their own carts: nothing loads carts yet; revisit in T12 when carts load from storage.
-- Demo graphics are Swift string art in Runtime/DemoCart.swift, loaded for every cart: no sprite sheet or cart format yet; revisit in T12/M3.
+- The boot cart's main.lua is `window.testCartMainLua` instead of the demo's when the page sets it, so Playwright specs can run their own code without OPFS: there is no editor to type it in; revisit in T13.
+- The boot cart's graphics are Swift string art in Runtime/DemoCart.swift: there is no sprite editor to author them as cart files; revisit in M3.
 - CPU budget of 500,000 instructions (per frame, and for the main chunk + `_init` together), an 8 MiB memory cap and a 250 ms wall-clock deadline per budget period are placeholders in `Runtime/Budgets.swift`: the owner sets SPEC's numeric limits; revisit when the owner decides them.
 - The Lua stack is limited to 15,000 slots (`CLua/fes_lua_user.h`) so a `__call` cycle stops in about 0.2 s in WebKit, which caps recursion at about 1,500–7,500 levels: the stall grows with the square of the limit; revisit if a cart needs deeper recursion.
 - One C library call can still freeze the tab, for example `string.find(string.rep("a", 300), ".-.-.-.-b")`, `string.rep("", 1e15)` or `table.move({}, 1, 1e12, 1, {})`: hooks cannot fire inside C, and main-thread wasm cannot be interrupted; revisit before T13, when a freeze would lose unsaved editor code (fix: run the console in a Worker the page can terminate).
@@ -18,3 +18,4 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - A loop of megabyte string compares or concatenations, such as `while true do local c = a == b end` on 2.5 MB strings, runs up to about 3 s before `CPU budget exceeded` (T11 QA-6): the loop makes no calls, so the clock is read only every 16,000 instructions; revisit if carts hit it, by reading the clock more often on count events.
 - When the budget runs out and a `<close>` handler then loops, the error shows `CPU budget exceeded` with no line (T11 QA-7): the cart still stops at once, so the owner deferred finding where the line is lost; revisit with the owner's limits, alongside the usage display.
 - CPU and memory errors give no hint of which budget number was hit or how close the cart came: there is no usage display yet; revisit with the owner's limits.
+- Saving a cart writes its files one at a time (cart.json last), so a failure partway leaves a mix of new and old files in the folder: OPFS has no multi-file transaction or portable directory move (decision 014); revisit with M6's content-addressed store.
