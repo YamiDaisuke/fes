@@ -20,7 +20,12 @@ export async function readCartFile(folder, name) {
     if (error.name === "NotFoundError") return null;
     throw error;
   }
-  return new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
+  const bytes = await file.arrayBuffer();
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new TypeError("not valid UTF-8");
+  }
 }
 
 export async function writeCartFile(folder, name, text) {
