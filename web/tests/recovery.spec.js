@@ -1,3 +1,4 @@
+import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 
 async function openBooted(page) {
@@ -147,4 +148,17 @@ test("undoing back to the saved code removes the copy", async ({ page }) => {
   await editor.press("Control+z");
   await expect(editor).toHaveText("-- original");
   expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+});
+
+ephemeralTest("a restore without saving still says why Save is unavailable", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "-- original";
+  });
+  await openBooted(page);
+  await page.locator(".cm-content").fill("-- edited demo");
+  recordDialogs(page, "accept");
+
+  await page.reload();
+  await expect(page.locator(".cm-content")).toHaveText("-- edited demo");
+  await expect(page.locator("#cart-status")).toHaveText("Saving is unavailable (Private Browsing?)");
 });

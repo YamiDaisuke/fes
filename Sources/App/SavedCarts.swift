@@ -30,13 +30,17 @@ func startSavedCarts() {
     let unsavedCodeText = readUnsavedCodeText()
     Task {
         _ = try? await awaitStorage(storage.requestPersistentStorage())
+        var savingIsUnavailable = false
         do {
             try await refreshCartList()
         } catch {
             saveButton.disabled = .boolean(true)
-            showStatus("Saving is unavailable (Private Browsing?)")
+            savingIsUnavailable = true
         }
         await offerUnsavedCode(unsavedCodeText)
+        if savingIsUnavailable {
+            showStatus("Saving is unavailable (Private Browsing?)")
+        }
     }
 }
 
