@@ -25,6 +25,32 @@ test("a saved cart's code runs when it is loaded on another page", async ({ cont
   await expect(secondPage.locator("#cart-name")).toHaveValue("Saved");
 });
 
+test("Enter on the focused Save button saves instead of pressing Start", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = 'function _update() if btnp(6) then error("Start pressed") end end';
+  });
+  await openBooted(page);
+  await page.getByRole("button", { name: "Save", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(page.locator("#cart-error")).toBeEmpty();
+});
+
+test("a cart whose cart.json can't be read is listed as damaged, and choosing it names the file", async ({ page }) => {
+  await openBooted(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    await fesStorage.writeCartFile(folder, "cart.json", "{");
+  });
+  await page.reload();
+
+  await page.locator("#cart-list").getByRole("button", { name: "Damaged cart" }).click();
+  await expect(page.locator("#cart-status")).toHaveText(/^Can't load: cart.json/);
+});
+
 test("an empty name is refused and nothing is saved", async ({ page }) => {
   await openBooted(page);
   await page.locator("#cart-name").fill("  ");
