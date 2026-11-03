@@ -151,9 +151,6 @@ test("undoing back to the saved code removes the copy", async ({ page }) => {
 });
 
 ephemeralTest("a restore without saving still says why Save is unavailable", async ({ page }) => {
-  await page.addInitScript(() => {
-    window.testCartMainLua = "-- original";
-  });
   await openBooted(page);
   await page.locator(".cm-content").fill("-- edited demo");
   recordDialogs(page, "accept");
