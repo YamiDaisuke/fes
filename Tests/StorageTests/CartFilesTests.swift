@@ -122,6 +122,7 @@ private func refusal(cartJSON: String) -> String? {
         refusal(cartJSON: "{\"format\": 2, \"title\": \"Room\"}")
             == "cart.json: This cart was made with a newer FES (format 2); this FES reads format 1.")
     #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \" \\t \"}") == "cart.json: the name is empty")
+    #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"\\u200b\\u200b\"}") == "cart.json: the name is empty")
 }
 
 

@@ -82,7 +82,7 @@ private func decodeCartJSON<Fields: Decodable>(_ fields: Fields.Type, from text:
 }
 
 func nameProblem(_ name: String) -> String? {
-    if name.allSatisfy(\.isWhitespace) {
+    if name.unicodeScalars.allSatisfy({ $0.properties.isWhitespace || $0.properties.generalCategory == .format }) {
         return "the name is empty"
     }
     if name.count > longestName {
