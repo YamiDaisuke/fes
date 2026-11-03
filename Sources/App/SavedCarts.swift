@@ -43,10 +43,12 @@ private func saveCart() async {
         showStatus("Can't save: \(problem)")
         return
     }
+    var saving = cart
+    saving.name = name
     cart.name = name
     let folder = cartFolder ?? newFolderName()
     cartFolder = folder
-    var files = cart.files
+    var files = saving.files
     let cartJSON = files.removeValue(forKey: "cart.json")!
     do {
         for (file, text) in files {
@@ -57,6 +59,7 @@ private func saveCart() async {
         showStatus("Can't save: \(error.thrownValue)")
         return
     }
+    lastSavedCart = saving
     showStatus("Saved \(name).")
     try? await refreshCartList()
 }
@@ -81,6 +84,9 @@ private func refreshCartList() async throws(JSException) {
 }
 
 private func loadCart(folder: String) async {
+    if cart != lastSavedCart && JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") != .boolean(true) {
+        return
+    }
     var files: [String: String] = [:]
     for file in Cart.fileNames {
         do {
@@ -98,10 +104,9 @@ private func loadCart(folder: String) async {
         return
     }
     cart = loaded
+    lastSavedCart = loaded
     cartFolder = folder
-    runningCart = RunningCart(mainLua: loaded.mainLua, ppu: loaded.ppu)
-    isErrorShown = false
-    document.getElementById("cart-error").textContent = ""
+    showCodeInEditor(loaded.mainLua)
     nameInput.value = .string(loaded.name)
     showStatus("Loaded \(loaded.name).")
 }
