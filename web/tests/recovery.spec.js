@@ -122,3 +122,29 @@ test("a copy whose folder now holds another cart is restored as a new cart", asy
   expect(await page.evaluate(() => fesStorage.listCartFolders())).toHaveLength(2);
   expect(await page.evaluate((folder) => fesStorage.readCartFile(folder, "main.lua"), mineFolder)).toBe("-- original");
 });
+
+test("an edited cart that was never saved is restored under its name", async ({ page }) => {
+  await openBooted(page);
+  await page.locator(".cm-content").fill("-- edited demo");
+  const questions = recordDialogs(page, "accept");
+
+  await page.reload();
+  await expect.poll(() => questions).toEqual(["Restore unsaved changes to Demo?"]);
+  await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Demo.");
+  await expect(page.locator(".cm-content")).toHaveText("-- edited demo");
+  await saveAs(page, "Demo");
+  expect(await page.evaluate(() => fesStorage.listCartFolders())).toHaveLength(1);
+});
+
+test("undoing back to the saved code removes the copy", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Mine");
+  const editor = page.locator(".cm-content");
+  await editor.press("End");
+  await editor.pressSequentially("x");
+  expect(await page.evaluate(() => fesStorage.readUnsavedCode())).not.toBeNull();
+
+  await editor.press("Control+z");
+  await expect(editor).toHaveText("-- original");
+  expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+});
