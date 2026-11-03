@@ -38,7 +38,9 @@ let package = Package(
             dependencies: [
                 "Console",
                 "Runtime",
+                "Storage",
                 .product(name: "JavaScriptKit", package: "JavaScriptKit"),
+                .product(name: "JavaScriptEventLoop", package: "JavaScriptKit"),
             ],
             linkerSettings: [
                 // wasm-ld rejects a --global-base below the stack size under --stack-first, and the Swift driver otherwise passes 4096.

@@ -17,6 +17,8 @@ private struct CartJSON: Codable {
 }
 
 extension Cart {
+    public static let fileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "palettes.pal", "map.map"]
+
     public init(files: [String: String]) throws(CartFileError) {
         let json = try parseCartJSON(fileText("cart.json", in: files))
         self.init(name: json.name, mainLua: try fileText("main.lua", in: files))
@@ -69,6 +71,10 @@ private func parseCartJSON(_ text: String) throws(CartFileError) -> CartJSON {
     return json
 }
 
+public func cartName(fromCartJSON text: String) throws(CartFileError) -> String {
+    try parseCartJSON(text).name
+}
+
 private func decodeCartJSON<Fields: Decodable>(_ fields: Fields.Type, from text: String) throws(CartFileError) -> Fields {
     do {
         return try JSONDecoder().decode(fields, from: Data(text.utf8))
@@ -81,7 +87,7 @@ private func decodeCartJSON<Fields: Decodable>(_ fields: Fields.Type, from text:
     }
 }
 
-func nameProblem(_ name: String) -> String? {
+public func nameProblem(_ name: String) -> String? {
     if name.unicodeScalars.allSatisfy({ $0.properties.isWhitespace || $0.properties.generalCategory == .format }) {
         return "the name is empty"
     }
