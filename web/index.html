@@ -31,17 +31,33 @@
     #face { display: flex; gap: 16px; }
     #face button { width: 72px; height: 72px; border-radius: 50%; }
     #cart-error {
-      position: fixed; top: 0; left: 0; right: 0; margin: 0;
-      padding: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
+      position: fixed; top: 0; left: 0; right: 240px; margin: 0;
+      padding: calc(8px + env(safe-area-inset-top)) 8px 8px calc(8px + env(safe-area-inset-left));
       color: #fff; background: rgb(0 0 0 / 0.75); font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
       max-height: 40vh; overflow: auto;
     }
     #cart-error:empty { display: none; }
+    #carts {
+      position: fixed; top: 0; right: 0; box-sizing: border-box; width: 240px; max-height: 40vh; overflow: auto;
+      padding: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 8px 8px;
+      color: #fff; background: rgb(0 0 0 / 0.75); font: 16px system-ui, sans-serif;
+    }
+    #carts input { width: 100%; box-sizing: border-box; font: inherit; }
+    #cart-list { margin: 8px 0; padding: 0; list-style: none; }
+    #cart-list button { width: 100%; text-align: left; font: inherit; }
+    #cart-status { margin: 0; }
   </style>
 </head>
 <body>
   <canvas id="screen" aria-label="FES screen"></canvas>
   <pre id="cart-error" role="alert"></pre>
+  <section id="carts" aria-label="Carts">
+    <label for="cart-name">Cart name</label>
+    <input id="cart-name" autocomplete="off">
+    <button type="button" id="cart-save">Save</button>
+    <ul id="cart-list"></ul>
+    <p id="cart-status" role="status"></p>
+  </section>
   <div id="pad" role="group" aria-label="Controller">
     <div id="dpad">
       <div data-buttons="up left" aria-hidden="true"></div>
