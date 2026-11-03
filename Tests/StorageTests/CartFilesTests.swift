@@ -71,7 +71,7 @@ private func refusal(cartJSON: String) -> String? {
 @Test func crlfAndUppercaseHexLoadTheSameAsLfAndLowercase() throws {
     let cart = sampleCart()
     var files = cart.files
-    for name in ["cart.json", "background.tiles", "sprites.tiles", "palettes.pal", "map.map"] {
+    for name in ["background.tiles", "sprites.tiles", "palettes.pal", "map.map"] {
         files[name] = files[name]!.uppercased().replacing("\n", with: "\r\n")
     }
     files["cart.json"] = cart.files["cart.json"]!.replacing("\n", with: "\r\n")
