@@ -7,6 +7,10 @@ import Foundation
 private let formatVersion = 1
 private let longestName = 64
 
+private struct CartFormat: Decodable {
+    var format: Int
+}
+
 private struct CartJSON: Codable {
     var format: Int
     var name: String
@@ -49,9 +53,25 @@ private func cartJSONText(_ json: CartJSON) -> String {
 }
 
 private func parseCartJSON(_ text: String) throws(CartFileError) -> CartJSON {
-    let json: CartJSON
+    let format = try decodeCartJSON(CartFormat.self, from: text).format
+    guard format >= 1 else {
+        throw CartFileError(file: "cart.json", reason: "format \(format) is not valid")
+    }
+    guard format <= formatVersion else {
+        throw CartFileError(
+            file: "cart.json",
+            reason: "This cart was made with a newer FES (format \(format)); this FES reads format \(formatVersion).")
+    }
+    let json = try decodeCartJSON(CartJSON.self, from: text)
+    if let problem = nameProblem(json.name) {
+        throw CartFileError(file: "cart.json", reason: problem)
+    }
+    return json
+}
+
+private func decodeCartJSON<Fields: Decodable>(_ fields: Fields.Type, from text: String) throws(CartFileError) -> Fields {
     do {
-        json = try JSONDecoder().decode(CartJSON.self, from: Data(text.utf8))
+        return try JSONDecoder().decode(fields, from: Data(text.utf8))
     } catch DecodingError.dataCorrupted {
         throw CartFileError(file: "cart.json", reason: "not valid JSON")
     } catch DecodingError.keyNotFound(let key, _) {
@@ -59,18 +79,6 @@ private func parseCartJSON(_ text: String) throws(CartFileError) -> CartJSON {
     } catch {
         throw CartFileError(file: "cart.json", reason: "\"format\" must be an integer and \"name\" a string")
     }
-    guard json.format >= 1 else {
-        throw CartFileError(file: "cart.json", reason: "format \(json.format) is not valid")
-    }
-    guard json.format <= formatVersion else {
-        throw CartFileError(
-            file: "cart.json",
-            reason: "This cart was made with a newer FES (format \(json.format)); this FES reads format \(formatVersion).")
-    }
-    if let problem = nameProblem(json.name) {
-        throw CartFileError(file: "cart.json", reason: problem)
-    }
-    return json
 }
 
 func nameProblem(_ name: String) -> String? {
