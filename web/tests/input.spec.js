@@ -172,6 +172,13 @@ test("after Run from the keyboard, Enter presses Start", async ({ page }) => {
   expect(await litNames(page)).toEqual(["start"]);
 });
 
+test("Enter presses Start while a pad button has focus", async ({ page }) => {
+  await page.locator('[data-buttons="a"]').focus();
+  await page.keyboard.press("Enter");
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual(["start"]);
+});
+
 test("losing focus releases held keys and fingers", async ({ page }) => {
   await page.keyboard.down("ArrowLeft");
   await page.keyboard.down("KeyZ");
