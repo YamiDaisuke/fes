@@ -11,10 +11,10 @@ func loadMainLua(_ state: OpaquePointer, _ mainLua: String, meter: UnsafeMutable
 }
 
 func errorText(_ state: OpaquePointer, status: Int32) -> String {
-    var length = 0
     if status == LUA_ERRMEM {
         return "memory budget exceeded"
     }
+    var length = 0
     guard let bytes = lua_tolstring(state, -1, &length) else {
         return "(error object is not a string)"
     }
