@@ -24,3 +24,5 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - The Home Screen hint's wording and 7-day reminder are placeholders: revisit when the owner reviews them.
 - A .fes re-compressed in Files (Compress) uses deflate and is refused: only store-only zips are read; revisit with DecompressionStream('deflate-raw') if users edit carts in Files.
 - Files inside an exported .fes are dated 1980-01-01: no calendar without Foundation; revisit if anyone unzips carts and cares.
+- The Art view's look (grid, selection and checker colors in Editors/ArtPixel.swift, the tool buttons) is a plain placeholder: the owner styles it; revisit when the owner restyles the editor.
+- In a window under about 420 CSS px wide (Slide Over) the Art view cuts off the tile sheet: zoom has a minimum of 1 and the sheet doesn't scroll; revisit if the editor is used in narrow windows.
