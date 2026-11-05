@@ -33,14 +33,15 @@ extension Cart {
 }
 
 public func fesFileName(forCartName name: String) -> String {
-    let charactersFilesRejects: Set<Character> = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
-    var fileName = String(name.map { charactersFilesRejects.contains($0) ? "-" : $0 })
-    while fileName.first?.isWhitespace == true {
-        fileName.removeFirst()
+    let scalarsFilesRejects: Set<Unicode.Scalar> = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
+    var scalars = String.UnicodeScalarView(name.unicodeScalars.map { scalarsFilesRejects.contains($0) ? "-" : $0 })
+    while scalars.first?.properties.isWhitespace == true {
+        scalars.removeFirst()
     }
-    if fileName.hasPrefix(".") {
-        fileName = "-" + fileName.dropFirst()
+    if scalars.first == "." {
+        scalars.replaceSubrange(scalars.startIndex...scalars.startIndex, with: ["-"])
     }
+    var fileName = String(scalars)
     // APFS allows 255 UTF-8 bytes per name; the rest is room for ".fes" and a " (2)" Files or Safari may add.
     while fileName.utf8.count > 200 {
         fileName.removeLast()

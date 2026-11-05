@@ -83,3 +83,8 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(fesFileName(forCartName: String(repeating: "\u{3000}", count: 63) + "👨‍👩‍👧‍👦") == "👨‍👩‍👧‍👦.fes")
     #expect(fesFileName(forCartName: "e" + String(repeating: "\u{301}", count: 100)) == "cart.fes")
 }
+
+@Test func fesFileNameReplacesRejectedCharactersAndLeadingDotsEvenWhenAMarkFollowsThem() {
+    #expect(fesFileName(forCartName: ".\u{301}abc") == "-\u{301}abc.fes")
+    #expect(fesFileName(forCartName: "a/\u{301}b:\u{200D}c|\u{FE0F}") == "a-\u{301}b-\u{200D}c-\u{FE0F}.fes")
+}
