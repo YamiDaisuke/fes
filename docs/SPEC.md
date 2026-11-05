@@ -27,7 +27,7 @@ Swift owns all state and logic. JavaScript is a thin layer that renders, capture
 - Boot: load the wasm module, run the frame loop with `requestAnimationFrame`.
 - Display: blit the framebuffer from wasm memory to a canvas with integer scaling. Start with Canvas 2D and `image-rendering: pixelated`; move to WebGL only if profiling demands it or for an optional CRT/LCD shader.
 - Code editor: CodeMirror 6 with Lua highlighting, diagnostics fed from the Lua or Teal compiler running in wasm.
-- Input: keyboard, touch overlay (D-pad, A, B, Start, Select) drawn in HTML/CSS, Gamepad API. All reduced to one button bitmask passed to Swift each frame.
+- Input: keyboard and a touch overlay (D-pad, A, B, Start, Select) drawn in HTML/CSS; gamepads are not planned (owner, 2026-11-05). All reduced to one button bitmask passed to Swift each frame.
 - Audio: an AudioWorklet that hosts a second, tiny Swift wasm module containing only the synth. The main thread sends APU register writes through the worklet's message port. No SharedArrayBuffer.
 - PWA shell: manifest, service worker, a small async OPFS wrapper.
 - Editor chrome: plain HTML and CSS.
@@ -66,7 +66,7 @@ A small built-in version history, not git. Files are stored by content hash. A s
 | Screen | 192×144, 60 fps |
 | Tiles | 8×8, 3 bits per pixel (8 colors per tile) |
 | Tile memory | 256 background tiles, 256 sprite tiles |
-| Master palette | 64 fixed, curated colors with good shading ramps |
+| Main palette | 64 curated colors with good shading ramps. Each cart stores its own copy (M3) |
 | Palettes | 8 background, 8 sprite, 8 colors each. Sprite color 0 is transparent |
 | Background | 2 scrolling tile layers + a non-scrolling window layer for HUDs |
 | Overlay | Small framebuffer layer above everything, 4 colors from its own palette, with `pset`, `line`, `rect`, `circ`, `print` |
@@ -76,7 +76,7 @@ A small built-in version history, not git. Files are stored by content hash. A s
 | Raster | Optional per-scanline callback (scroll, palette changes) |
 | Audio | 4 channels: 2 pulse (duty, sweep), 1 wavetable (32 samples × 4 bits), 1 noise. Volume envelopes. Tracker effects: slide, vibrato, arpeggio, volume |
 | Input | D-pad, A, B, Start, Select |
-| Assets | Everything is made in the built-in editors. No image or audio import |
+| Assets | Made in the built-in editors. Sprite sheet images (PNG or JPEG) can be imported into tile memory (M3). No audio import |
 
 ## Console API (initial, grows per milestone)
 
@@ -85,7 +85,6 @@ A small built-in version history, not git. Files are stored by content hash. A s
 ## Open decisions
 
 Ask the owner when the task that needs them begins:
-- The 64-color master palette. The owner is a pixel artist: propose two or three candidates, let them choose or supply their own.
 - Cart file format details (text sections, single-file export).
 - Map dimensions in cart storage and VRAM.
 - Numeric limits: code size, CPU instructions per frame, RAM cap.

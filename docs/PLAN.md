@@ -1,6 +1,6 @@
 # Plan
 
-Proof of concept first. Milestones M0–M2 are broken into tasks now. Later milestones are outlines: when the last task of the previous milestone reaches `stage:ready`, the architect breaks the next milestone into tasks of the same size, adds them to this file in the first PR of that milestone, and creates their issues.
+Proof of concept first. Milestones M0–M3 are broken into tasks. Later milestones are outlines: when the last task of the previous milestone reaches `stage:ready`, the architect breaks the next milestone into tasks of the same size, adds them to this file in the first PR of that milestone, and creates their issues.
 
 Each task is one PR, small enough to read in one sitting. `Depends` decides what the branch stacks on (see `docs/WORKFLOW.md`).
 
@@ -41,7 +41,7 @@ PoC milestone: a Lua cart moves a sprite with the D-pad on an iPad.
 
 ### T04 Palettes and tiles
 Depends: T01
-- `Console` types for the master palette (placeholder until the owner picks one), the 8+8 sub-palettes and 3bpp 8×8 tiles in tile memory.
+- `Console` types for the main palette (placeholder until the owner picks one), the 8+8 sub-palettes and 3bpp 8×8 tiles in tile memory.
 - Decoding a tile row to palette indices.
 
 Accept: tests for tile decoding and palette lookup, including out-of-range handling.
@@ -119,17 +119,92 @@ Depends: T12
 
 Accept: installed to Home Screen, works in airplane mode; export then import restores a cart exactly.
 
-## M3 — Tile and palette editor (outline)
+## M3 — Tile and palette editor
 
-Master palette choice with the owner; palette editor; tile editor (pencil, fill, picker, flip, copy/paste); sprite sheet saved in the cart and used by `spr`.
+Draw tiles and palettes on the iPad, or import a sprite sheet from Pixquare (or any pixel-art tool), and see them in a running cart. Each cart carries its own main palette.
 
-Image import (owner request): drop a PNG or JPEG sprite/tile sheet exported from Pixquare (or any pixel-art tool) and it becomes tile memory, ready for `spr` and the map.
-- The browser decodes the image (JS does what the browser does best); Swift validates and converts it. The image is untrusted input, so validation is never cut.
-- The sheet is read as a grid of 8×8 tiles, at most 256 per bank.
-- If the image breaks the console's limits, the import is rejected with a report that highlights each offending tile and the rule it breaks: more than 8 colors in a tile, colors that don't fit a sub-palette, too many tiles, or a size that isn't a multiple of 8. Nothing is changed silently; the owner fixes the art in Pixquare and imports again.
-- Optional per import: adopt the image's colors (up to 64) as the master palette, instead of mapping onto the existing one.
-- Not planned: importing a whole level image into a tilemap, or auto-reducing colors.
-- JPEG compression smears colors, so JPEGs will usually fail the limits; the import report should say that PNG is the format to export.
+Swift owns the art and every edit. JavaScript only blits Swift's pixel buffers into canvases, forwards pointer positions, hosts the system color picker and decodes image files. The editor's controls are labelled HTML buttons that VoiceOver and a hardware keyboard can use. Not planned: importing a whole level image into a tilemap, or reducing an image's colors automatically.
+
+The owner answered the M3 questions in PR #51.
+
+### T16 Main palette in the cart
+Depends: T15
+- The main palette becomes a value with 64 colors that the PPU and the cart carry, instead of a global. The default is Lospec's "Z64" by Jehkoba, 64 colors (https://lospec.com/palette-list/z64, the `.hex` download at https://lospec.com/palette-list/z64.hex), chosen by the owner; its decision record credits the author and link. Code identifiers named "master" (`MasterPalette`, master indices) are renamed to "main palette". Remove the DEBT line about the placeholder palette.
+- New cart file `main-palette.hex`: 64 lines of `rrggbb`, lowercase on write, either case on read, as strictly shaped as the other cart files. `cart.json` moves to format 2. Format 1 carts load with the default palette and save as format 2. The `.fes` archive picks the file up through `Cart.fileNames`.
+- Re-record the golden images (decision 006). A decision record replaces decision 013's "Later" line.
+
+Accept: tests for the palette file's round trip and refusals naming file and line, a format 1 cart (from OPFS and from a `.fes`) loading with the default palette, and the goldens in the new colors.
+
+### T17 Art view and tile sheet
+Depends: T16
+- An `Editors` target (SPEC). A third full-screen view, Art, next to Code and Game. Save is reachable from it.
+- Swift renders a bank's 256 tiles as a 16×16 sheet and the edit area at the largest integer zoom that fits, with a pixel grid. JS blits both buffers into canvases and sends taps to Swift as canvas pixel positions.
+- Switch bank (background or sprite) and preview palette (one of that bank's 8). Tap a tile to select it, and the edit area shows it.
+
+Accept: golden tests of the sheet and the edit area, including sprite color 0 drawn as transparent; Playwright opens Art, taps a tile and sees it in the edit area.
+
+### T18 Pencil and picker
+Depends: T17
+- A strip with the preview palette's 8 colors. The pencil paints the selected color while dragging, with finger or Pencil. A fast drag still draws a continuous line. The picker takes the color under the touch.
+- Edits change the open cart: Save writes them, Run puts them in `spr` and the map, and the unsaved-changes prompt sees them.
+
+Accept: Swift tests for stroke lines, including strokes that leave the edit area; Playwright draws a stroke, runs a cart whose `spr` shows the drawn tile, saves, reloads and finds the pixels.
+
+### T19 Recovery copy of the whole cart
+Depends: T18
+- Decision 016's recovery copy grows from `main.lua` to every cart file, so unsaved tile, palette and code edits come back after a reload or a frozen tab. A copy written by the older FES still restores. Remove the DEBT line.
+
+Accept: tests for the copy's round trip, an older copy and malformed copies dropped; Playwright draws, reloads without saving, restores, and finds the pixels and the code.
+
+### T20 Blocks, fill, flip, copy and paste
+Depends: T18
+- The edit area shows a block of 1×1, 2×2 or 4×4 tiles starting at the selected one, and the pencil and picker work across its tile borders.
+- Fill replaces the touched pixel's 4-connected same-color region inside the edit area.
+- Flip H and V mirror the edit area's block in place, moving tiles as well as pixels.
+- Copy and paste the block. The clipboard is Swift state, kept while FES runs and across carts; not the system clipboard.
+
+Accept: tests for mapping block pixels to tiles, fill crossing tile borders inside a block but never leaving it, flipping a 2×2 block, and pasting at the sheet's edge; Playwright uses each tool once.
+
+### T21 Palette editor
+Depends: T18
+- In the Art view: the 8 background and 8 sprite palettes and the 64 main palette colors as buttons whose labels name the entry and its color. Select a palette entry, then tap a main palette color to assign it. Selecting a palette also makes it the tile editor's preview palette. Sprite color 0 is marked transparent.
+
+Accept: Playwright assigns a main palette color to a sprite palette entry, runs a cart and sees the sprite's new color, saves, reloads and finds it.
+
+### T22 Edit main palette colors
+Depends: T21
+- Change the selected main palette color with the iPadOS color picker (`<input type="color">`). Every palette entry using that color changes with it. Reset the cart's main palette to the default.
+
+Accept: tests for reading the picker's `#rrggbb` value and refusing anything else; Playwright edits a color, sees the sheet and the game change, saves, reloads and finds it.
+
+### T23 Undo and redo
+Depends: T20, T21, T22
+- Every Art view edit (stroke, fill, flip, paste, palette and main palette color change) is one undo step. Redo, until the next new edit. The history is cleared when another cart opens and has a fixed limit.
+
+Accept: tests for undo and redo order, redo dropped after a new edit, and the limit; Playwright undoes and redoes a stroke.
+
+### T24 Sheet import core
+Depends: T16
+- In `Editors`, natively tested: turn a decoded RGBA image into a bank's 256 tiles. Tiles are read left to right, top to bottom, and replace the whole bank; tiles the image doesn't reach are cleared.
+- Each pixel must be exactly a color of the cart's main palette, or, in the sprite bank, fully transparent (color 0). Each tile must fit one of the bank's current sub-palettes: its pixel indices are the colors' positions there.
+- Otherwise a report lists every broken rule with its tile column and row. The rules: a size that isn't a multiple of 8, more than 256 tiles, half-transparent pixels, transparency in the background bank, colors missing from the main palette, more than 8 colors in a tile (7 plus transparent for sprites), and colors that fit no sub-palette. Dimensions are checked before any pixel is read.
+
+Accept: a test per rule, a sheet that imports exactly, and a report with the right tile positions.
+
+### T25 Import a sheet in the Art view
+Depends: T24, T23
+- An Import button in the Art view. JS reads the picked file and decodes it with the browser, with no color-space conversion or premultiplied alpha, then hands the RGBA bytes to Swift. Size and dimension limits apply before decoding.
+- After a confirm, a clean import replaces the bank. It is one undo step and marks the cart unsaved.
+- A rejected import shows the report: Swift draws the image with each offending tile outlined, next to the list of rules. A JPEG's report says to export PNG.
+
+Accept: Playwright imports a fixture PNG and sees its tiles in the sheet and in a running cart, with every color exact; a fixture with a 9-color tile shows the report naming that tile; a JPEG shows the PNG hint.
+
+### T26 Adopt the image's colors
+Depends: T25
+- Per import, an option: the image's colors (up to 64, in order of first appearance) become the cart's main palette, and the bank's 8 sub-palettes are built from the tiles' color sets. The confirm says that the other bank's colors change too.
+- Over 64 colors, or tiles that need more than 8 sub-palettes, are refused with the same report.
+
+Accept: tests for building sub-palettes (tiles sharing a palette, sprite color 0 kept transparent, too many colors, too many palettes); Playwright imports with the option and the running cart shows the image's colors.
 
 ## M4 — Map and scene editor (outline)
 
