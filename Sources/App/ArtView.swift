@@ -19,6 +19,7 @@ nonisolated(unsafe) private var shownSheetLayout: GridLayout?
 nonisolated(unsafe) private let artClicked = JSClosure { _ in
     show(.art)
     redrawArtView()
+    _ = tileSlider.focus()
     return .undefined
 }
 

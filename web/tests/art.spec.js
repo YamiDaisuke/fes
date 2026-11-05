@@ -75,6 +75,14 @@ ephemeralTest("the tile slider selects tiles from the keyboard", async ({ page }
   expect(await editAreaShowsSheetTile(page, 1)).toBe(true);
 });
 
+ephemeralTest("pressing Art from the keyboard moves focus to the tile slider", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#cart-name")).toHaveValue("Demo");
+  await page.locator("#show-art").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#art-tile")).toBeFocused();
+});
+
 test("Save works from the art view", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
