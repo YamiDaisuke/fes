@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { openPaused, runFrames } from "./frames.js";
+import { typeCode } from "./code-editor.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -9,7 +10,7 @@ async function openBooted(page) {
 test("code typed in the editor runs when Run is pressed", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Code" }).click();
-  await page.locator(".cm-content").fill('error("from the editor")');
+  await typeCode(page, 'error("from the editor")');
   await page.getByRole("button", { name: "Run" }).click();
   await expect(page.locator("#cart-error")).toContainText("main.lua:1: from the editor");
   await expect(page.locator(".cm-editor")).toBeHidden();

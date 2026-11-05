@@ -1,5 +1,6 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
+import { typeCode } from "./code-editor.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -41,6 +42,31 @@ test("a saved cart's code runs when it is loaded on another page", async ({ cont
   await expect(secondPage.locator("#cart-error")).toContainText("main.lua:1: from saved cart");
 });
 
+test("code with a NUL character survives edit, Save, reload and load", async ({ page }) => {
+  const code = 'x = "a\0b"\ny = 2\nerror("len " .. #x .. " y " .. y)';
+  await page.addInitScript(() => {
+    window.testCartMainLua = "";
+  });
+  await openBooted(page);
+  await page.locator(".cm-content").focus();
+  await page.keyboard.insertText(code);
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
+
+  await page.getByRole("button", { name: "Code" }).click();
+  await saveAs(page, "N");
+  const saved = await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    return fesStorage.readCartFile(folder, "main.lua");
+  });
+  expect(saved).toBe(code);
+
+  await openBooted(page);
+  await page.locator("#cart-list").getByRole("button", { name: "N" }).click();
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
+});
+
 test("Enter on the focused Save button saves", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Save", exact: true }).focus();
@@ -56,7 +82,7 @@ test("loading over unsaved code asks first, and cancelling keeps the edit", asyn
   await saveAs(page, "Mine");
   await expect(page.locator("#cart-list button")).toHaveCount(1);
   const editor = page.locator(".cm-content");
-  await editor.fill("-- edited");
+  await typeCode(page, "-- edited");
 
   await cancelLoadAfterQuestion(page, "Mine", "Discard unsaved changes to Mine?");
   await expect(editor).toHaveText("-- edited");
@@ -73,7 +99,7 @@ test("loading over an edited boot cart asks first, even before any save on this 
 
   const secondPage = await context.newPage();
   await openBooted(secondPage);
-  await secondPage.locator(".cm-content").fill("-- my edit to the demo");
+  await typeCode(secondPage, "-- my edit to the demo");
   await cancelLoadAfterQuestion(secondPage, "Mine", "Discard unsaved changes to Demo?");
   await expect(secondPage.locator(".cm-content")).toHaveText("-- my edit to the demo");
 });
@@ -89,7 +115,7 @@ test("code typed while a save is running stays unsaved", async ({ page }) => {
   await openBooted(page);
   await page.locator("#cart-name").fill("Mine");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.locator(".cm-content").fill("-- typed during the save");
+  await typeCode(page, "-- typed during the save");
   await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
   await cancelLoadAfterQuestion(page, "Mine", "Discard unsaved changes to Mine?");
 });

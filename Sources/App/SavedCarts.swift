@@ -16,7 +16,7 @@ nonisolated(unsafe) private let saveClicked = JSClosure { _ in
 }
 
 nonisolated(unsafe) private let cartListClicked = JSClosure { arguments in
-    if let folder = arguments[0].target.closest("[data-folder]").object?.dataset.folder.string {
+    if let button = arguments[0].target.closest("[data-folder]").object, let folder = string(from: button.dataset.folder) {
         Task { await loadCart(folder: folder) }
     }
     return .undefined
@@ -45,7 +45,7 @@ func startSavedCarts() {
 }
 
 private func saveCart() async {
-    let name = nameInput.value.string ?? ""
+    let name = string(from: nameInput.value) ?? ""
     if let problem = nameProblem(name) {
         showStatus("Can't save: \(problem)")
         return
@@ -73,7 +73,7 @@ private func saveCart() async {
 }
 
 private func refreshCartList() async throws(JSException) {
-    let folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { $0.string! }
+    let folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { string(from: $0)! }
     var entries: [(folder: String, name: String)] = []
     for folder in folders {
         entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
@@ -106,7 +106,7 @@ func readSavedCart(folder: String) async -> Cart? {
     var files: [String: String] = [:]
     for file in Cart.fileNames {
         do {
-            files[file] = try await awaitStorage(storage.readCartFile(folder, file)).string
+            files[file] = string(from: try await awaitStorage(storage.readCartFile(folder, file)))
         } catch {
             showStatus("Can't read \(file): \(error.thrownValue)")
             return nil
@@ -134,7 +134,7 @@ func showCartName() {
 }
 
 private func savedCartName(folder: String) async -> String? {
-    guard let text = try? await awaitStorage(storage.readCartFile(folder, "cart.json")).string else {
+    guard let value = try? await awaitStorage(storage.readCartFile(folder, "cart.json")), let text = string(from: value) else {
         return nil
     }
     return try? cartName(fromCartJSON: text)

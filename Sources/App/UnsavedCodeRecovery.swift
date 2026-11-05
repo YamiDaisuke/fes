@@ -18,7 +18,7 @@ func keepUnsavedCodeCopy() {
 }
 
 func readUnsavedCodeText() -> String? {
-    (try? storage.throwing.readUnsavedCode!())?.string
+    (try? storage.throwing.readUnsavedCode!()).flatMap(string(from:))
 }
 
 func offerUnsavedCode(_ text: String?) async {
