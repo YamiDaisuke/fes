@@ -25,3 +25,27 @@ func errorText(_ state: OpaquePointer, status: Int32) -> String {
     }
     return text
 }
+
+public func syntaxError(inMainLua mainLua: String) -> String? {
+    let meter = UnsafeMutablePointer<BudgetMeter>.allocate(capacity: 1)
+    meter.initialize(to: BudgetMeter())
+    defer { meter.deallocate() }
+    let state = newStateWithinBudget(meter: meter)
+    defer { lua_close(state) }
+    let status = loadMainLua(state, mainLua, meter: meter)
+    return status == LUA_OK ? nil : errorText(state, status: status)
+}
+
+public func mainLuaLine(inError error: String) -> Int? {
+    let prefix = mainLuaName + ":"
+    for line in error.split(separator: "\n") {
+        let position = line.drop(while: { $0 == "\t" })
+        guard position.hasPrefix(prefix) else { continue }
+        let digits = position.dropFirst(prefix.count).prefix(while: \.isNumber)
+        let afterDigits = position.dropFirst(prefix.count + digits.count)
+        if afterDigits.hasPrefix(":"), let number = Int(digits), number > 0 {
+            return number
+        }
+    }
+    return nil
+}
