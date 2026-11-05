@@ -5,7 +5,7 @@ import Storage
 
 nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) private let storage = JSObject.global.fesStorage
-nonisolated(unsafe) private let nameInput = document.getElementById("cart-name")
+nonisolated(unsafe) let nameInput = document.getElementById("cart-name")
 nonisolated(unsafe) private let saveButton = document.getElementById("cart-save")
 nonisolated(unsafe) private let cartList = document.getElementById("cart-list")
 nonisolated(unsafe) private let cartStatus = document.getElementById("cart-status")
@@ -35,6 +35,7 @@ func startSavedCarts() {
             try await refreshCartList()
         } catch {
             saveButton.disabled = .boolean(true)
+            document.getElementById("cart-import").disabled = .boolean(true)
             savingIsUnavailable = true
         }
         await offerUnsavedCode(unsavedCodeText)
@@ -55,13 +56,8 @@ private func saveCart() async {
     cart.name = name
     let folder = cartFolder ?? newFolderName()
     cartFolder = folder
-    var files = saving.files
-    let cartJSON = files.removeValue(forKey: "cart.json")!
     do {
-        for (file, text) in files {
-            _ = try await awaitStorage(storage.writeCartFile(folder, file, text))
-        }
-        _ = try await awaitStorage(storage.writeCartFile(folder, "cart.json", cartJSON))
+        try await writeCart(saving, folder: folder)
     } catch {
         showStatus("Can't save: \(error.thrownValue)")
         return
@@ -72,7 +68,16 @@ private func saveCart() async {
     try? await refreshCartList()
 }
 
-private func refreshCartList() async throws(JSException) {
+func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
+    var files = writing.files
+    let cartJSON = files.removeValue(forKey: "cart.json")!
+    for (file, text) in files {
+        _ = try await awaitStorage(storage.writeCartFile(folder, file, text))
+    }
+    _ = try await awaitStorage(storage.writeCartFile(folder, "cart.json", cartJSON))
+}
+
+func refreshCartList() async throws(JSException) {
     let folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { string(from: $0)! }
     var entries: [(folder: String, name: String)] = []
     for folder in folders {
@@ -144,7 +149,7 @@ private func awaitStorage(_ promise: JSValue) async throws(JSException) -> JSVal
     try await JSPromise(promise.object!)!.value
 }
 
-private func newFolderName() -> String {
+func newFolderName() -> String {
     let digits = String(UInt64.random(in: .min ... .max), radix: 16)
     return String(repeating: "0", count: 16 - digits.count) + digits
 }

@@ -1,6 +1,7 @@
 import { init } from "../.build/js/index.js";
 import { listenForInput, buttonsForFrame } from "./input.js";
 import * as storage from "./storage.js";
+import * as files from "./files.js";
 import { createCodeEditor } from "./code-editor.js";
 import { startPWA } from "./pwa.js";
 
@@ -17,6 +18,7 @@ function fitCanvas() {
 }
 
 globalThis.fesStorage = storage;
+globalThis.fesFiles = files;
 globalThis.fesCodeEditor = createCodeEditor(document.getElementById("code-editor"));
 const { instance } = await init();
 new ResizeObserver(fitCanvas).observe(gameView);
