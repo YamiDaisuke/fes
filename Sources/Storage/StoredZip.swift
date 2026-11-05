@@ -24,31 +24,35 @@ public struct ArchiveError: Error, CustomStringConvertible {
 }
 
 func storedZip(_ entries: [(name: String, bytes: [UInt8])]) -> [UInt8] {
+    let zero16 = littleEndian(UInt16(0))
     var archive: [UInt8] = []
     var centralDirectory: [UInt8] = []
     for entry in entries {
         let name = Array(entry.name.utf8)
         let size = littleEndian(UInt32(entry.bytes.count))
+        let noFlags = zero16
+        let noExtraField = zero16
         let fieldsInBothHeaders =
-            littleEndian(UInt16(0)) + littleEndian(UInt16(storedMethod)) + littleEndian(midnight) + littleEndian(january1st1980)
-            + littleEndian(crc32(entry.bytes)) + size + size
-            + littleEndian(UInt16(name.count)) + littleEndian(UInt16(0))
+            noFlags + littleEndian(UInt16(storedMethod)) + littleEndian(midnight) + littleEndian(january1st1980)
+            + littleEndian(crc32(entry.bytes)) + size + size + littleEndian(UInt16(name.count)) + noExtraField
         let localHeaderOffset = UInt32(archive.count)
 
         archive += littleEndian(localHeaderSignature) + littleEndian(versionNeeded) + fieldsInBothHeaders
         archive += name + entry.bytes
 
-        let noComment = littleEndian(UInt16(0))
-        let diskZero = littleEndian(UInt16(0))
-        let noAttributes = littleEndian(UInt16(0)) + littleEndian(UInt32(0))
+        let noComment = zero16
+        let diskZero = zero16
+        let noAttributes = zero16 + littleEndian(UInt32(0))
         centralDirectory += littleEndian(centralHeaderSignature) + littleEndian(versionMadeBy) + littleEndian(versionNeeded)
         centralDirectory += fieldsInBothHeaders + noComment + diskZero + noAttributes + littleEndian(localHeaderOffset) + name
     }
     let centralDirectoryOffset = UInt32(archive.count)
     let entryCount = littleEndian(UInt16(entries.count))
+    let diskZero = zero16
+    let noComment = zero16
     archive += centralDirectory
-    archive += littleEndian(endRecordSignature) + littleEndian(UInt16(0)) + littleEndian(UInt16(0)) + entryCount + entryCount
-    archive += littleEndian(UInt32(centralDirectory.count)) + littleEndian(centralDirectoryOffset) + littleEndian(UInt16(0))
+    archive += littleEndian(endRecordSignature) + diskZero + diskZero + entryCount + entryCount
+    archive += littleEndian(UInt32(centralDirectory.count)) + littleEndian(centralDirectoryOffset) + noComment
     return archive
 }
 
