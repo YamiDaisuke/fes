@@ -1,5 +1,6 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
+import { typeCode } from "./code-editor.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -81,7 +82,7 @@ test("loading over unsaved code asks first, and cancelling keeps the edit", asyn
   await saveAs(page, "Mine");
   await expect(page.locator("#cart-list button")).toHaveCount(1);
   const editor = page.locator(".cm-content");
-  await editor.fill("-- edited");
+  await typeCode(page, "-- edited");
 
   await cancelLoadAfterQuestion(page, "Mine", "Discard unsaved changes to Mine?");
   await expect(editor).toHaveText("-- edited");
@@ -98,7 +99,7 @@ test("loading over an edited boot cart asks first, even before any save on this 
 
   const secondPage = await context.newPage();
   await openBooted(secondPage);
-  await secondPage.locator(".cm-content").fill("-- my edit to the demo");
+  await typeCode(secondPage, "-- my edit to the demo");
   await cancelLoadAfterQuestion(secondPage, "Mine", "Discard unsaved changes to Demo?");
   await expect(secondPage.locator(".cm-content")).toHaveText("-- my edit to the demo");
 });
@@ -114,7 +115,7 @@ test("code typed while a save is running stays unsaved", async ({ page }) => {
   await openBooted(page);
   await page.locator("#cart-name").fill("Mine");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.locator(".cm-content").fill("-- typed during the save");
+  await typeCode(page, "-- typed during the save");
   await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
   await cancelLoadAfterQuestion(page, "Mine", "Discard unsaved changes to Mine?");
 });

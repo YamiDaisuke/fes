@@ -1,5 +1,6 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
+import { typeCode } from "./code-editor.js";
 
 async function openCodeView(page) {
   await page.goto("/");
@@ -8,14 +9,6 @@ async function openCodeView(page) {
 }
 
 const line = (page, number) => page.locator(".cm-line").nth(number - 1);
-
-async function typeCode(page, code) {
-  // WebKit's fill() on CodeMirror sometimes leaves an extra empty first line (T14 QA-6).
-  await expect(async () => {
-    await page.locator(".cm-content").fill(code);
-    await expect(page.locator(".cm-line")).toHaveText(code.split("\n"), { timeout: 1000 });
-  }).toPass();
-}
 
 ephemeralTest("a syntax error appears on its line after typing", async ({ page }) => {
   await openCodeView(page);

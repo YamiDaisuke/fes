@@ -1,5 +1,6 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
+import { typeCode } from "./code-editor.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -37,7 +38,7 @@ test.beforeEach(async ({ page }) => {
 test("unsaved code comes back after a reload when the prompt is accepted", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");
-  await page.locator(".cm-content").fill('error("edited")');
+  await typeCode(page, 'error("edited")');
   const questions = recordDialogs(page, "accept");
 
   await page.reload();
@@ -52,7 +53,7 @@ test("unsaved code comes back after a reload when the prompt is accepted", async
 test("declining the prompt drops the copy", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");
-  await page.locator(".cm-content").fill("-- edited");
+  await typeCode(page, "-- edited");
   const questions = recordDialogs(page, "dismiss");
 
   await reloadUntilCartsListed(page);
@@ -67,7 +68,7 @@ test("declining the prompt drops the copy", async ({ page }) => {
 
 test("saving removes the copy", async ({ page }) => {
   await openBooted(page);
-  await page.locator(".cm-content").fill("-- edited");
+  await typeCode(page, "-- edited");
   await saveAs(page, "Mine");
   const questions = recordDialogs(page, "accept");
 
@@ -78,7 +79,7 @@ test("saving removes the copy", async ({ page }) => {
 test("code whose saved cart can't be read is restored as a new cart", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");
-  await page.locator(".cm-content").fill("-- edited");
+  await typeCode(page, "-- edited");
   await page.evaluate(async () => {
     const [folder] = await fesStorage.listCartFolders();
     await fesStorage.writeCartFile(folder, "cart.json", "{");
@@ -126,7 +127,7 @@ test("a copy whose folder now holds another cart is restored as a new cart", asy
 
 test("an edited cart that was never saved is restored under its name", async ({ page }) => {
   await openBooted(page);
-  await page.locator(".cm-content").fill("-- edited demo");
+  await typeCode(page, "-- edited demo");
   const questions = recordDialogs(page, "accept");
 
   await page.reload();
@@ -152,7 +153,7 @@ test("undoing back to the saved code removes the copy", async ({ page }) => {
 
 ephemeralTest("a restore without saving still says why Save is unavailable", async ({ page }) => {
   await openBooted(page);
-  await page.locator(".cm-content").fill("-- edited demo");
+  await typeCode(page, "-- edited demo");
   recordDialogs(page, "accept");
 
   await page.reload();
