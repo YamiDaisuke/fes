@@ -33,10 +33,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET" || !precachedURLs.has(url.href)) return;
   if (request.mode === "navigate") event.waitUntil(forgetIfUnpublished());
   event.respondWith(
-    (async () => {
-      const cache = await caches.open(cacheName);
-      return (await cache.match(request, { ignoreSearch: true })) ?? fetch(request);
-    })(),
+    (async () => (await caches.match(request, { cacheName, ignoreSearch: true })) ?? fetch(request))(),
   );
 });
 
@@ -48,8 +45,8 @@ async function forgetIfUnpublished() {
     return;
   }
   if (response.status !== 404) return;
-  await self.registration.unregister();
   for (const key of await caches.keys()) {
     if (key.startsWith(cachePrefix)) await caches.delete(key);
   }
+  await self.registration.unregister();
 }
