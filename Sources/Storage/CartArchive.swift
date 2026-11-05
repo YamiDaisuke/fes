@@ -12,6 +12,12 @@ extension Cart {
             throw ArchiveError("larger than 8 MiB")
         }
         let entries = try readStoredZip(fesArchive)
+        for name in entries.keys where !Cart.fileNames.contains(name) {
+            let lowercased = name.lowercased()
+            if let cartFile = Cart.fileNames.first(where: { lowercased == $0 || lowercased == $0 + "/" }) {
+                throw ArchiveError("\(name) could be unzipped as \(cartFile)")
+            }
+        }
         var files: [String: String] = [:]
         for name in Cart.fileNames {
             guard let bytes = entries[name] else {
