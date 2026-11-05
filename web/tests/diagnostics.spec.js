@@ -74,3 +74,12 @@ ephemeralTest("a syntax check pending at Run doesn't clear the runtime error", a
   await expect(page.locator("#code-error")).toHaveText("main.lua:2: quick");
   await expect(line(page, 2).locator(".cm-lintRange-error")).toHaveCount(1);
 });
+
+ephemeralTest("an error whose text starts with a newline still shows a message", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "x = 1\ny = 2\nerror('\\nmain.lua:999: fake', 0)\nz = 3";
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toHaveText("main.lua:999: fake");
+});

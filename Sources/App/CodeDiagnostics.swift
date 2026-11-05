@@ -21,13 +21,13 @@ func showRuntimeErrorInCode(_ error: String) {
 }
 
 func showErrorInCode(_ error: String?) {
-    let firstLine = error.map { String($0.prefix(while: { $0 != "\n" })) } ?? ""
-    if firstLine != shownCodeError {
-        JSObject.global.document.getElementById("code-error").textContent = .string(firstLine)
-        shownCodeError = firstLine
+    let message = error?.split(separator: "\n").first.map(String.init) ?? ""
+    if message != shownCodeError {
+        JSObject.global.document.getElementById("code-error").textContent = .string(message)
+        shownCodeError = message
     }
     if let error, let line = mainLuaLine(inError: error) {
-        _ = codeEditor.showError(line, firstLine)
+        _ = codeEditor.showError(line, message)
     } else {
         _ = codeEditor.clearError()
     }
