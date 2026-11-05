@@ -10,6 +10,29 @@ private enum OneEntryArchive {
     static let endRecord = 100
 }
 
+private let evilMainLua = (name: "main.lua", bytes: Array("print(\"EVIL\")".utf8))
+private let notes = (name: "notes.txt", bytes: Array("hi".utf8))
+
+private func localEntry(_ entry: (name: String, bytes: [UInt8])) -> [UInt8] {
+    Array(storedZip([entry]).prefix(30 + entry.name.utf8.count + entry.bytes.count))
+}
+
+private func centralHeader(_ entry: (name: String, bytes: [UInt8]), at localHeaderOffset: Int) -> [UInt8] {
+    var header = Array(storedZip([entry]).dropFirst(localEntry(entry).count).dropLast(22))
+    header.replaceSubrange(42..<46, with: littleEndian(UInt32(localHeaderOffset)))
+    return header
+}
+
+private func archive(_ localEntries: [UInt8], centralHeaders: [[UInt8]]) -> [UInt8] {
+    let directory = centralHeaders.flatMap { $0 }
+    var endRecord = storedZip([])
+    endRecord[8] = UInt8(centralHeaders.count)
+    endRecord[10] = UInt8(centralHeaders.count)
+    endRecord.replaceSubrange(12..<16, with: littleEndian(UInt32(directory.count)))
+    endRecord.replaceSubrange(16..<20, with: littleEndian(UInt32(localEntries.count)))
+    return localEntries + directory + endRecord
+}
+
 private func refusal(_ archive: [UInt8]) -> String? {
     do {
         _ = try readStoredZip(archive)
@@ -119,8 +142,34 @@ private func refusal(changing changes: [Int: UInt8]) -> String? {
     #expect(refusal(changing: OneEntryArchive.centralHeader + 20, to: 9) == "main.lua has two different sizes")
 }
 
-@Test func entryOffsetPastTheEndIsRefused() {
-    #expect(refusal(changing: OneEntryArchive.centralHeader + 43, to: 0xFF) == "main.lua has no local header where the central directory says")
+@Test func entryWhoseLocalHeaderIsInsideAnotherEntrysDataIsRefused() {
+    let notesHidingMainLua = (name: "notes.txt", bytes: localEntry(evilMainLua))
+    let insideNotesData = 30 + notesHidingMainLua.name.utf8.count
+    let overlapping = archive(
+        localEntry(notesHidingMainLua),
+        centralHeaders: [centralHeader(notesHidingMainLua, at: 0), centralHeader(evilMainLua, at: insideNotesData)]
+    )
+    #expect(refusal(overlapping) == "main.lua overlaps another entry or has bytes before it")
+}
+
+@Test func bytesBetweenTwoEntriesAreRefused() {
+    let gap = [UInt8](repeating: 0, count: 4)
+    let withGap = archive(
+        localEntry(notes) + gap + localEntry(mainLua),
+        centralHeaders: [centralHeader(notes, at: 0), centralHeader(mainLua, at: localEntry(notes).count + gap.count)]
+    )
+    #expect(refusal(withGap) == "main.lua overlaps another entry or has bytes before it")
+}
+
+@Test func localEntryHiddenBeforeTheCentralDirectoryIsRefused() {
+    let hidden = archive(localEntry(mainLua) + localEntry(evilMainLua), centralHeaders: [centralHeader(mainLua, at: 0)])
+    #expect(refusal(hidden) == "there are bytes between the last entry and the central directory")
+}
+
+@Test func bytesBeforeTheFirstEntryAreRefusedEvenWithOffsetsAdjusted() {
+    let stub = Array("#!/bin/sh\n".utf8)
+    let prepended = archive(stub + localEntry(mainLua), centralHeaders: [centralHeader(mainLua, at: stub.count)])
+    #expect(refusal(prepended) == "main.lua overlaps another entry or has bytes before it")
 }
 
 @Test func entryOffsetAtSomethingElseThanALocalHeaderIsRefused() {

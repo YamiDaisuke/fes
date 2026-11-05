@@ -77,6 +77,7 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
 
     var files: [String: [UInt8]] = [:]
     var header = directoryStart
+    var previousDataEnd = 0
     for _ in 0..<entryCount {
         guard try uint32(archive, at: header) == centralHeaderSignature else {
             throw ArchiveError("an entry in the central directory is damaged")
@@ -105,7 +106,10 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
         guard compressedSize == size else {
             throw ArchiveError("\(name) has two different sizes")
         }
-        guard localHeader <= directoryStart - localHeaderLength, try uint32(archive, at: localHeader) == localHeaderSignature else {
+        guard localHeader == previousDataEnd else {
+            throw ArchiveError("\(name) overlaps another entry or has bytes before it")
+        }
+        guard try uint32(archive, at: localHeader) == localHeaderSignature else {
             throw ArchiveError("\(name) has no local header where the central directory says")
         }
         let flagsToNameLength = 22
@@ -127,10 +131,14 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
             throw ArchiveError("\(name) appears twice")
         }
         files[name] = data
+        previousDataEnd = dataStart + size
         header += centralHeaderLength + nameLength + extraLength + commentLength
     }
     guard header == end else {
         throw ArchiveError("the end record doesn't match the central directory")
+    }
+    guard previousDataEnd == directoryStart else {
+        throw ArchiveError("there are bytes between the last entry and the central directory")
     }
     return files
 }
@@ -176,6 +184,6 @@ private func littleEndian(_ value: UInt16) -> [UInt8] {
     [UInt8(value & 0xFF), UInt8(value >> 8)]
 }
 
-private func littleEndian(_ value: UInt32) -> [UInt8] {
+func littleEndian(_ value: UInt32) -> [UInt8] {
     [UInt8(value & 0xFF), UInt8((value >> 8) & 0xFF), UInt8((value >> 16) & 0xFF), UInt8(value >> 24)]
 }
