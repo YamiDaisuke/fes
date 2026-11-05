@@ -80,6 +80,7 @@ ephemeralTest("an error whose text starts with a newline still shows a message",
     window.testCartMainLua = "x = 1\ny = 2\nerror('\\nmain.lua:999: fake', 0)\nz = 3";
   });
   await page.goto("/");
+  await expect(page.locator("#cart-error")).toContainText("main.lua:999: fake");
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator("#code-error")).toHaveText("main.lua:999: fake");
 });
