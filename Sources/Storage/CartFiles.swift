@@ -32,17 +32,7 @@ private func fileText(_ file: String, in files: [String: String]) throws(CartFil
 }
 
 private func withLFLineEndings(_ text: String) -> String {
-    var lfText = String.UnicodeScalarView()
-    var previousWasCR = false
-    for scalar in text.unicodeScalars {
-        if scalar == "\r" {
-            lfText.append("\n")
-        } else if scalar != "\n" || !previousWasCR {
-            lfText.append(scalar)
-        }
-        previousWasCR = scalar == "\r"
-    }
-    return String(lfText)
+    String(text.map { $0 == "\r\n" || $0 == "\r" ? "\n" : $0 })
 }
 
 private func cartJSONText(name: String) -> String {
