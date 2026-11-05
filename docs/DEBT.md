@@ -1,13 +1,13 @@
 # Debt
 
 Deliberate shortcuts, one line each: what, why, when to revisit.
-- App.wasm ships without wasm-opt (10.6 MB, 3.0 MB gzipped): binaryen isn't installed or approved; revisit in T15 when offline first-load size matters.
+- App.wasm ships without wasm-opt (10.6 MB, 3.0 MB gzipped): binaryen isn't installed or approved; revisit if installing over cellular is too slow.
 - A cancelled pending deploy leaves its PR's check cancelled and can skip that PR's first preview comment: the `pages` concurrency group keeps only one pending job, so restacking three or more PRs cancels some; revisit if restacks often leave PRs without a preview link.
 - Master palette is a generated 2-bit-per-channel placeholder: the owner picks the curated 64 colors (SPEC open decision); revisit at the start of M3.
 - Background tilemap is a fixed 32×32 cells: map dimensions are a SPEC open decision the owner takes in M4; revisit then (change Tilemap.columns/rows, keep powers of two, re-record goldens).
 - One console frame per requestAnimationFrame callback: Safari on iPad delivers rAF at 60 Hz by default, but with the "Prefer Page Rendering Updates near 60fps" feature flag off ProMotion iPads call it at 120 Hz and the game runs at double speed; revisit when input or the cart runtime needs real-time pacing (fixed timestep driven by rAF timestamps).
 - The touch overlay is a plain placeholder look, shown in the game view even with a hardware keyboard: the owner styles it; revisit when the owner restyles it.
-- The overlay buttons listen only for pointer events, not `click`, so VoiceOver and Switch Control activation does nothing: it is a placeholder pad; revisit with the T15 PWA work or when the owner restyles the overlay.
+- The overlay buttons listen only for pointer events, not `click`, so VoiceOver and Switch Control activation does nothing: it is a placeholder pad; revisit when the owner restyles the overlay.
 - The boot cart's main.lua is `window.testCartMainLua` instead of the demo's when the page sets it, so Playwright specs can boot their own code without pressing Run or typing through CodeMirror's closeBrackets: revisit if that hook ever ships to users.
 - The boot cart's graphics are Swift string art in Runtime/DemoCart.swift: there is no sprite editor to author them as cart files; revisit in M3.
 - CPU budget of 500,000 instructions (per frame, and for the main chunk + `_init` together), an 8 MiB memory cap and a 250 ms wall-clock deadline per budget period are placeholders in `Runtime/Budgets.swift`: the owner sets SPEC's numeric limits; revisit when the owner decides them.
@@ -20,3 +20,5 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - Saving a cart writes its files one at a time (cart.json last), so a failure partway leaves a mix of new and old files in the folder: OPFS has no multi-file transaction or portable directory move (decision 014); revisit with M6's content-addressed store.
 - The recovery copy holds only main.lua and only one cart per origin: the code editor is the only editor and M6 brings history; revisit in M3 when tiles and maps become editable.
 - Code typed before the restore prompt shows is replaced without asking when the user accepts it (T13b QA-2): the window is the OPFS cart listing at boot, a few milliseconds on an iPad; revisit if anyone hits it.
+- App icon is placeholder art in scripts/make-icons.js: the owner is a pixel artist; revisit when the owner draws it (edit the grid, run `node scripts/make-icons.js`).
+- The Home Screen hint's wording and 7-day reminder are placeholders: revisit when the owner reviews them.
