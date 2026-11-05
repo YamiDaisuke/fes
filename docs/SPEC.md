@@ -66,7 +66,7 @@ A small built-in version history, not git. Files are stored by content hash. A s
 | Screen | 192×144, 60 fps |
 | Tiles | 8×8, 3 bits per pixel (8 colors per tile) |
 | Tile memory | 256 background tiles, 256 sprite tiles |
-| Master palette | 64 curated colors with good shading ramps. Each cart stores its own copy (M3) |
+| Main palette | 64 curated colors with good shading ramps. Each cart stores its own copy (M3) |
 | Palettes | 8 background, 8 sprite, 8 colors each. Sprite color 0 is transparent |
 | Background | 2 scrolling tile layers + a non-scrolling window layer for HUDs |
 | Overlay | Small framebuffer layer above everything, 4 colors from its own palette, with `pset`, `line`, `rect`, `circ`, `print` |
@@ -85,7 +85,6 @@ A small built-in version history, not git. Files are stored by content hash. A s
 ## Open decisions
 
 Ask the owner when the task that needs them begins:
-- The 64-color master palette. The owner is a pixel artist: propose two or three candidates, let them choose or supply their own.
 - Cart file format details (text sections, single-file export).
 - Map dimensions in cart storage and VRAM.
 - Numeric limits: code size, CPU instructions per frame, RAM cap.
