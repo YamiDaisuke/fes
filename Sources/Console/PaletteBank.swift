@@ -1,4 +1,4 @@
-public struct PaletteBank {
+public struct PaletteBank: Equatable {
     public static let paletteCount = 8
     public static let colorsPerPalette = 8
 
@@ -8,6 +8,10 @@ public struct PaletteBank {
 
     public func color(palette: Int, index: Int) -> Color {
         MasterPalette.colors[masterIndices[entry(palette, index)]]
+    }
+
+    public func masterIndex(palette: Int, index: Int) -> Int {
+        masterIndices[entry(palette, index)]
     }
 
     public mutating func setMasterIndex(_ master: Int, palette: Int, index: Int) {

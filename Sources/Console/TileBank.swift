@@ -1,4 +1,4 @@
-public struct TileBank {
+public struct TileBank: Equatable {
     public static let tileCount = 256
     public static let tileSize = 8
 
