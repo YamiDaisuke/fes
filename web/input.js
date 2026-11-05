@@ -45,7 +45,7 @@ function releasePointer(event) {
 export function listenForInput(overlay) {
   addEventListener("keydown", (event) => {
     const button = KEY_BUTTONS[event.code];
-    if (!button || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (!button || event.target.closest("#carts") || event.metaKey || event.ctrlKey || event.altKey) return;
     event.preventDefault();
     heldKeys.add(event.code);
     pressedSinceLastFrame |= BUTTON_BITS[button];

@@ -1,25 +1,11 @@
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-
 private let formatVersion = 1
 private let longestName = 64
 
-private struct CartFormat: Decodable {
-    var format: Int
-}
-
-private struct CartJSON: Codable {
-    var format: Int
-    var name: String
-}
-
 extension Cart {
+    public static let fileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "palettes.pal", "map.map"]
+
     public init(files: [String: String]) throws(CartFileError) {
-        let json = try parseCartJSON(fileText("cart.json", in: files))
-        self.init(name: json.name, mainLua: try fileText("main.lua", in: files))
+        self.init(name: try cartName(fromCartJSON: fileText("cart.json", in: files)), mainLua: try fileText("main.lua", in: files))
         backgroundTiles = try parseTileSheet(fileText("background.tiles", in: files), file: "background.tiles")
         spriteTiles = try parseTileSheet(fileText("sprites.tiles", in: files), file: "sprites.tiles")
         (backgroundPalettes, spritePalettes) = try parsePalettes(fileText("palettes.pal", in: files), file: "palettes.pal")
@@ -28,7 +14,7 @@ extension Cart {
 
     public var files: [String: String] {
         [
-            "cart.json": cartJSONText(CartJSON(format: formatVersion, name: name)),
+            "cart.json": cartJSONText(name: name),
             "main.lua": mainLua,
             "background.tiles": tileSheetText(backgroundTiles),
             "sprites.tiles": tileSheetText(spriteTiles),
@@ -45,15 +31,24 @@ private func fileText(_ file: String, in files: [String: String]) throws(CartFil
     return text
 }
 
-private func cartJSONText(_ json: CartJSON) -> String {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-    let data = try! encoder.encode(json)
-    return String(decoding: data, as: UTF8.self) + "\n"
+private func cartJSONText(name: String) -> String {
+    "{\n  \"format\" : \(formatVersion),\n  \"name\" : \(jsonString(name))\n}\n"
 }
 
-private func parseCartJSON(_ text: String) throws(CartFileError) -> CartJSON {
-    let format = try decodeCartJSON(CartFormat.self, from: text).format
+public func cartName(fromCartJSON text: String) throws(CartFileError) -> String {
+    let fields: [String: JSONValue]
+    do {
+        fields = try parseJSONObject(text)
+    } catch {
+        throw CartFileError(file: "cart.json", reason: error.reason)
+    }
+    let wrongTypes = CartFileError(file: "cart.json", reason: "\"format\" must be an integer and \"name\" a string")
+    guard let formatValue = fields["format"] else {
+        throw CartFileError(file: "cart.json", reason: "missing \"format\"")
+    }
+    guard case .number(let formatText) = formatValue, let format = Int(formatText) else {
+        throw wrongTypes
+    }
     guard format >= 1 else {
         throw CartFileError(file: "cart.json", reason: "format \(format) is not valid")
     }
@@ -62,26 +57,19 @@ private func parseCartJSON(_ text: String) throws(CartFileError) -> CartJSON {
             file: "cart.json",
             reason: "This cart was made with a newer FES (format \(format)); this FES reads format \(formatVersion).")
     }
-    let json = try decodeCartJSON(CartJSON.self, from: text)
-    if let problem = nameProblem(json.name) {
+    guard let nameValue = fields["name"] else {
+        throw CartFileError(file: "cart.json", reason: "missing \"name\"")
+    }
+    guard case .string(let name) = nameValue else {
+        throw wrongTypes
+    }
+    if let problem = nameProblem(name) {
         throw CartFileError(file: "cart.json", reason: problem)
     }
-    return json
+    return name
 }
 
-private func decodeCartJSON<Fields: Decodable>(_ fields: Fields.Type, from text: String) throws(CartFileError) -> Fields {
-    do {
-        return try JSONDecoder().decode(fields, from: Data(text.utf8))
-    } catch DecodingError.dataCorrupted {
-        throw CartFileError(file: "cart.json", reason: "not valid JSON")
-    } catch DecodingError.keyNotFound(let key, _) {
-        throw CartFileError(file: "cart.json", reason: "missing \"\(key.stringValue)\"")
-    } catch {
-        throw CartFileError(file: "cart.json", reason: "\"format\" must be an integer and \"name\" a string")
-    }
-}
-
-func nameProblem(_ name: String) -> String? {
+public func nameProblem(_ name: String) -> String? {
     if name.unicodeScalars.allSatisfy({ $0.properties.isWhitespace || $0.properties.generalCategory == .format }) {
         return "the name is empty"
     }

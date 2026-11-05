@@ -144,3 +144,57 @@ private func refusal(cartJSON: String) -> String? {
 @Test func formatBelowOneIsRefused() {
     #expect(refusal(cartJSON: "{\"format\": 0, \"name\": \"Room\"}") == "cart.json: format 0 is not valid")
 }
+
+@Test func cartJSONIsReadInEitherKeyOrderWithAnyJSONWhitespace() throws {
+    #expect(try cartName(fromCartJSON: " \r\n\t{\n\"name\"\t:\"Room\" ,\r\n \"format\":1 } \n") == "Room")
+}
+
+@Test func cartJSONNameEscapesAreDecoded() throws {
+    let json = "{\"format\": 1, \"name\": \"\\u00e9\\u00C9\\ud83c\\udfae\\/\\\\\\\"\"}"
+    #expect(try cartName(fromCartJSON: json) == "éÉ🎮/\\\"")
+}
+
+@Test func cartJSONNameWithAControlCharacterIsWrittenEscaped() {
+    let cart = Cart(name: "a\tb\u{1f}c", mainLua: "")
+    #expect(cart.files["cart.json"] == "{\n  \"format\" : 1,\n  \"name\" : \"a\\tb\\u001fc\"\n}\n")
+}
+
+@Test func invalidStringsInCartJSONAreRefused() {
+    for name in ["\\ud83c", "\\ud83cx", "\\udfae", "\\ud83c\\u0041", "\\x", "\\u12g4", "\\u+123", "a\tb"] {
+        #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"\(name)\"}") == "cart.json: not valid JSON")
+    }
+}
+
+@Test func duplicateKeysAndTrailingDataAreRefused() {
+    #expect(
+        refusal(cartJSON: "{\"format\": 1, \"name\": \"A\", \"name\": \"B\"}") == "cart.json: \"name\" appears twice")
+    #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"A\"} x") == "cart.json: not valid JSON")
+    #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"A\"}}") == "cart.json: not valid JSON")
+    #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"A\",}") == "cart.json: not valid JSON")
+    #expect(refusal(cartJSON: "[1]") == "cart.json: expected a JSON object")
+}
+
+@Test func formatThatIsNotAPlainIntegerIsRefused() {
+    for format in ["1.0", "1e0", "\"1\"", "true", "99999999999999999999"] {
+        #expect(
+            refusal(cartJSON: "{\"format\": \(format), \"name\": \"Room\"}")
+                == "cart.json: \"format\" must be an integer and \"name\" a string")
+    }
+    for format in ["01", "-", "1.", ".5", "1e", "+1"] {
+        #expect(refusal(cartJSON: "{\"format\": \(format), \"name\": \"Room\"}") == "cart.json: not valid JSON")
+    }
+    #expect(refusal(cartJSON: "{\"format\": -1, \"name\": \"Room\"}") == "cart.json: format -1 is not valid")
+}
+
+@Test func unknownKeysWithNestedValuesAreIgnored() throws {
+    let extra = "\"palette\": [[1, -2.5e-3], {\"a\": null, \"b\": false}, true, \"\\u0041\"]"
+    #expect(try cartName(fromCartJSON: "{\"format\": 1, \(extra), \"name\": \"Room\"}") == "Room")
+    #expect(
+        refusal(cartJSON: "{\(extra), \"format\": 2}")
+            == "cart.json: This cart was made with a newer FES (format 2); this FES reads format 1.")
+}
+
+@Test func deeplyNestedCartJSONIsRefusedWithoutCrashing() {
+    let nested = String(repeating: "[", count: 100_000) + String(repeating: "]", count: 100_000)
+    #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"Room\", \"x\": \(nested)}") == "cart.json: not valid JSON")
+}

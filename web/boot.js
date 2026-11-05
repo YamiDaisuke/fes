@@ -1,5 +1,6 @@
 import { init } from "../.build/js/index.js";
 import { listenForInput, buttonsForFrame } from "./input.js";
+import * as storage from "./storage.js";
 
 const canvas = document.getElementById("screen");
 
@@ -9,6 +10,7 @@ function fitCanvas() {
   canvas.style.height = `${canvas.height * scale}px`;
 }
 
+globalThis.fesStorage = storage;
 const { instance } = await init();
 fitCanvas();
 addEventListener("resize", fitCanvas);

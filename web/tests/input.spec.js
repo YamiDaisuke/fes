@@ -143,6 +143,17 @@ test("unmapped keys and Cmd shortcuts press nothing and keep their default actio
   expect(await litNames(page)).toEqual([]);
 });
 
+test("mapped keys type into the cart name field and press nothing", async ({ page }) => {
+  const name = page.locator("#cart-name");
+  await name.fill("");
+  await name.pressSequentially("zx");
+  await name.press("ArrowLeft");
+  await name.press("Shift+KeyY");
+  await runFrames(page, 1);
+  await expect(name).toHaveValue("zYx");
+  expect(await litNames(page)).toEqual([]);
+});
+
 test("losing focus releases held keys and fingers", async ({ page }) => {
   await page.keyboard.down("ArrowLeft");
   await page.keyboard.down("KeyZ");
