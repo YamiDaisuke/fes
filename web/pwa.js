@@ -7,7 +7,8 @@ export function startPWA() {
 }
 
 async function registerServiceWorker() {
-  let hadController = navigator.serviceWorker.controller !== null;
+  const ownWorkerURL = new URL("sw.js", location.href).href;
+  let hadController = navigator.serviceWorker.controller?.scriptURL === ownWorkerURL;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (hadController) document.getElementById("update-notice").hidden = false;
     hadController = true;
