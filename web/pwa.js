@@ -7,9 +7,10 @@ export function startPWA() {
 }
 
 async function registerServiceWorker() {
-  const hadController = navigator.serviceWorker.controller !== null;
+  let hadController = navigator.serviceWorker.controller !== null;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (hadController) document.getElementById("update-notice").hidden = false;
+    hadController = true;
   });
   document.getElementById("update-reload").addEventListener("click", () => location.reload());
 
