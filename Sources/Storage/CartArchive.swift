@@ -14,7 +14,7 @@ extension Cart {
         let entries = try readStoredZip(fesArchive)
         for name in entries.keys where !Cart.fileNames.contains(name) {
             if let cartFile = cartFileUnzippedInPlace(ofEntry: name) {
-                throw ArchiveError("\(name) could be unzipped as \(cartFile)")
+                throw ArchiveError("\(shownEntryName(name)) could be unzipped as \(cartFile)")
             }
         }
         var files: [String: String] = [:]

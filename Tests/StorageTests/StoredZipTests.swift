@@ -197,3 +197,8 @@ private func refusal(changing changes: [Int: UInt8]) -> String? {
 @Test func nameLongerThanTheFileIsRefusedInsteadOfReadPastTheEnd() {
     #expect(refusal(changing: OneEntryArchive.centralHeader + 29, to: 0xFF) == "the file is cut short")
 }
+
+@Test func entryNameInARefusalHasControlCharactersReplacedAndIsCutTo64Characters() {
+    let hostile = (name: "\u{7}\n" + String(repeating: "é", count: 100), bytes: [UInt8]())
+    #expect(refusal(storedZip([hostile, hostile])) == "??" + String(repeating: "é", count: 61) + "… appears twice")
+}
