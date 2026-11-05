@@ -93,42 +93,43 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
         let localHeader = try offsetOrLength(archive, at: header + 42)
         let nameBytes = try bytes(archive, from: header + centralHeaderLength, count: nameLength)
         let name = String(decoding: nameBytes, as: UTF8.self)
+        let shownName = shownEntryName(name)
 
         guard flags & encryptedFlag == 0 else {
-            throw ArchiveError("\(name) is encrypted")
+            throw ArchiveError("\(shownName) is encrypted")
         }
         guard method == storedMethod else {
-            throw ArchiveError("\(name) is compressed; FES reads .fes files it exported")
+            throw ArchiveError("\(shownName) is compressed; FES reads .fes files it exported")
         }
         guard flags & dataDescriptorFlag == 0 else {
-            throw ArchiveError("\(name) has a data descriptor; FES reads .fes files it exported")
+            throw ArchiveError("\(shownName) has a data descriptor; FES reads .fes files it exported")
         }
         guard compressedSize == size else {
-            throw ArchiveError("\(name) has two different sizes")
+            throw ArchiveError("\(shownName) has two different sizes")
         }
         guard localHeader == previousDataEnd else {
-            throw ArchiveError("\(name) overlaps another entry or has bytes before it")
+            throw ArchiveError("\(shownName) overlaps another entry or has bytes before it")
         }
         guard try uint32(archive, at: localHeader) == localHeaderSignature else {
-            throw ArchiveError("\(name) has no local header where the central directory says")
+            throw ArchiveError("\(shownName) has no local header where the central directory says")
         }
         let flagsToNameLength = 22
         let localFlagsToNameLength = try bytes(archive, from: localHeader + 6, count: flagsToNameLength)
         let centralFlagsToNameLength = archive[(header + 8)..<(header + 8 + flagsToNameLength)]
         let localName = try bytes(archive, from: localHeader + localHeaderLength, count: nameLength)
         guard localFlagsToNameLength.elementsEqual(centralFlagsToNameLength), localName.elementsEqual(nameBytes) else {
-            throw ArchiveError("\(name)'s local header doesn't match the central directory")
+            throw ArchiveError("\(shownName)'s local header doesn't match the central directory")
         }
         let dataStart = localHeader + localHeaderLength + nameLength + (try uint16(archive, at: localHeader + 28))
         guard dataStart <= directoryStart, size <= directoryStart - dataStart else {
-            throw ArchiveError("\(name)'s data runs into the central directory")
+            throw ArchiveError("\(shownName)'s data runs into the central directory")
         }
         let data = Array(archive[dataStart..<(dataStart + size)])
         guard crc32(data) == expectedCRC else {
-            throw ArchiveError("\(name) is damaged (its CRC doesn't match)")
+            throw ArchiveError("\(shownName) is damaged (its CRC doesn't match)")
         }
         guard files[name] == nil else {
-            throw ArchiveError("\(name) appears twice")
+            throw ArchiveError("\(shownName) appears twice")
         }
         files[name] = data
         previousDataEnd = dataStart + size
@@ -141,6 +142,11 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
         throw ArchiveError("there are bytes between the last entry and the central directory")
     }
     return files
+}
+
+func shownEntryName(_ name: String) -> String {
+    let printable = String(String.UnicodeScalarView(name.unicodeScalars.map { $0.properties.generalCategory == .control ? "?" : $0 }))
+    return printable.count > 64 ? printable.prefix(63) + "…" : printable
 }
 
 private func endRecordOffset(_ archive: [UInt8]) throws(ArchiveError) -> Int {

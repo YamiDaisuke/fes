@@ -31,12 +31,19 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(try Cart(fesArchive: cart.fesArchive) == cart)
 }
 
+private func fixture(_ name: String) throws -> [UInt8] {
+    let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/\(name)")
+    return Array(try #require(FileManager.default.contents(atPath: url.path)))
+}
+
 @Test func archiveMadeByInfoZipReadsAsItsCart() throws {
     // Made with: zip -0 -X -D made-by-zip.fes * in a folder holding Cart(name: "Fixture", mainLua: "print(1)").files.
-    let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/made-by-zip.fes")
-    let bytes = try #require(FileManager.default.contents(atPath: fixture.path))
+    #expect(try Cart(fesArchive: fixture("made-by-zip.fes")) == Cart(name: "Fixture", mainLua: "print(1)"))
+}
 
-    #expect(try Cart(fesArchive: Array(bytes)) == Cart(name: "Fixture", mainLua: "print(1)"))
+@Test func archiveMadeByInfoZipWithExtraFieldsAndACommentReadsAsItsCart() throws {
+    // Made with: echo "A cart for FES" | zip -0 -D -z made-by-zip-with-extras-and-a-comment.fes * in the same folder.
+    #expect(try Cart(fesArchive: fixture("made-by-zip-with-extras-and-a-comment.fes")) == Cart(name: "Fixture", mainLua: "print(1)"))
 }
 
 @Test func unknownEntriesAreIgnored() throws {
@@ -46,11 +53,13 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(try Cart(fesArchive: withExtras) == cart)
 }
 
-@Test func entryNamedLikeACartFileInAnotherCaseOrAsAFolderIsRefused() {
+@Test func entryNamedLikeACartFileInAnotherCaseAsAFolderOrWithALeadingPathIsRefused() {
     let cart = Cart(name: "Demo", mainLua: "print(1)")
 
     #expect(refusal(archive(of: cart, changing: ["MAIN.LUA": Array("print(2)".utf8)])) == "MAIN.LUA could be unzipped as main.lua")
     #expect(refusal(archive(of: cart, changing: ["main.lua/": []])) == "main.lua/ could be unzipped as main.lua")
+    #expect(refusal(archive(of: cart, changing: ["./main.lua": Array("print(2)".utf8)])) == "./main.lua could be unzipped as main.lua")
+    #expect(refusal(archive(of: cart, changing: ["/Map.map": []])) == "/Map.map could be unzipped as map.map")
 }
 
 @Test func archiveWithoutMainLuaNamesTheMissingFile() {
@@ -82,4 +91,9 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
 @Test func fesFileNameIsNeverHiddenWhenTheCutLeavesOnlySpacesOrNothing() {
     #expect(fesFileName(forCartName: String(repeating: "\u{3000}", count: 63) + "👨‍👩‍👧‍👦") == "👨‍👩‍👧‍👦.fes")
     #expect(fesFileName(forCartName: "e" + String(repeating: "\u{301}", count: 100)) == "cart.fes")
+}
+
+@Test func fesFileNameReplacesRejectedCharactersAndLeadingDotsEvenWhenAMarkFollowsThem() {
+    #expect(fesFileName(forCartName: ".\u{301}abc") == "-\u{301}abc.fes")
+    #expect(fesFileName(forCartName: "a/\u{301}b:\u{200D}c|\u{FE0F}") == "a-\u{301}b-\u{200D}c-\u{FE0F}.fes")
 }

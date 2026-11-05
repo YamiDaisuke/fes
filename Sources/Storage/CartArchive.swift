@@ -13,9 +13,8 @@ extension Cart {
         }
         let entries = try readStoredZip(fesArchive)
         for name in entries.keys where !Cart.fileNames.contains(name) {
-            let lowercased = name.lowercased()
-            if let cartFile = Cart.fileNames.first(where: { lowercased == $0 || lowercased == $0 + "/" }) {
-                throw ArchiveError("\(name) could be unzipped as \(cartFile)")
+            if let cartFile = cartFileUnzippedInPlace(ofEntry: name) {
+                throw ArchiveError("\(shownEntryName(name)) could be unzipped as \(cartFile)")
             }
         }
         var files: [String: String] = [:]
@@ -33,14 +32,15 @@ extension Cart {
 }
 
 public func fesFileName(forCartName name: String) -> String {
-    let charactersFilesRejects: Set<Character> = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
-    var fileName = String(name.map { charactersFilesRejects.contains($0) ? "-" : $0 })
-    while fileName.first?.isWhitespace == true {
-        fileName.removeFirst()
+    let scalarsFilesRejects: Set<Unicode.Scalar> = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
+    var scalars = String.UnicodeScalarView(name.unicodeScalars.map { scalarsFilesRejects.contains($0) ? "-" : $0 })
+    while scalars.first?.properties.isWhitespace == true {
+        scalars.removeFirst()
     }
-    if fileName.hasPrefix(".") {
-        fileName = "-" + fileName.dropFirst()
+    if scalars.first == "." {
+        scalars.replaceSubrange(scalars.startIndex...scalars.startIndex, with: ["-"])
     }
+    var fileName = String(scalars)
     // APFS allows 255 UTF-8 bytes per name; the rest is room for ".fes" and a " (2)" Files or Safari may add.
     while fileName.utf8.count > 200 {
         fileName.removeLast()
@@ -49,6 +49,14 @@ public func fesFileName(forCartName name: String) -> String {
         fileName.removeLast()
     }
     return (fileName.isEmpty ? "cart" : fileName) + ".fes"
+}
+
+private func cartFileUnzippedInPlace(ofEntry name: String) -> String? {
+    var path = Substring(name.lowercased())
+    while path.hasPrefix("/") || path.hasPrefix("./") {
+        path = path.dropFirst(path.hasPrefix("/") ? 1 : 2)
+    }
+    return Cart.fileNames.first { path == $0 || path == $0 + "/" }
 }
 
 // String(validating:as:) needs macOS 15, and Package.swift supports macOS 13.
