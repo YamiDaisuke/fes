@@ -46,3 +46,31 @@ test("restored code with a syntax error shows it without typing", async ({ page 
   await expect(page.locator("#code-error")).toHaveText("main.lua:3: unexpected symbol near '='");
   await expect(line(page, 3).locator(".cm-lintRange-error")).toHaveCount(1);
 });
+
+ephemeralTest("Code after a run without an error drops the previous run's error", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "x = 1\nfunction _update()\n  local y = 2\n  if btn(4) then error('pressed') end\nend";
+  });
+  await page.goto("/");
+  await expect(page.locator("#cart-name")).toHaveValue("Demo");
+  await page.keyboard.down("KeyZ");
+  await expect(page.locator("#cart-error")).toContainText("main.lua:4: pressed");
+  await page.keyboard.up("KeyZ");
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toContainText("main.lua:4: pressed");
+
+  await page.getByRole("button", { name: "Run" }).click();
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toBeEmpty();
+  await expect(page.locator(".cm-lintRange-error")).toHaveCount(0);
+});
+
+ephemeralTest("a syntax check pending at Run doesn't clear the runtime error", async ({ page }) => {
+  await openCodeView(page);
+  await page.locator(".cm-content").fill("x = 1\nerror('quick')");
+  await page.getByRole("button", { name: "Run" }).click();
+  await page.getByRole("button", { name: "Code" }).click();
+  await page.waitForTimeout(700);
+  await expect(page.locator("#code-error")).toHaveText("main.lua:2: quick");
+  await expect(line(page, 2).locator(".cm-lintRange-error")).toHaveCount(1);
+});

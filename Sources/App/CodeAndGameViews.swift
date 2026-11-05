@@ -42,6 +42,7 @@ func showCodeInEditor(_ code: String) {
 }
 
 func runCart() {
+    checkSyntaxNow()
     runningCart = RunningCart(mainLua: cart.mainLua, ppu: cart.ppu)
     isErrorShown = false
     document.getElementById("cart-error").textContent = ""
