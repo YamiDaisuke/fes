@@ -7,11 +7,12 @@ enum ShownView: String {
 
 nonisolated(unsafe) var shownView = ShownView.game
 nonisolated(unsafe) private let document = JSObject.global.document
-nonisolated(unsafe) private let codeEditor = JSObject.global.fesCodeEditor
+nonisolated(unsafe) let codeEditor = JSObject.global.fesCodeEditor
 
 nonisolated(unsafe) private let codeChanged = JSClosure { arguments in
     cart.mainLua = arguments[0].string!
     keepUnsavedCodeCopy()
+    checkSyntaxSoon()
     return .undefined
 }
 
@@ -22,6 +23,9 @@ nonisolated(unsafe) private let runClicked = JSClosure { _ in
 
 nonisolated(unsafe) private let codeClicked = JSClosure { _ in
     showCodeView()
+    if let error = runningCart.error {
+        showRuntimeErrorInCode(error)
+    }
     return .undefined
 }
 
@@ -34,9 +38,11 @@ func startCodeAndGameViews() {
 
 func showCodeInEditor(_ code: String) {
     _ = codeEditor.setCode(code)
+    checkSyntaxNow()
 }
 
 func runCart() {
+    checkSyntaxNow()
     runningCart = RunningCart(mainLua: cart.mainLua, ppu: cart.ppu)
     isErrorShown = false
     document.getElementById("cart-error").textContent = ""
