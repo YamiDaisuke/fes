@@ -9,18 +9,26 @@ async function openCodeView(page) {
 
 const line = (page, number) => page.locator(".cm-line").nth(number - 1);
 
+async function typeCode(page, code) {
+  // WebKit's fill() on CodeMirror sometimes leaves an extra empty first line (T14 QA-6).
+  await expect(async () => {
+    await page.locator(".cm-content").fill(code);
+    await expect(page.locator(".cm-line")).toHaveText(code.split("\n"), { timeout: 1000 });
+  }).toPass();
+}
+
 ephemeralTest("a syntax error appears on its line after typing", async ({ page }) => {
   await openCodeView(page);
-  await page.locator(".cm-content").fill("x = 1\ny = 2\nx = = 1");
+  await typeCode(page, "x = 1\ny = 2\nx = = 1");
   await expect(line(page, 3).locator(".cm-lintRange-error")).toHaveCount(1);
   await expect(page.locator("#code-error")).toHaveText("main.lua:3: unexpected symbol near '='");
 });
 
 ephemeralTest("fixing the error clears the diagnostic", async ({ page }) => {
   await openCodeView(page);
-  await page.locator(".cm-content").fill("x = = 1");
+  await typeCode(page, "x = = 1");
   await expect(page.locator("#code-error")).toContainText("main.lua:1:");
-  await page.locator(".cm-content").fill("x = 1");
+  await typeCode(page, "x = 1");
   await expect(page.locator("#code-error")).toBeEmpty();
   await expect(page.locator(".cm-lintRange-error")).toHaveCount(0);
 });
@@ -67,7 +75,7 @@ ephemeralTest("Code after a run without an error drops the previous run's error"
 
 ephemeralTest("a syntax check pending at Run doesn't clear the runtime error", async ({ page }) => {
   await openCodeView(page);
-  await page.locator(".cm-content").fill("x = 1\nerror('quick')");
+  await typeCode(page, "x = 1\nerror('quick')");
   await page.getByRole("button", { name: "Run" }).click();
   await page.getByRole("button", { name: "Code" }).click();
   await page.waitForTimeout(700);
