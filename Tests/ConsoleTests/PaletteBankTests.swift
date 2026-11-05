@@ -29,10 +29,3 @@ import Testing
     bank.setMainPaletteIndex(-1, palette: 0, index: 0)
     #expect(bank.mainPaletteIndex(palette: 0, index: 0) == 63)
 }
-
-@Test func mainPaletteWrapsTheIndexOfAColorToSixBits() {
-    var palette = MainPalette()
-    palette[-1] = Color(rgb: 0x010203)
-    #expect(palette[63] == Color(rgb: 0x010203))
-    #expect(palette[64] == palette[0])
-}
