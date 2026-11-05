@@ -1,6 +1,6 @@
 import Console
 
-private let sheetColumns = 16
+public let sheetColumns = 16
 
 public func tileSheetLayout(fittingWidth width: Int, height: Int) -> GridLayout {
     .largest(squares: sheetColumns, pixelsPerSquare: TileBank.tileSize, fittingWidth: width, height: height)
