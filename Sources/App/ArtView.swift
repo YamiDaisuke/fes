@@ -77,7 +77,7 @@ func startArtView() {
     _ = resizeObserver.observe!(editArea)
 }
 
-private func redrawArtView() {
+func redrawArtView() {
     guard shownView == .art else { return }
     let sheetBox = flooredSize(of: sheetArea)
     let editBox = flooredSize(of: editArea)

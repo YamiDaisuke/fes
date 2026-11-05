@@ -89,6 +89,24 @@ test("Save works from the art view", async ({ page }) => {
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
 });
 
+test("loading a cart while the art view is shown redraws the sheet in its colors", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator("#cart-name").fill("Recolored");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Recolored.");
+  await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    await fesStorage.writeCartFile(folder, "main-palette.hex", "123456\n".repeat(64));
+  });
+  await page.locator("#show-art").click();
+  const demoSheet = await sheetPixels(page);
+
+  await page.locator("#cart-list").getByRole("button", { name: "Recolored", includeHidden: true }).dispatchEvent("click");
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Recolored.");
+  expect(await sheetPixels(page)).not.toBe(demoSheet);
+});
+
 ephemeralTest("going through the art view doesn't put an old run's error on edited code", async ({ page }) => {
   await page.addInitScript(() => {
     window.testCartMainLua = "function _update() missing() end";

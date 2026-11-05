@@ -132,6 +132,7 @@ func openCart(_ opened: Cart, folder: String) {
     showCodeInEditor(opened.mainLua)
     showCartName()
     keepUnsavedCodeCopy()
+    redrawArtView()
 }
 
 func showCartName() {
