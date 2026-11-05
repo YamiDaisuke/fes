@@ -1,19 +1,22 @@
 import { init } from "../.build/js/index.js";
 import { listenForInput, buttonsForFrame } from "./input.js";
 import * as storage from "./storage.js";
+import { createCodeEditor } from "./code-editor.js";
 
 const canvas = document.getElementById("screen");
+const gameView = document.getElementById("game-view");
 
 function fitCanvas() {
-  const scale = Math.max(1, Math.floor(Math.min(innerWidth / canvas.width, innerHeight / canvas.height)));
+  const fit = Math.min(gameView.clientWidth / canvas.width, gameView.clientHeight / canvas.height);
+  const scale = Math.max(1, Math.floor(fit));
   canvas.style.width = `${canvas.width * scale}px`;
   canvas.style.height = `${canvas.height * scale}px`;
 }
 
 globalThis.fesStorage = storage;
+globalThis.fesCodeEditor = createCodeEditor(document.getElementById("code-editor"));
 const { instance } = await init();
-fitCanvas();
-addEventListener("resize", fitCanvas);
+new ResizeObserver(fitCanvas).observe(gameView);
 
 const context = canvas.getContext("2d");
 listenForInput(document.getElementById("pad"));

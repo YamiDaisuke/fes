@@ -5,7 +5,7 @@ extension Cart {
     public static let fileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "palettes.pal", "map.map"]
 
     public init(files: [String: String]) throws(CartFileError) {
-        self.init(name: try cartName(fromCartJSON: fileText("cart.json", in: files)), mainLua: try fileText("main.lua", in: files))
+        self.init(name: try cartName(fromCartJSON: fileText("cart.json", in: files)), mainLua: withLFLineEndings(try fileText("main.lua", in: files)))
         backgroundTiles = try parseTileSheet(fileText("background.tiles", in: files), file: "background.tiles")
         spriteTiles = try parseTileSheet(fileText("sprites.tiles", in: files), file: "sprites.tiles")
         (backgroundPalettes, spritePalettes) = try parsePalettes(fileText("palettes.pal", in: files), file: "palettes.pal")
@@ -29,6 +29,20 @@ private func fileText(_ file: String, in files: [String: String]) throws(CartFil
         throw CartFileError(file: file, reason: "file is missing")
     }
     return text
+}
+
+private func withLFLineEndings(_ text: String) -> String {
+    var lfText = String.UnicodeScalarView()
+    var previousWasCR = false
+    for scalar in text.unicodeScalars {
+        if scalar == "\r" {
+            lfText.append("\n")
+        } else if scalar != "\n" || !previousWasCR {
+            lfText.append(scalar)
+        }
+        previousWasCR = scalar == "\r"
+    }
+    return String(lfText)
 }
 
 private func cartJSONText(name: String) -> String {

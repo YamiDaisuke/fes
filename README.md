@@ -36,7 +36,7 @@ This compiles the Swift package to `App.wasm` and bundles the page into `web/dis
 npm run serve
 ```
 
-Open http://localhost:8000/ in Safari. You should see the demo cart, scaled up by a whole number to fit the window, with the touch controller over it: a sprite in a walled room of bricks. The D-pad or the arrow keys walk it, the view follows, and A (or Z) changes its colors.
+Open http://localhost:8000/ in Safari. You should see the demo cart, scaled up by a whole number to fit the window, with the touch controller over it: a sprite in a walled room of bricks. The D-pad or the arrow keys walk it, the view follows, and A (or Z) changes its colors. Code opens the cart's `main.lua` in the editor, with the carts panel beside it, and Run restarts the game with what you typed.
 
 To try it on the iPad, use the Network URL that esbuild prints (the iPad must be on the same Wi-Fi).
 

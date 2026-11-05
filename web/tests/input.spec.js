@@ -143,15 +143,40 @@ test("unmapped keys and Cmd shortcuts press nothing and keep their default actio
   expect(await litNames(page)).toEqual([]);
 });
 
-test("mapped keys type into the cart name field and press nothing", async ({ page }) => {
+test("mapped keys type into the cart name field", async ({ page }) => {
+  await page.getByRole("button", { name: "Code" }).click();
   const name = page.locator("#cart-name");
   await name.fill("");
   await name.pressSequentially("zx");
   await name.press("ArrowLeft");
   await name.press("Shift+KeyY");
-  await runFrames(page, 1);
   await expect(name).toHaveValue("zYx");
+});
+
+test("controller keys reach the cart while a toolbar button has focus", async ({ page }) => {
+  await page.getByRole("button", { name: "Run" }).focus();
+  await page.keyboard.down("ArrowLeft");
+  await runFrames(page, 2);
+  expect(await litNames(page)).toEqual(["left"]);
+  await page.keyboard.up("ArrowLeft");
+});
+
+test("after Run from the keyboard, Enter presses Start", async ({ page }) => {
+  await page.getByRole("button", { name: "Run" }).focus();
+  await page.keyboard.press("Enter");
+  await runFrames(page, 1);
   expect(await litNames(page)).toEqual([]);
+
+  await page.keyboard.press("Enter");
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual(["start"]);
+});
+
+test("Enter presses Start while a pad button has focus", async ({ page }) => {
+  await page.locator('[data-buttons="a"]').focus();
+  await page.keyboard.press("Enter");
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual(["start"]);
 });
 
 test("losing focus releases held keys and fingers", async ({ page }) => {

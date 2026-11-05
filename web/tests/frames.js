@@ -2,18 +2,20 @@ import { expect } from "@playwright/test";
 
 export async function openPaused(page) {
   await page.addInitScript(() => {
-    const queued = [];
+    let queued = [];
     window.requestAnimationFrame = (callback) => queued.push(callback);
-    window.queuedAnimationFrames = () => queued.length;
+    window.isOneGameFrameQueued = () => queued.filter((callback) => callback.name === "drawFrame").length === 1;
     window.runAnimationFrames = (count) => {
       for (let i = 0; i < count; i++) {
-        if (queued.length === 0) throw new Error(`no animation frame queued before frame ${i}`);
-        queued.shift()(performance.now());
+        if (!window.isOneGameFrameQueued()) throw new Error(`expected exactly one game frame queued before frame ${i}`);
+        const frame = queued;
+        queued = [];
+        for (const callback of frame) callback(performance.now());
       }
     };
   });
   await page.goto("/");
-  await expect.poll(() => page.evaluate(() => window.queuedAnimationFrames())).toBe(1);
+  await expect.poll(() => page.evaluate(() => window.isOneGameFrameQueued())).toBe(true);
 }
 
 export async function runFrames(page, count) {

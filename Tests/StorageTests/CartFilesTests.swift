@@ -3,7 +3,7 @@ import Storage
 import Testing
 
 private func sampleCart() -> Cart {
-    var cart = Cart(name: "Ünï \"quoted\" cart 🎮", mainLua: "print(\"héllo\")\r\nx = 1\r\n")
+    var cart = Cart(name: "Ünï \"quoted\" cart 🎮", mainLua: "print(\"héllo\")\nx = 1\n")
     cart.backgroundTiles.setPixel(tile: 255, x: 7, y: 7, color: 7)
     cart.spriteTiles.setPixel(tile: 255, x: 7, y: 7, color: 3)
     cart.spritePalettes.setMasterIndex(63, palette: 7, index: 7)
@@ -76,6 +76,12 @@ private func refusal(cartJSON: String) -> String? {
     }
     files["cart.json"] = cart.files["cart.json"]!.replacing("\n", with: "\r\n")
     #expect(try Cart(files: files) == cart)
+}
+
+@Test func mainLuaLineEndingsAreReadAsLFSoTheEditorTextMatchesTheLoadedCart() throws {
+    var files = sampleCart().files
+    files["main.lua"] = "a = 1\r\nb = 2\rc = 3\n\r\n\r\r"
+    #expect(try Cart(files: files).mainLua == "a = 1\nb = 2\nc = 3\n\n\n\n")
 }
 
 @Test func malformedGridFilesAreRefusedNamingTheFileAndLine() {
