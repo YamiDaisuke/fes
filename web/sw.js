@@ -30,11 +30,10 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   url.search = "";
+  url.hash = "";
   if (request.method !== "GET" || !precachedURLs.has(url.href)) return;
   if (request.mode === "navigate") event.waitUntil(forgetIfUnpublished());
-  event.respondWith(
-    (async () => (await caches.match(request, { cacheName, ignoreSearch: true })) ?? fetch(request))(),
-  );
+  event.respondWith(caches.match(request, { cacheName, ignoreSearch: true }).then((cached) => cached ?? fetch(request)));
 });
 
 async function forgetIfUnpublished() {
