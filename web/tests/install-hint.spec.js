@@ -1,0 +1,21 @@
+import { test, expect } from "@playwright/test";
+
+test("Not now keeps the install hint hidden after a reload", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#install-hint")).toBeVisible();
+
+  await page.getByRole("button", { name: "Not now" }).click();
+  await expect(page.locator("#install-hint")).toBeHidden();
+
+  await page.reload();
+  await expect(page.locator("#screen")).toHaveJSProperty("width", 192);
+  await expect(page.locator("#install-hint")).toBeHidden();
+});
+
+test("the install hint comes back once 7 days have passed since Not now", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("fes-install-hint-dismissed", String(Date.now() - 7 * 24 * 60 * 60 * 1000 - 1000));
+  });
+  await page.goto("/");
+  await expect(page.locator("#install-hint")).toBeVisible();
+});
