@@ -1,11 +1,16 @@
-private let formatVersion = 1
+private let formatVersion = 2
+private let firstFormatWithMainPalette = 2
 private let longestName = 64
 
 extension Cart {
-    public static let fileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "palettes.pal", "map.map"]
+    public static let fileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "main-palette.hex", "palettes.pal", "map.map"]
 
     public init(files: [String: String]) throws(CartFileError) {
-        self.init(name: try cartName(fromCartJSON: fileText("cart.json", in: files)), mainLua: withLFLineEndings(try fileText("main.lua", in: files)))
+        let cartJSON = try parseCartJSON(fileText("cart.json", in: files))
+        self.init(name: cartJSON.name, mainLua: withLFLineEndings(try fileText("main.lua", in: files)))
+        if cartJSON.format >= firstFormatWithMainPalette {
+            mainPalette = try parseMainPalette(fileText("main-palette.hex", in: files), file: "main-palette.hex")
+        }
         backgroundTiles = try parseTileSheet(fileText("background.tiles", in: files), file: "background.tiles")
         spriteTiles = try parseTileSheet(fileText("sprites.tiles", in: files), file: "sprites.tiles")
         (backgroundPalettes, spritePalettes) = try parsePalettes(fileText("palettes.pal", in: files), file: "palettes.pal")
@@ -18,6 +23,7 @@ extension Cart {
             "main.lua": mainLua,
             "background.tiles": tileSheetText(backgroundTiles),
             "sprites.tiles": tileSheetText(spriteTiles),
+            "main-palette.hex": mainPaletteText(mainPalette),
             "palettes.pal": paletteText(background: backgroundPalettes, sprites: spritePalettes),
             "map.map": mapText(background),
         ]
@@ -39,7 +45,7 @@ private func cartJSONText(name: String) -> String {
     "{\n  \"format\" : \(formatVersion),\n  \"name\" : \(jsonString(name))\n}\n"
 }
 
-public func cartName(fromCartJSON text: String) throws(CartFileError) -> String {
+public func parseCartJSON(_ text: String) throws(CartFileError) -> (format: Int, name: String) {
     let fields: [String: JSONValue]
     do {
         fields = try parseJSONObject(text)
@@ -70,7 +76,7 @@ public func cartName(fromCartJSON text: String) throws(CartFileError) -> String 
     if let problem = nameProblem(name) {
         throw CartFileError(file: "cart.json", reason: problem)
     }
-    return name
+    return (format, name)
 }
 
 public func nameProblem(_ name: String) -> String? {

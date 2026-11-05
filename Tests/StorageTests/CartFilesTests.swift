@@ -6,7 +6,9 @@ private func sampleCart() -> Cart {
     var cart = Cart(name: "Ünï \"quoted\" cart 🎮", mainLua: "print(\"héllo\")\nx = 1\n")
     cart.backgroundTiles.setPixel(tile: 255, x: 7, y: 7, color: 7)
     cart.spriteTiles.setPixel(tile: 255, x: 7, y: 7, color: 3)
-    cart.spritePalettes.setMasterIndex(63, palette: 7, index: 7)
+    cart.spritePalettes.setMainPaletteIndex(63, palette: 7, index: 7)
+    cart.mainPalette[63] = Color(rgb: 0x0a0b0c)
+    cart.mainPalette[0] = Color(rgb: 0xabcdef)
     cart.background[column: 31, row: 31] = Tilemap.Cell(tile: 255, palette: 7)
     return cart
 }
@@ -62,7 +64,7 @@ private func refusal(cartJSON: String) -> String? {
 
 @Test func paletteLineNineIsSpritePaletteZero() {
     var cart = sampleCart()
-    cart.spritePalettes.setMasterIndex(43, palette: 0, index: 1)
+    cart.spritePalettes.setMainPaletteIndex(43, palette: 0, index: 1)
     let palettes = lines(cart.files["palettes.pal"])
     #expect(palettes[0] == "00 01 02 03 04 05 06 07")
     #expect(palettes[8] == "00 2b 02 03 04 05 06 07")
@@ -71,7 +73,7 @@ private func refusal(cartJSON: String) -> String? {
 @Test func crlfAndUppercaseHexLoadTheSameAsLfAndLowercase() throws {
     let cart = sampleCart()
     var files = cart.files
-    for name in ["background.tiles", "sprites.tiles", "palettes.pal", "map.map"] {
+    for name in ["background.tiles", "sprites.tiles", "main-palette.hex", "palettes.pal", "map.map"] {
         files[name] = files[name]!.uppercased().replacing("\n", with: "\r\n")
     }
     files["cart.json"] = cart.files["cart.json"]!.replacing("\n", with: "\r\n")
@@ -100,7 +102,7 @@ private func refusal(cartJSON: String) -> String? {
             == "map.map line 4: expected 32 cells, found 31")
     #expect(
         refusal(changing: "palettes.pal", line: 3, to: "40 01 02 03 04 05 06 07")
-            == "palettes.pal line 3: entry 1: expected a master index 00–3f, found 40")
+            == "palettes.pal line 3: entry 1: expected a main palette index 00–3f, found 40")
 
     var files = sampleCart().files
     files["sprites.tiles"] = lines(files["sprites.tiles"]).dropLast().joined(separator: "\n") + "\n"
@@ -122,11 +124,11 @@ private func refusal(cartJSON: String) -> String? {
 @Test func badCartJSONIsRefused() {
     #expect(refusal(cartJSON: "{\"format\": 1, \"name\": ") == "cart.json: not valid JSON")
     #expect(
-        refusal(cartJSON: "{\"format\": 2, \"name\": \"Room\"}")
-            == "cart.json: This cart was made with a newer FES (format 2); this FES reads format 1.")
+        refusal(cartJSON: "{\"format\": 3, \"name\": \"Room\"}")
+            == "cart.json: This cart was made with a newer FES (format 3); this FES reads format 2.")
     #expect(
-        refusal(cartJSON: "{\"format\": 2, \"title\": \"Room\"}")
-            == "cart.json: This cart was made with a newer FES (format 2); this FES reads format 1.")
+        refusal(cartJSON: "{\"format\": 3, \"title\": \"Room\"}")
+            == "cart.json: This cart was made with a newer FES (format 3); this FES reads format 2.")
     #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \" \\t \"}") == "cart.json: the name is empty")
     #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"\\u200b\\u200b\"}") == "cart.json: the name is empty")
 }
@@ -152,17 +154,17 @@ private func refusal(cartJSON: String) -> String? {
 }
 
 @Test func cartJSONIsReadInEitherKeyOrderWithAnyJSONWhitespace() throws {
-    #expect(try cartName(fromCartJSON: " \r\n\t{\n\"name\"\t:\"Room\" ,\r\n \"format\":1 } \n") == "Room")
+    #expect(try parseCartJSON(" \r\n\t{\n\"name\"\t:\"Room\" ,\r\n \"format\":1 } \n") == (1, "Room"))
 }
 
 @Test func cartJSONNameEscapesAreDecoded() throws {
     let json = "{\"format\": 1, \"name\": \"\\u00e9\\u00C9\\ud83c\\udfae\\/\\\\\\\"\"}"
-    #expect(try cartName(fromCartJSON: json) == "éÉ🎮/\\\"")
+    #expect(try parseCartJSON(json).name == "éÉ🎮/\\\"")
 }
 
 @Test func cartJSONNameWithAControlCharacterIsWrittenEscaped() {
     let cart = Cart(name: "a\tb\u{1f}c", mainLua: "")
-    #expect(cart.files["cart.json"] == "{\n  \"format\" : 1,\n  \"name\" : \"a\\tb\\u001fc\"\n}\n")
+    #expect(cart.files["cart.json"] == "{\n  \"format\" : 2,\n  \"name\" : \"a\\tb\\u001fc\"\n}\n")
 }
 
 @Test func invalidStringsInCartJSONAreRefused() {
@@ -194,13 +196,66 @@ private func refusal(cartJSON: String) -> String? {
 
 @Test func unknownKeysWithNestedValuesAreIgnored() throws {
     let extra = "\"palette\": [[1, -2.5e-3], {\"a\": null, \"b\": false}, true, \"\\u0041\"]"
-    #expect(try cartName(fromCartJSON: "{\"format\": 1, \(extra), \"name\": \"Room\"}") == "Room")
+    #expect(try parseCartJSON("{\"format\": 1, \(extra), \"name\": \"Room\"}").name == "Room")
     #expect(
-        refusal(cartJSON: "{\(extra), \"format\": 2}")
-            == "cart.json: This cart was made with a newer FES (format 2); this FES reads format 1.")
+        refusal(cartJSON: "{\(extra), \"format\": 3}")
+            == "cart.json: This cart was made with a newer FES (format 3); this FES reads format 2.")
 }
 
 @Test func deeplyNestedCartJSONIsRefusedWithoutCrashing() {
     let nested = String(repeating: "[", count: 100_000) + String(repeating: "]", count: 100_000)
     #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"Room\", \"x\": \(nested)}") == "cart.json: not valid JSON")
+}
+
+private func z64HexFromLospec() throws -> String {
+    String(decoding: try fixture("z64.hex"), as: UTF8.self)
+}
+
+private func formatOneFiles(of cart: Cart) -> [String: String] {
+    var files = cart.files
+    files["cart.json"] = files["cart.json"]!.replacing("\"format\" : 2", with: "\"format\" : 1")
+    files["main-palette.hex"] = nil
+    return files
+}
+
+@Test func defaultMainPaletteIsWrittenAsLospecsZ64() throws {
+    let lospec = try z64HexFromLospec()
+    #expect(Cart(name: "Demo", mainLua: "").files["main-palette.hex"] == lospec.replacing("\r\n", with: "\n"))
+}
+
+@Test func lospecsZ64DownloadLoadsAsTheDefaultMainPalette() throws {
+    var files = Cart(name: "Demo", mainLua: "").files
+    files["main-palette.hex"] = try z64HexFromLospec().uppercased()
+    #expect(try Cart(files: files).mainPalette == MainPalette())
+}
+
+@Test func malformedMainPaletteIsRefusedNamingTheFileAndLine() {
+    for color in ["#4d30bf", "4d30b", "4d30bg", "4d30bf "] {
+        #expect(
+            refusal(changing: "main-palette.hex", line: 5, to: color)
+                == "main-palette.hex line 5: expected a color rrggbb, found \(color)")
+    }
+    var files = sampleCart().files
+    files["main-palette.hex"] = lines(files["main-palette.hex"]).dropLast().joined(separator: "\n") + "\n"
+    #expect(refusal(files) == "main-palette.hex line 64: expected 64 lines, found 63")
+}
+
+@Test func formatTwoCartWithoutAMainPaletteIsRefused() {
+    var files = sampleCart().files
+    files["main-palette.hex"] = nil
+    #expect(refusal(files) == "main-palette.hex: file is missing")
+}
+
+@Test func formatOneCartLoadsWithTheDefaultMainPaletteAndIsWrittenAsFormatTwo() throws {
+    var cart = sampleCart()
+    cart.mainPalette = MainPalette()
+    let loaded = try Cart(files: formatOneFiles(of: cart))
+    #expect(loaded == cart)
+    #expect(loaded.files["cart.json"]!.contains("\"format\" : 2"))
+}
+
+@Test func formatOneCartIgnoresAMainPaletteFile() throws {
+    var files = formatOneFiles(of: sampleCart())
+    files["main-palette.hex"] = "not a palette"
+    #expect(try Cart(files: files).mainPalette == MainPalette())
 }

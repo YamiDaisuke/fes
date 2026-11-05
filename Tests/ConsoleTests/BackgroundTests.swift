@@ -50,3 +50,11 @@ private func sceneFrame(scrollX: Int, scrollY: Int) -> Framebuffer {
     let offset = (1 * Screen.width + 2) * 4
     #expect(Array(frame.rgba[offset..<(offset + 4)]) == [10, 20, 30, 255])
 }
+
+@Test func ppuDrawsWithItsOwnMainPalette() {
+    var ppu = PPU()
+    ppu.mainPalette[0] = Color(rgb: 0x123456)
+    var frame = Framebuffer()
+    ppu.render(into: &frame)
+    #expect(Array(frame.rgba[0..<4]) == [0x12, 0x34, 0x56, 255])
+}
