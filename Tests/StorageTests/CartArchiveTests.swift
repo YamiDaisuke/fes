@@ -46,11 +46,13 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(try Cart(fesArchive: withExtras) == cart)
 }
 
-@Test func entryNamedLikeACartFileInAnotherCaseOrAsAFolderIsRefused() {
+@Test func entryNamedLikeACartFileInAnotherCaseAsAFolderOrWithALeadingPathIsRefused() {
     let cart = Cart(name: "Demo", mainLua: "print(1)")
 
     #expect(refusal(archive(of: cart, changing: ["MAIN.LUA": Array("print(2)".utf8)])) == "MAIN.LUA could be unzipped as main.lua")
     #expect(refusal(archive(of: cart, changing: ["main.lua/": []])) == "main.lua/ could be unzipped as main.lua")
+    #expect(refusal(archive(of: cart, changing: ["./main.lua": Array("print(2)".utf8)])) == "./main.lua could be unzipped as main.lua")
+    #expect(refusal(archive(of: cart, changing: ["/Map.map": []])) == "/Map.map could be unzipped as map.map")
 }
 
 @Test func archiveWithoutMainLuaNamesTheMissingFile() {
