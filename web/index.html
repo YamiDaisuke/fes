@@ -4,9 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>FES</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <meta name="theme-color" content="#000000">
   <style>
     html, body { margin: 0; height: 100%; background: #000; }
-    body { display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); overflow: hidden; }
+    body { display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr); overflow: hidden; }
+    #code-view, #game-view { grid-row: 3; }
     body[data-view="code"] #game-view,
     body[data-view="code"] #show-code,
     body[data-view="game"] #code-view { display: none; }
@@ -15,6 +19,13 @@
       padding: calc(4px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left));
     }
     #toolbar button { min-height: 44px; min-width: 88px; font: 16px system-ui, sans-serif; touch-action: manipulation; }
+    #notices p {
+      display: flex; align-items: center; gap: 8px; margin: 0;
+      padding: 4px calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left));
+      color: #fff; background: #223; font: 16px/1.4 system-ui, sans-serif;
+    }
+    #notices p[hidden] { display: none; }
+    #notices button { flex: none; min-height: 44px; font: inherit; touch-action: manipulation; }
     #code-view { display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr) 240px; }
     #code-editor { grid-row: 1 / 3; min-height: 0; background: #fff; }
     #code-error {
@@ -70,6 +81,16 @@
   <div id="toolbar">
     <button type="button" id="run">Run</button>
     <button type="button" id="show-code">Code</button>
+  </div>
+  <div id="notices">
+    <p id="install-hint" hidden>
+      <span>Safari can delete carts saved in a browser tab after 7 days without a visit. To keep them, add FES to your Home Screen: open Safari's Share menu, then choose Add to Home Screen. You can also export carts to Files as a backup.</span>
+      <button type="button" id="install-hint-dismiss">Not now</button>
+    </p>
+    <p id="update-notice" role="status" hidden>
+      <span>A new version of FES is ready.</span>
+      <button type="button" id="update-reload">Reload</button>
+    </p>
   </div>
   <div id="code-view">
     <div id="code-editor"></div>
