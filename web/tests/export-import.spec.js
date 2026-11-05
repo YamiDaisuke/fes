@@ -1,7 +1,7 @@
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 
-const cartFileNames = ["cart.json", "main.lua", "palettes.pal", "background.tiles", "sprites.tiles", "map.map"];
+const cartFileNames = ["cart.json", "main.lua", "palettes.pal", "background.tiles", "sprites.tiles", "main-palette.hex", "map.map"];
 
 async function openBooted(page) {
   await page.goto("/");
