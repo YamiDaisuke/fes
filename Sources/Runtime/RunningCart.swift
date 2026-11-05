@@ -3,7 +3,6 @@ import Console
 
 private let messageHandlerIndex: Int32 = 1
 private let globalsIndex: Int32 = 2
-private let maxErrorBytes = 8192
 
 public final class RunningCart {
     public private(set) var error: String?
@@ -24,9 +23,7 @@ public final class RunningCart {
 
         meter.pointee.startPeriod()
         startEnforcingCPUBudget(state)
-        meter.pointee.isMemoryCapped = true
-        let loadStatus = luaL_loadbufferx(state, mainLua, mainLua.utf8.count, "=main.lua", "t")
-        meter.pointee.isMemoryCapped = false
+        let loadStatus = loadMainLua(state, mainLua, meter: meter)
         guard loadStatus == LUA_OK else {
             stop(status: loadStatus)
             return
@@ -70,18 +67,7 @@ public final class RunningCart {
     }
 
     private func stop(status: Int32) {
-        var length = 0
-        if status == LUA_ERRMEM {
-            error = "memory budget exceeded"
-        } else if let bytes = lua_tolstring(state, -1, &length) {
-            let shownBytes = UnsafeRawBufferPointer(start: bytes, count: min(length, maxErrorBytes))
-            error = String(decoding: shownBytes, as: UTF8.self)
-            if length > maxErrorBytes {
-                error! += "\n[cut: first \(maxErrorBytes) of \(length) bytes shown]"
-            }
-        } else {
-            error = "(error object is not a string)"
-        }
+        error = errorText(state, status: status)
         lua_settop(state, globalsIndex)
     }
 }
