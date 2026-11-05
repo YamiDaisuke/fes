@@ -37,6 +37,7 @@ let package = Package(
             name: "App",
             dependencies: [
                 "Console",
+                "Editors",
                 "Runtime",
                 "Storage",
                 .product(name: "JavaScriptKit", package: "JavaScriptKit"),

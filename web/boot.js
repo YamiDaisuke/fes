@@ -3,6 +3,7 @@ import { listenForInput, buttonsForFrame } from "./input.js";
 import * as storage from "./storage.js";
 import * as files from "./files.js";
 import { createCodeEditor } from "./code-editor.js";
+import { createArtView } from "./art-view.js";
 import { startPWA } from "./pwa.js";
 
 startPWA();
@@ -20,7 +21,10 @@ function fitCanvas() {
 globalThis.fesStorage = storage;
 globalThis.fesFiles = files;
 globalThis.fesCodeEditor = createCodeEditor(document.getElementById("code-editor"));
+let wasmMemory;
+globalThis.fesArtView = createArtView(() => wasmMemory.buffer);
 const { instance } = await init();
+wasmMemory = instance.exports.memory;
 new ResizeObserver(fitCanvas).observe(gameView);
 
 const context = canvas.getContext("2d");
