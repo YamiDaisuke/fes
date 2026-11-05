@@ -38,3 +38,18 @@ import Testing
     try expectImageMatchesGolden(
         rgba: image.rgba, width: image.width, height: image.height, named: "sheet-background-palette-0-tile-255")
 }
+
+@Test func sheetRingWrapsTileNumbersLikeTheTileBank() {
+    let cart = cartWithPatternTiles()
+    let layout = tileSheetLayout(fittingWidth: 145, height: 145)
+    func sheet(selecting tile: Int) -> RGBAImage {
+        tileSheetImage(
+            tiles: cart.tiles(in: .background),
+            colors: cart.previewColors(bank: .background, palette: 0),
+            selectedTile: tile,
+            layout: layout
+        )
+    }
+    #expect(sheet(selecting: 256) == sheet(selecting: 0))
+    #expect(sheet(selecting: -1) == sheet(selecting: 255))
+}
