@@ -73,3 +73,8 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(fesFileName(forCartName: " .hidden ") == "-hidden.fes")
     #expect(fesFileName(forCartName: "Demo") == "Demo.fes")
 }
+
+@Test func fesFileNameKeepsWholeCharactersWithin200Bytes() {
+    let family = "👨‍👩‍👧‍👦"
+    #expect(fesFileName(forCartName: String(repeating: family, count: 64)) == String(repeating: family, count: 8) + ".fes")
+}

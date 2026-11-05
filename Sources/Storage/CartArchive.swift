@@ -35,6 +35,10 @@ extension Cart {
 public func fesFileName(forCartName name: String) -> String {
     let charactersFilesRejects: Set<Character> = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
     var fileName = String(name.map { charactersFilesRejects.contains($0) ? "-" : $0 })
+    // APFS allows 255 UTF-8 bytes per name; the rest is room for ".fes" and a " (2)" Files or Safari may add.
+    while fileName.utf8.count > 200 {
+        fileName.removeLast()
+    }
     while fileName.first?.isWhitespace == true {
         fileName.removeFirst()
     }
