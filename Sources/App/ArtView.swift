@@ -18,7 +18,7 @@ nonisolated(unsafe) private var shownSheetLayout: GridLayout?
 
 nonisolated(unsafe) private let artClicked = JSClosure { _ in
     show(.art)
-    showArt()
+    redrawArtView()
     return .undefined
 }
 
@@ -26,7 +26,7 @@ nonisolated(unsafe) private let bankClicked = JSClosure { arguments in
     if let button = arguments[0].target.closest("[data-bank]").object,
        let bank = string(from: button.dataset.bank).flatMap(Bank.init(rawValue:)) {
         artSelection.bank = bank
-        showArt()
+        redrawArtView()
     }
     return .undefined
 }
@@ -36,7 +36,7 @@ nonisolated(unsafe) private let paletteClicked = JSClosure { arguments in
        let palette = string(from: button.dataset.palette).flatMap({ Int($0) }),
        (0..<PaletteBank.paletteCount).contains(palette) {
         artSelection.previewPalette = palette
-        showArt()
+        redrawArtView()
     }
     return .undefined
 }
@@ -44,7 +44,7 @@ nonisolated(unsafe) private let paletteClicked = JSClosure { arguments in
 nonisolated(unsafe) private let tileChanged = JSClosure { _ in
     if let tile = string(from: tileSlider.value).flatMap({ Int($0) }), (0..<TileBank.tileCount).contains(tile) {
         artSelection.tile = tile
-        showArt()
+        redrawArtView()
     }
     return .undefined
 }
@@ -55,13 +55,13 @@ nonisolated(unsafe) private let sheetTapped = JSClosure { arguments in
        let y = arguments[1].number.flatMap({ Int(exactly: $0) }),
        let tile = sheetTile(atX: x, y: y, in: layout) {
         artSelection.tile = tile
-        showArt()
+        redrawArtView()
     }
     return .undefined
 }
 
 nonisolated(unsafe) private let artResized = JSClosure { _ in
-    showArt()
+    redrawArtView()
     return .undefined
 }
 
@@ -76,7 +76,7 @@ func startArtView() {
     _ = resizeObserver.observe!(editArea)
 }
 
-private func showArt() {
+private func redrawArtView() {
     guard shownView == .art else { return }
     let sheetBox = flooredSize(of: sheetArea)
     let editBox = flooredSize(of: editArea)
