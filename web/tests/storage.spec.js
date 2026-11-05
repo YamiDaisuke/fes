@@ -63,6 +63,7 @@ test("code with a NUL character survives edit, Save, reload and load", async ({ 
 
   await openBooted(page);
   await page.locator("#cart-list").getByRole("button", { name: "N" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded N.");
   await page.getByRole("button", { name: "Run" }).click();
   await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
 });
