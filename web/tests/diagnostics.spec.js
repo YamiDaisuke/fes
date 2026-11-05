@@ -92,3 +92,13 @@ ephemeralTest("an error whose text starts with a newline still shows a message",
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator("#code-error")).toHaveText("main.lua:999: fake");
 });
+
+ephemeralTest("an error with a CRLF in its text shows only its first line", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "x = 1\ny = 2\nerror('a\\r\\nb')";
+  });
+  await page.goto("/");
+  await expect(page.locator("#cart-error")).toContainText("main.lua:3: a");
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toHaveText("main.lua:3: a");
+});

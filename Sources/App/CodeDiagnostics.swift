@@ -21,7 +21,7 @@ func showRuntimeErrorInCode(_ error: String) {
 }
 
 func showErrorInCode(_ error: String?) {
-    let message = error?.split(separator: "\n").first.map(String.init) ?? ""
+    let message = error?.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
     if message != shownCodeError {
         JSObject.global.document.getElementById("code-error").textContent = .string(message)
         shownCodeError = message

@@ -43,7 +43,7 @@ public func syntaxError(inMainLua mainLua: String) -> String? {
 
 public func mainLuaLine(inError error: String) -> Int? {
     let prefix = mainLuaName + ":"
-    for line in error.split(separator: "\n") {
+    for line in error.split(whereSeparator: \.isNewline) {
         let position = line.drop(while: { $0 == "\t" })
         guard position.hasPrefix(prefix) else { continue }
         let digits = position.dropFirst(prefix.count).prefix(while: \.isNumber)
