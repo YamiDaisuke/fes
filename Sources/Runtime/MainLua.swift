@@ -18,7 +18,12 @@ func errorText(_ state: OpaquePointer, status: Int32) -> String {
     guard let bytes = lua_tolstring(state, -1, &length) else {
         return "(error object is not a string)"
     }
-    let shownBytes = UnsafeRawBufferPointer(start: bytes, count: min(length, maxErrorBytes))
+    var shownLength = min(length, maxErrorBytes)
+    let isUTF8ContinuationByte = { (index: Int) in UInt8(bitPattern: bytes[index]) & 0b1100_0000 == 0b1000_0000 }
+    while shownLength < length, shownLength > 0, isUTF8ContinuationByte(shownLength) {
+        shownLength -= 1
+    }
+    let shownBytes = UnsafeRawBufferPointer(start: bytes, count: shownLength)
     var text = String(decoding: shownBytes, as: UTF8.self)
     if length > maxErrorBytes {
         text += "\n[cut: first \(maxErrorBytes) of \(length) bytes shown]"

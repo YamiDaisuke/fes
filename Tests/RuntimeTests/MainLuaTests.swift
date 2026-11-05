@@ -15,6 +15,17 @@ import Testing
     #expect(error!.utf8.count < 8192 + 64)
 }
 
+@Test func cutErrorEndsOnAWholeCharacter() {
+    for padding in ["", "a"] {
+        let error = syntaxError(inMainLua: "x = \"" + padding + String(repeating: "é", count: 10_000) + "\n")
+        #expect(error?.contains("\u{FFFD}") == false)
+    }
+}
+
+@Test func syntaxCheckKeepsTheMemoryCap() {
+    #expect(syntaxError(inMainLua: "x = \"" + String(repeating: "a", count: 9 << 20) + "\"") == "memory budget exceeded")
+}
+
 @Test func runtimeErrorLineComesFromTheMessage() {
     let cart = RunningCart(mainLua: "\n\nerror('boom')")
     #expect(mainLuaLine(inError: cart.error!) == 3)
