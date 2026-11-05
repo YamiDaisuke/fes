@@ -51,7 +51,7 @@ let package = Package(
             ]
         ),
         .target(name: "Storage", dependencies: ["Console"]),
-        .target(name: "GoldenImage", dependencies: ["Console"], path: "Tests/GoldenImage"),
+        .target(name: "GoldenImage", dependencies: ["Console", "Storage"], path: "Tests/GoldenImage"),
         .testTarget(name: "ConsoleTests", dependencies: ["Console", "GoldenImage"], exclude: ["Golden"]),
         .testTarget(name: "RuntimeTests", dependencies: ["Runtime", "Console", "GoldenImage"], exclude: ["Golden"]),
         .testTarget(name: "StorageTests", dependencies: ["Storage", "Console"]),
