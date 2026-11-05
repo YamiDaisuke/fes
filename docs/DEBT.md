@@ -22,3 +22,5 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - Code typed before the restore prompt shows is replaced without asking when the user accepts it (T13b QA-2): the window is the OPFS cart listing at boot, a few milliseconds on an iPad; revisit if anyone hits it.
 - App icon is placeholder art in scripts/make-icons.js: the owner is a pixel artist; revisit when the owner draws it (edit the grid, run `node scripts/make-icons.js`).
 - The Home Screen hint's wording and 7-day reminder are placeholders: revisit when the owner reviews them.
+- A .fes re-compressed in Files (Compress) uses deflate and is refused: only store-only zips are read; revisit with DecompressionStream('deflate-raw') if users edit carts in Files.
+- Files inside an exported .fes are dated 1980-01-01: no calendar without Foundation; revisit if anyone unzips carts and cares.
