@@ -63,6 +63,7 @@ test("code with a NUL character survives edit, Save, reload and load", async ({ 
 
   await openBooted(page);
   await page.locator("#cart-list").getByRole("button", { name: "N" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded N.");
   await page.getByRole("button", { name: "Run" }).click();
   await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
 });
@@ -157,6 +158,33 @@ test("loading a cart with a damaged map names the file and line and keeps the cu
   await page.locator("#cart-list").getByRole("button", { name: "Room" }).click();
   await expect(page.locator("#cart-status")).toHaveText("Can't load: map.map line 32: expected 32 lines, found 31");
   await expect(page.locator("#cart-name")).toHaveValue("Renamed but unsaved");
+});
+
+test("a format 1 cart in storage loads with the default main palette and saves as format 2", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Old");
+  await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    await fesStorage.writeCartFile(folder, "cart.json", '{"format": 1, "name": "Old"}');
+    const carts = await (await navigator.storage.getDirectory()).getDirectoryHandle("carts");
+    await (await carts.getDirectoryHandle(folder)).removeEntry("main-palette.hex");
+  });
+  await openBooted(page);
+
+  await page.locator("#cart-list").getByRole("button", { name: "Old" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Old.");
+  await saveAs(page, "Old");
+  const saved = await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    return {
+      cartJSON: await fesStorage.readCartFile(folder, "cart.json"),
+      mainPalette: await fesStorage.readCartFile(folder, "main-palette.hex"),
+    };
+  });
+  expect(saved.cartJSON).toContain('"format" : 2');
+  const colors = saved.mainPalette.trimEnd().split("\n");
+  expect(colors).toHaveLength(64);
+  expect(colors.slice(0, 2)).toEqual(["000000", "4d30bf"]);
 });
 
 ephemeralTest("without OPFS saving is unavailable and the console still boots cleanly", async ({ page }) => {

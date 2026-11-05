@@ -3,7 +3,6 @@
 Deliberate shortcuts, one line each: what, why, when to revisit.
 - App.wasm ships without wasm-opt (10.6 MB, 3.0 MB gzipped): binaryen isn't installed or approved; revisit if installing over cellular is too slow.
 - A cancelled pending deploy leaves its PR's check cancelled and can skip that PR's first preview comment: the `pages` concurrency group keeps only one pending job, so restacking three or more PRs cancels some; revisit if restacks often leave PRs without a preview link.
-- Main palette is a generated 2-bit-per-channel placeholder: the owner chose Lospec's Z64 (PR #51); T16 replaces it.
 - Background tilemap is a fixed 32×32 cells: map dimensions are a SPEC open decision the owner takes in M4; revisit then (change Tilemap.columns/rows, keep powers of two, re-record goldens).
 - One console frame per requestAnimationFrame callback: Safari on iPad delivers rAF at 60 Hz by default, but with the "Prefer Page Rendering Updates near 60fps" feature flag off ProMotion iPads call it at 120 Hz and the game runs at double speed; revisit when input or the cart runtime needs real-time pacing (fixed timestep driven by rAF timestamps).
 - The touch overlay is a plain placeholder look, shown in the game view even with a hardware keyboard: the owner styles it; revisit when the owner restyles it.

@@ -7,7 +7,7 @@ func paletteText(background: PaletteBank, sprites: PaletteBank) -> String {
     for bank in [background, sprites] {
         for palette in 0..<PaletteBank.paletteCount {
             let entries = (0..<PaletteBank.colorsPerPalette).map { index in
-                lowercaseHex(bank.masterIndex(palette: palette, index: index), digits: 2)
+                lowercaseHex(bank.mainPaletteIndex(palette: palette, index: index), digits: 2)
             }
             text += entries.joined(separator: " ") + "\n"
         }
@@ -21,13 +21,13 @@ func parsePalettes(_ text: String, file: String) throws(CartFileError) -> (backg
         let fields = try spaceSeparatedFields(
             line, count: PaletteBank.colorsPerPalette, file: file, lineNumber: lineIndex + 1, what: "entries")
         for (index, field) in fields.enumerated() {
-            guard field.count == 2, let master = hexValue(field), master < MasterPalette.colors.count else {
+            guard field.count == 2, let mainPaletteIndex = hexValue(field), mainPaletteIndex < MainPalette.colorCount else {
                 throw CartFileError(
                     file: file, line: lineIndex + 1,
-                    reason: "entry \(index + 1): expected a master index 00–3f, found \(field)")
+                    reason: "entry \(index + 1): expected a main palette index 00–3f, found \(field)")
             }
-            banks[lineIndex / PaletteBank.paletteCount].setMasterIndex(
-                master, palette: lineIndex % PaletteBank.paletteCount, index: index)
+            banks[lineIndex / PaletteBank.paletteCount].setMainPaletteIndex(
+                mainPaletteIndex, palette: lineIndex % PaletteBank.paletteCount, index: index)
         }
     }
     return (banks[0], banks[1])
