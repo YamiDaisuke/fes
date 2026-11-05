@@ -31,12 +31,19 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(try Cart(fesArchive: cart.fesArchive) == cart)
 }
 
+private func fixture(_ name: String) throws -> [UInt8] {
+    let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/\(name)")
+    return Array(try #require(FileManager.default.contents(atPath: url.path)))
+}
+
 @Test func archiveMadeByInfoZipReadsAsItsCart() throws {
     // Made with: zip -0 -X -D made-by-zip.fes * in a folder holding Cart(name: "Fixture", mainLua: "print(1)").files.
-    let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/made-by-zip.fes")
-    let bytes = try #require(FileManager.default.contents(atPath: fixture.path))
+    #expect(try Cart(fesArchive: fixture("made-by-zip.fes")) == Cart(name: "Fixture", mainLua: "print(1)"))
+}
 
-    #expect(try Cart(fesArchive: Array(bytes)) == Cart(name: "Fixture", mainLua: "print(1)"))
+@Test func archiveMadeByInfoZipWithExtraFieldsAndACommentReadsAsItsCart() throws {
+    // Made with: echo "A cart for FES" | zip -0 -D -z made-by-zip-with-extras-and-a-comment.fes * in the same folder.
+    #expect(try Cart(fesArchive: fixture("made-by-zip-with-extras-and-a-comment.fes")) == Cart(name: "Fixture", mainLua: "print(1)"))
 }
 
 @Test func unknownEntriesAreIgnored() throws {
