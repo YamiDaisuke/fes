@@ -22,10 +22,10 @@ nonisolated(unsafe) private let runClicked = JSClosure { _ in
 }
 
 nonisolated(unsafe) private let codeClicked = JSClosure { _ in
+    showCodeView()
     if let error = runningCart.error {
         showRuntimeErrorInCode(error)
     }
-    showCodeView()
     return .undefined
 }
 

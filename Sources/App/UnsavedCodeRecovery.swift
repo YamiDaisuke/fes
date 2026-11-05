@@ -44,8 +44,8 @@ func offerUnsavedCode(_ text: String?) async {
         showStatus("Restored unsaved code of \(copy.name) as a new cart: its saved cart couldn't be read or was renamed.")
     }
     cart.mainLua = copy.mainLua
+    showCodeView()
     showCodeInEditor(cart.mainLua)
     showCartName()
-    showCodeView()
     keepUnsavedCodeCopy()
 }
