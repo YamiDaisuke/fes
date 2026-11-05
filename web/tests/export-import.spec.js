@@ -1,4 +1,5 @@
 import { test, expect } from "./persistent-context.js";
+import { typeCode } from "./code-editor.js";
 
 const cartFileNames = ["cart.json", "main.lua", "palettes.pal", "background.tiles", "sprites.tiles", "map.map"];
 
@@ -12,7 +13,7 @@ function savedFolders(page) {
   return page.evaluate(() => fesStorage.listCartFolders());
 }
 
-test("an exported cart imports as a new cart with identical files", async ({ page }, testInfo) => {
+test("an exported cart imports as a new cart with identical files, leaving the open cart alone", async ({ page }, testInfo) => {
   await page.addInitScript(() => {
     window.testCartMainLua = 'x = "ä\0b"\nfunction frame() end\n';
   });
@@ -28,6 +29,8 @@ test("an exported cart imports as a new cart with identical files", async ({ pag
   await expect(page.locator("#cart-status")).toHaveText("Exported Ünï-a-b.fes.");
   const exported = testInfo.outputPath("exported.fes");
   await download.saveAs(exported);
+  await page.locator("#cart-name").fill("Unsaved");
+  await typeCode(page, "-- unsaved");
 
   await page.locator("#cart-import-file").setInputFiles(exported);
   await expect(page.locator("#cart-status")).toHaveText("Imported Ünï:a/b as a new cart.");
@@ -38,6 +41,12 @@ test("an exported cart imports as a new cart with identical files", async ({ pag
     return Promise.all(folders.map((folder) => Promise.all(fileNames.map((name) => fesStorage.readCartFile(folder, name)))));
   }, cartFileNames);
   expect(imported).toEqual(original);
+
+  await expect(page.locator("#cart-name")).toHaveValue("Unsaved");
+  await expect(page.locator(".cm-line")).toHaveText(["-- unsaved"]);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Unsaved.");
+  expect(await savedFolders(page)).toHaveLength(2);
 });
 
 test("importing a file that isn't a .fes reports why and saves nothing", async ({ page }) => {
