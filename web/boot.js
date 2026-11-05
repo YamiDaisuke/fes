@@ -2,6 +2,9 @@ import { init } from "../.build/js/index.js";
 import { listenForInput, buttonsForFrame } from "./input.js";
 import * as storage from "./storage.js";
 import { createCodeEditor } from "./code-editor.js";
+import { startPWA } from "./pwa.js";
+
+startPWA();
 
 const canvas = document.getElementById("screen");
 const gameView = document.getElementById("game-view");

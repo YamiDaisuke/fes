@@ -9,3 +9,7 @@ rm -rf web/dist
 mkdir -p web/dist
 npx esbuild web/boot.js --bundle --format=esm --outfile=web/dist/boot.js
 cp web/index.html .build/js/App.wasm web/dist/
+cp web/manifest.webmanifest web/dist/
+cp -R web/icons web/dist/
+version=$(cd web/dist && find . -type f | sort | xargs sha256sum | sha256sum | cut -c1-16)
+sed "s/BUILD_VERSION/$version/" web/sw.js > web/dist/sw.js
