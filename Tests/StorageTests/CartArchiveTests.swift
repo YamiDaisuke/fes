@@ -78,3 +78,8 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     let family = "👨‍👩‍👧‍👦"
     #expect(fesFileName(forCartName: String(repeating: family, count: 64)) == String(repeating: family, count: 8) + ".fes")
 }
+
+@Test func fesFileNameIsNeverHiddenWhenTheCutLeavesOnlySpacesOrNothing() {
+    #expect(fesFileName(forCartName: String(repeating: "\u{3000}", count: 63) + "👨‍👩‍👧‍👦") == "👨‍👩‍👧‍👦.fes")
+    #expect(fesFileName(forCartName: "e" + String(repeating: "\u{301}", count: 100)) == "cart.fes")
+}
