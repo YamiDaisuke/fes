@@ -41,6 +41,31 @@ test("a saved cart's code runs when it is loaded on another page", async ({ cont
   await expect(secondPage.locator("#cart-error")).toContainText("main.lua:1: from saved cart");
 });
 
+test("code with a NUL character survives edit, Save, reload and load", async ({ page }) => {
+  const code = 'x = "a\0b"\ny = 2\nerror("len " .. #x .. " y " .. y)';
+  await page.addInitScript(() => {
+    window.testCartMainLua = "";
+  });
+  await openBooted(page);
+  await page.locator(".cm-content").focus();
+  await page.keyboard.insertText(code);
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
+
+  await page.getByRole("button", { name: "Code" }).click();
+  await saveAs(page, "N");
+  const saved = await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    return fesStorage.readCartFile(folder, "main.lua");
+  });
+  expect(saved).toBe(code);
+
+  await openBooted(page);
+  await page.locator("#cart-list").getByRole("button", { name: "N" }).click();
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
+});
+
 test("Enter on the focused Save button saves", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Save", exact: true }).focus();

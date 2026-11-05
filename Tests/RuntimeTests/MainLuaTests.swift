@@ -5,6 +5,10 @@ import Testing
     #expect(syntaxError(inMainLua: "x = 1\ny = = 2")?.hasPrefix("main.lua:2: unexpected symbol near '='") == true)
 }
 
+@Test func syntaxCheckReadsPastANulInAString() {
+    #expect(syntaxError(inMainLua: "x = \"a\u{0}b\"\ny = = 2")?.hasPrefix("main.lua:2:") == true)
+}
+
 @Test func syntaxCheckDoesNotRunTheCode() {
     #expect(syntaxError(inMainLua: #"error("ran")"#) == nil)
 }
