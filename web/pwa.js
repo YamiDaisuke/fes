@@ -10,7 +10,10 @@ async function registerServiceWorker() {
   const ownWorkerURL = new URL("sw.js", location.href).href;
   let hadController = navigator.serviceWorker.controller?.scriptURL === ownWorkerURL;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (hadController) document.getElementById("update-notice").hidden = false;
+    if (hadController) {
+      document.getElementById("update-status").textContent = "A new version of FES is ready.";
+      document.getElementById("update-reload").hidden = false;
+    }
     hadController = true;
   });
   document.getElementById("update-reload").addEventListener("click", () => location.reload());
