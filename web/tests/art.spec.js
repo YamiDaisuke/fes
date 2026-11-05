@@ -107,6 +107,19 @@ test("loading a cart while the art view is shown redraws the sheet in its colors
   expect(await sheetPixels(page)).not.toBe(demoSheet);
 });
 
+ephemeralTest("leaving the game through the art view still shows the runtime error on its line in Code", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "x = 1\nfunction _update()\n  missing()\nend";
+  });
+  await page.goto("/");
+  await expect(page.locator("#cart-error")).toContainText("main.lua:3:");
+
+  await page.locator("#show-art").click();
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toContainText("main.lua:3:");
+  await expect(page.locator(".cm-activeLine")).toHaveText("  missing()");
+});
+
 ephemeralTest("going through the art view doesn't put an old run's error on edited code", async ({ page }) => {
   await page.addInitScript(() => {
     window.testCartMainLua = "function _update() missing() end";
