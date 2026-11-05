@@ -1,3 +1,5 @@
+import Storage
+
 // Uncompressed PNG: PNG spec https://www.w3.org/TR/png/, zlib RFC 1950, stored deflate blocks RFC 1951.
 func pngData(rgba: [UInt8], width: Int, height: Int) -> [UInt8] {
     var header = bigEndian(UInt32(width)) + bigEndian(UInt32(height))
@@ -41,17 +43,6 @@ private func zlibStored(_ data: [UInt8]) -> [UInt8] {
 private func chunk(_ type: String, _ data: [UInt8]) -> [UInt8] {
     let typeAndData = Array(type.utf8) + data
     return bigEndian(UInt32(data.count)) + typeAndData + bigEndian(crc32(typeAndData))
-}
-
-private func crc32(_ bytes: [UInt8]) -> UInt32 {
-    var crc: UInt32 = 0xFFFF_FFFF
-    for byte in bytes {
-        crc ^= UInt32(byte)
-        for _ in 0..<8 {
-            crc = crc & 1 == 1 ? (crc >> 1) ^ 0xEDB8_8320 : crc >> 1
-        }
-    }
-    return ~crc
 }
 
 private func adler32(_ bytes: [UInt8]) -> UInt32 {
