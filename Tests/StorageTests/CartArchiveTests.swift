@@ -1,0 +1,68 @@
+import Console
+import Foundation
+@testable import Storage
+import Testing
+
+private func refusal(_ archive: [UInt8]) -> String? {
+    do {
+        _ = try Cart(fesArchive: archive)
+        return nil
+    } catch {
+        return "\(error)"
+    }
+}
+
+private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) -> [UInt8] {
+    var entries = cart.files.mapValues { Array($0.utf8) }
+    for (name, bytes) in changes {
+        entries[name] = bytes
+    }
+    return storedZip(entries.sorted { $0.key < $1.key }.map { (name: $0.key, bytes: $0.value) })
+}
+
+@Test func cartSurvivesAFesArchiveRoundTrip() throws {
+    var cart = Cart(name: "Ünï cart 🎮", mainLua: "print(\"a\\0b\")\n-- \u{0}\n")
+    cart.backgroundTiles.setPixel(tile: 255, x: 7, y: 7, color: 7)
+    cart.spriteTiles.setPixel(tile: 1, x: 0, y: 3, color: 2)
+    cart.backgroundPalettes.setMasterIndex(12, palette: 3, index: 1)
+    cart.spritePalettes.setMasterIndex(63, palette: 7, index: 7)
+    cart.background[column: 31, row: 31] = Tilemap.Cell(tile: 255, palette: 7)
+
+    #expect(try Cart(fesArchive: cart.fesArchive) == cart)
+}
+
+@Test func archiveMadeByInfoZipReadsAsItsCart() throws {
+    // Made with: zip -0 -X -D made-by-zip.fes * in a folder holding Cart(name: "Fixture", mainLua: "print(1)").files.
+    let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/made-by-zip.fes")
+    let bytes = try #require(FileManager.default.contents(atPath: fixture.path))
+
+    #expect(try Cart(fesArchive: Array(bytes)) == Cart(name: "Fixture", mainLua: "print(1)"))
+}
+
+@Test func unknownEntriesAreIgnored() throws {
+    let cart = Cart(name: "Demo", mainLua: "print(1)")
+    let withExtras = archive(of: cart, changing: ["__MACOSX/._main.lua": [0, 0xFF], "notes.txt": Array("hi".utf8)])
+
+    #expect(try Cart(fesArchive: withExtras) == cart)
+}
+
+@Test func archiveWithoutMainLuaNamesTheMissingFile() {
+    #expect(refusal(archive(of: Cart(name: "Demo", mainLua: ""), changing: ["main.lua": nil])) == "main.lua: file is missing")
+}
+
+@Test func cartFileThatIsNotUTF8IsRefused() {
+    var map = Array(Cart(name: "Demo", mainLua: "").files["map.map"]!.utf8)
+    map[0] = 0xFF
+
+    #expect(refusal(archive(of: Cart(name: "Demo", mainLua: ""), changing: ["map.map": map])) == "map.map: not valid UTF-8")
+}
+
+@Test func fileLargerThan8MiBIsRefusedBeforeItIsRead() {
+    #expect(refusal([UInt8](repeating: 0, count: Cart.largestArchiveBytes + 1)) == "larger than 8 MiB")
+}
+
+@Test func fesFileNameReplacesCharactersFilesRejectsAndAvoidsHiddenFiles() {
+    #expect(fesFileName(forCartName: "a/b:c") == "a-b-c.fes")
+    #expect(fesFileName(forCartName: " .hidden ") == "-hidden.fes")
+    #expect(fesFileName(forCartName: "Demo") == "Demo.fes")
+}
