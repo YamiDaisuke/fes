@@ -51,8 +51,10 @@ function iconPNG(size) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(size, 0);
   header.writeUInt32BE(size, 4);
-  header[8] = 8;
-  header[9] = 2;
+  const bitDepth = 8;
+  const truecolorRGB = 2;
+  header[8] = bitDepth;
+  header[9] = truecolorRGB;
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     chunk("IHDR", header),
