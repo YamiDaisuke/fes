@@ -20,8 +20,14 @@ private func refusal(_ archive: [UInt8]) -> String? {
 }
 
 private func refusal(changing offset: Int, to value: UInt8) -> String? {
+    refusal(changing: [offset: value])
+}
+
+private func refusal(changing changes: [Int: UInt8]) -> String? {
     var archive = storedZip([mainLua])
-    archive[offset] = value
+    for (offset, value) in changes {
+        archive[offset] = value
+    }
     return refusal(archive)
 }
 
@@ -58,8 +64,17 @@ private func refusal(changing offset: Int, to value: UInt8) -> String? {
     #expect(try readStoredZip(storedZip(Array(entries.dropLast()))).count == 64)
 }
 
-@Test func centralDirectoryOverlappingTheEndRecordIsRefused() {
-    #expect(refusal(changing: OneEntryArchive.endRecord + 16, to: 47) == "the central directory lies outside the file")
+@Test func endRecordWithAWrongCentralDirectoryOffsetIsRefused() {
+    #expect(refusal(changing: OneEntryArchive.endRecord + 16, to: 47) == "the end record doesn't match the central directory")
+}
+
+@Test func endRecordWithAWrongCentralDirectorySizeIsRefused() {
+    #expect(refusal(changing: OneEntryArchive.endRecord + 12, to: 10) == "the end record doesn't match the central directory")
+}
+
+@Test func centralDirectoryHoldingMoreEntriesThanTheEndRecordCountsIsRefused() {
+    let noEntries = [OneEntryArchive.endRecord + 8: UInt8(0), OneEntryArchive.endRecord + 10: 0]
+    #expect(refusal(changing: noEntries) == "the end record doesn't match the central directory")
 }
 
 @Test func damagedCentralHeaderIsRefused() {
@@ -72,6 +87,32 @@ private func refusal(changing offset: Int, to value: UInt8) -> String? {
 
 @Test func deflatedEntryIsRefused() {
     #expect(refusal(changing: OneEntryArchive.centralHeader + 10, to: 8) == "main.lua is compressed; FES reads .fes files it exported")
+}
+
+@Test func entryWithADataDescriptorIsRefused() {
+    let dataDescriptorInBothHeaders = [OneEntryArchive.localHeader + 6: UInt8(8), OneEntryArchive.centralHeader + 8: 8]
+    #expect(refusal(changing: dataDescriptorInBothHeaders) == "main.lua has a data descriptor; FES reads .fes files it exported")
+}
+
+@Test func localHeaderWithAnotherNameIsRefused() {
+    #expect(refusal(changing: OneEntryArchive.localHeader + 30, to: UInt8(ascii: "e")) == "main.lua's local header doesn't match the central directory")
+}
+
+@Test func localHeaderWithAnotherMethodIsRefused() {
+    #expect(refusal(changing: OneEntryArchive.localHeader + 8, to: 8) == "main.lua's local header doesn't match the central directory")
+}
+
+@Test func localHeaderMarkedEncryptedIsRefused() {
+    #expect(refusal(changing: OneEntryArchive.localHeader + 6, to: 1) == "main.lua's local header doesn't match the central directory")
+}
+
+@Test func localHeaderWithAnotherCRCIsRefused() {
+    #expect(refusal(changing: OneEntryArchive.localHeader + 14, to: 0) == "main.lua's local header doesn't match the central directory")
+}
+
+@Test func localHeaderWithOtherSizesIsRefused() {
+    let sizesOfOne = [OneEntryArchive.localHeader + 18: UInt8(1), OneEntryArchive.localHeader + 22: 1]
+    #expect(refusal(changing: sizesOfOne) == "main.lua's local header doesn't match the central directory")
 }
 
 @Test func entryWhoseTwoSizesDifferIsRefused() {
@@ -87,10 +128,11 @@ private func refusal(changing offset: Int, to value: UInt8) -> String? {
 }
 
 @Test func entryDataRunningIntoTheCentralDirectoryIsRefused() {
-    var archive = storedZip([mainLua])
-    archive[OneEntryArchive.centralHeader + 20] = 9
-    archive[OneEntryArchive.centralHeader + 24] = 9
-    #expect(refusal(archive) == "main.lua's data runs into the central directory")
+    let sizesOfNineInBothHeaders = [
+        OneEntryArchive.localHeader + 18: UInt8(9), OneEntryArchive.localHeader + 22: 9,
+        OneEntryArchive.centralHeader + 20: 9, OneEntryArchive.centralHeader + 24: 9,
+    ]
+    #expect(refusal(changing: sizesOfNineInBothHeaders) == "main.lua's data runs into the central directory")
 }
 
 @Test func flippedDataByteFailsTheCRC() {

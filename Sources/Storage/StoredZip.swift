@@ -7,6 +7,7 @@ private let centralHeaderLength = 46
 private let endRecordLength = 22
 private let mostEntries = 64
 private let encryptedFlag = 1
+private let dataDescriptorFlag = 8
 private let storedMethod = 0
 private let versionNeeded: UInt16 = 10
 private let versionMadeBy: UInt16 = 20
@@ -70,8 +71,8 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
     }
     let directorySize = try offsetOrLength(archive, at: end + 12)
     let directoryStart = try offsetOrLength(archive, at: end + 16)
-    guard directoryStart <= end, directorySize <= end - directoryStart else {
-        throw ArchiveError("the central directory lies outside the file")
+    guard directoryStart <= end, directorySize == end - directoryStart else {
+        throw ArchiveError("the end record doesn't match the central directory")
     }
 
     var files: [String: [UInt8]] = [:]
@@ -89,7 +90,8 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
         let extraLength = try uint16(archive, at: header + 30)
         let commentLength = try uint16(archive, at: header + 32)
         let localHeader = try offsetOrLength(archive, at: header + 42)
-        let name = String(decoding: try bytes(archive, from: header + centralHeaderLength, count: nameLength), as: UTF8.self)
+        let nameBytes = try bytes(archive, from: header + centralHeaderLength, count: nameLength)
+        let name = String(decoding: nameBytes, as: UTF8.self)
 
         guard flags & encryptedFlag == 0 else {
             throw ArchiveError("\(name) is encrypted")
@@ -97,14 +99,23 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
         guard method == storedMethod else {
             throw ArchiveError("\(name) is compressed; FES reads .fes files it exported")
         }
+        guard flags & dataDescriptorFlag == 0 else {
+            throw ArchiveError("\(name) has a data descriptor; FES reads .fes files it exported")
+        }
         guard compressedSize == size else {
             throw ArchiveError("\(name) has two different sizes")
         }
         guard localHeader <= directoryStart - localHeaderLength, try uint32(archive, at: localHeader) == localHeaderSignature else {
             throw ArchiveError("\(name) has no local header where the central directory says")
         }
-        let dataStart = localHeader + localHeaderLength
-            + (try uint16(archive, at: localHeader + 26)) + (try uint16(archive, at: localHeader + 28))
+        let flagsToNameLength = 22
+        let localFlagsToNameLength = try bytes(archive, from: localHeader + 6, count: flagsToNameLength)
+        let centralFlagsToNameLength = archive[(header + 8)..<(header + 8 + flagsToNameLength)]
+        let localName = try bytes(archive, from: localHeader + localHeaderLength, count: nameLength)
+        guard localFlagsToNameLength.elementsEqual(centralFlagsToNameLength), localName.elementsEqual(nameBytes) else {
+            throw ArchiveError("\(name)'s local header doesn't match the central directory")
+        }
+        let dataStart = localHeader + localHeaderLength + nameLength + (try uint16(archive, at: localHeader + 28))
         guard dataStart <= directoryStart, size <= directoryStart - dataStart else {
             throw ArchiveError("\(name)'s data runs into the central directory")
         }
@@ -117,6 +128,9 @@ func readStoredZip(_ archive: [UInt8]) throws(ArchiveError) -> [String: [UInt8]]
         }
         files[name] = data
         header += centralHeaderLength + nameLength + extraLength + commentLength
+    }
+    guard header == end else {
+        throw ArchiveError("the end record doesn't match the central directory")
     }
     return files
 }
