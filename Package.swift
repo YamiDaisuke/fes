@@ -3,9 +3,12 @@ import PackageDescription
 
 // Lua's deepest C recursion (LUAI_MAXCCALLS levels) peaks at 95 KB of wasm stack; see docs/decisions/010-cart-runtime.md.
 let wasmStackBytes = 1 << 20
+// lua.h includes this header, so C and Swift share its smaller Lua stack limit; see docs/decisions/012-cpu-and-memory-budgets.md.
+let luaUserHeader = "-DLUA_USER_H=\"../fes_lua_user.h\""
 
 let package = Package(
     name: "FES",
+    platforms: [.macOS(.v13)],
     dependencies: [
         .package(url: "https://github.com/swiftwasm/JavaScriptKit", exact: "0.61.0"),
     ],
@@ -16,6 +19,7 @@ let package = Package(
             cSettings: [
                 // Half of Lua's default: 200 nested C calls overflowed WebKit's native stack once it was cut to iOS's 1 MB; see decision 010.
                 .define("LUAI_MAXCCALLS", to: "100"),
+                .unsafeFlags([luaUserHeader]),
                 .define("_WASI_EMULATED_SIGNAL", .when(platforms: [.wasi])),
                 .define("_WASI_EMULATED_PROCESS_CLOCKS", .when(platforms: [.wasi])),
                 .unsafeFlags(["-mllvm", "-wasm-enable-sjlj"], .when(platforms: [.wasi])),
@@ -24,7 +28,11 @@ let package = Package(
                 .linkedLibrary("setjmp", .when(platforms: [.wasi])),
             ]
         ),
-        .target(name: "Runtime", dependencies: ["CLua", "Console"]),
+        .target(
+            name: "Runtime",
+            dependencies: ["CLua", "Console"],
+            swiftSettings: [.unsafeFlags(["-Xcc", luaUserHeader])]
+        ),
         .executableTarget(
             name: "App",
             dependencies: [
