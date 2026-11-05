@@ -1,11 +1,6 @@
 import JavaScriptKit
 import Runtime
 
-enum ShownView: String {
-    case code, game
-}
-
-nonisolated(unsafe) var shownView = ShownView.game
 nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) let codeEditor = JSObject.global.fesCodeEditor
 
@@ -23,9 +18,6 @@ nonisolated(unsafe) private let runClicked = JSClosure { _ in
 
 nonisolated(unsafe) private let codeClicked = JSClosure { _ in
     showCodeView()
-    if let error = runningCart.error {
-        showRuntimeErrorInCode(error)
-    }
     return .undefined
 }
 
@@ -53,9 +45,4 @@ func runCart() {
 func showCodeView() {
     show(.code)
     _ = codeEditor.focus()
-}
-
-private func show(_ view: ShownView) {
-    shownView = view
-    document.body.dataset.view = .string(view.rawValue)
 }
