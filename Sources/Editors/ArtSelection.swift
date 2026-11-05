@@ -21,13 +21,20 @@ extension Cart {
         }
     }
 
+    func palettes(in bank: Bank) -> PaletteBank {
+        switch bank {
+        case .background: backgroundPalettes
+        case .sprite: spritePalettes
+        }
+    }
+
     public func previewColors(bank: Bank, palette: Int) -> [Color?] {
-        let palettes = bank == .background ? backgroundPalettes : spritePalettes
+        let bankPalettes = palettes(in: bank)
         return (0..<PaletteBank.colorsPerPalette).map { index in
             if bank == .sprite && index == 0 {
                 return nil
             }
-            return mainPalette[palettes.mainPaletteIndex(palette: palette, index: index)]
+            return mainPalette[bankPalettes.mainPaletteIndex(palette: palette, index: index)]
         }
     }
 }
