@@ -10,7 +10,7 @@ nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) let codeEditor = JSObject.global.fesCodeEditor
 
 nonisolated(unsafe) private let codeChanged = JSClosure { arguments in
-    cart.mainLua = arguments[0].string!
+    cart.mainLua = string(from: arguments[0])!
     keepUnsavedCodeCopy()
     checkSyntaxSoon()
     return .undefined

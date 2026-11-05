@@ -29,7 +29,7 @@ func frame(heldButtons: UInt32) -> UnsafeRawPointer {
 }
 
 private func demoCart() -> Cart {
-    var cart = Cart(name: "Demo", mainLua: JSObject.global.testCartMainLua.string ?? DemoCart.mainLua)
+    var cart = Cart(name: "Demo", mainLua: string(from: JSObject.global.testCartMainLua) ?? DemoCart.mainLua)
     let demoPPU = DemoCart.ppuWithTiles()
     cart.backgroundTiles = demoPPU.backgroundTiles
     cart.spriteTiles = demoPPU.spriteTiles
