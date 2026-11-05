@@ -19,3 +19,17 @@ test("the install hint comes back once 7 days have passed since Not now", async 
   await page.goto("/");
   await expect(page.locator("#install-hint")).toBeVisible();
 });
+
+for (const [name, storedValue] of [
+  ["in the future", () => String(Date.now() + 24 * 60 * 60 * 1000)],
+  ["Infinity", () => "Infinity"],
+]) {
+  test(`the install hint shows when the stored dismissal time is ${name}`, async ({ page }) => {
+    await page.addInitScript(
+      ([key, value]) => localStorage.setItem(key, value),
+      ["fes-install-hint-dismissed", storedValue()],
+    );
+    await page.goto("/");
+    await expect(page.locator("#install-hint")).toBeVisible();
+  });
+}

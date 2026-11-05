@@ -29,7 +29,9 @@ async function registerServiceWorker() {
 
 function showInstallHint() {
   if (matchMedia("(display-mode: standalone)").matches) return;
-  if (Date.now() - Number(localStorage.getItem(installHintDismissedKey)) < installHintPause) return;
+  const dismissedAt = Number(localStorage.getItem(installHintDismissedKey));
+  const dismissedRecently = dismissedAt <= Date.now() && Date.now() - dismissedAt < installHintPause;
+  if (dismissedRecently) return;
   const hint = document.getElementById("install-hint");
   hint.hidden = false;
   document.getElementById("install-hint-dismiss").addEventListener("click", () => {
