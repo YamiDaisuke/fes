@@ -36,6 +36,7 @@ function showInstallHint() {
   hint.hidden = false;
   document.getElementById("install-hint-dismiss").addEventListener("click", () => {
     localStorage.setItem(installHintDismissedKey, String(Date.now()));
+    document.getElementById("run").focus();
     hint.hidden = true;
   });
 }

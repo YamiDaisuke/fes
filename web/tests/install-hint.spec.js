@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
 
-test("Not now keeps the install hint hidden after a reload", async ({ page }) => {
+test("Not now moves focus to Run and keeps the install hint hidden after a reload", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#install-hint")).toBeVisible();
 
   await page.getByRole("button", { name: "Not now" }).click();
   await expect(page.locator("#install-hint")).toBeHidden();
+  await expect(page.locator("#run")).toBeFocused();
 
   await page.reload();
   await expect(page.locator("#screen")).toHaveJSProperty("width", 192);
