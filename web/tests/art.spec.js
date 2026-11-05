@@ -1,0 +1,98 @@
+import { test as ephemeralTest, expect } from "@playwright/test";
+import { test } from "./persistent-context.js";
+import { typeCode } from "./code-editor.js";
+
+async function openArtView(page) {
+  await page.goto("/");
+  await expect(page.locator("#cart-name")).toHaveValue("Demo");
+  await page.locator("#show-art").click();
+}
+
+function sheetTileCenter(page, tile) {
+  return page.evaluate((tile) => {
+    const zoom = (document.getElementById("art-sheet").width - 17) / 128;
+    const origin = (square) => 1 + square * (8 * zoom + 1);
+    return { x: origin(tile % 16) + 4 * zoom, y: origin(Math.floor(tile / 16)) + 4 * zoom };
+  }, tile);
+}
+
+function editAreaShowsSheetTile(page, tile) {
+  return page.evaluate((tile) => {
+    const pixelAt = (canvas, x, y) => canvas.getContext("2d").getImageData(x, y, 1, 1).data.join();
+    const sheet = document.getElementById("art-sheet");
+    const edit = document.getElementById("art-edit");
+    const sheetZoom = (sheet.width - 17) / 128;
+    const editZoom = (edit.width - 9) / 8;
+    const sheetLeft = 1 + (tile % 16) * (8 * sheetZoom + 1);
+    const sheetTop = 1 + Math.floor(tile / 16) * (8 * sheetZoom + 1);
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const fromSheet = pixelAt(sheet, sheetLeft + x * sheetZoom, sheetTop + y * sheetZoom);
+        const fromEdit = pixelAt(edit, 1 + x * (editZoom + 1) + editZoom / 2, 1 + y * (editZoom + 1) + editZoom / 2);
+        if (fromSheet !== fromEdit) return false;
+      }
+    }
+    return true;
+  }, tile);
+}
+
+const sheetPixels = (page) => page.evaluate(() => document.getElementById("art-sheet").toDataURL());
+
+ephemeralTest("tapping a tile in the sheet shows it in the edit area", async ({ page }) => {
+  await openArtView(page);
+  expect(await editAreaShowsSheetTile(page, 1)).toBe(false);
+
+  await page.locator("#art-sheet").click({ position: await sheetTileCenter(page, 1) });
+  await expect(page.locator("#art-tile")).toHaveAttribute("aria-valuetext", "1, column 1, row 0");
+  expect(await editAreaShowsSheetTile(page, 1)).toBe(true);
+});
+
+ephemeralTest("the bank and palette buttons recolor the sheet and show which is pressed", async ({ page }) => {
+  await openArtView(page);
+  const background = page.getByRole("button", { name: "Background" });
+  const sprites = page.getByRole("button", { name: "Sprites" });
+  await expect(background).toHaveAttribute("aria-pressed", "true");
+  const backgroundSheet = await sheetPixels(page);
+
+  await sprites.click();
+  await expect(sprites).toHaveAttribute("aria-pressed", "true");
+  await expect(background).toHaveAttribute("aria-pressed", "false");
+  const spriteSheet = await sheetPixels(page);
+  expect(spriteSheet).not.toBe(backgroundSheet);
+
+  await page.getByRole("button", { name: "Palette 3" }).click();
+  await expect(page.getByRole("button", { name: "Palette 3" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Palette 0" })).toHaveAttribute("aria-pressed", "false");
+  expect(await sheetPixels(page)).not.toBe(spriteSheet);
+});
+
+ephemeralTest("the tile slider selects tiles from the keyboard", async ({ page }) => {
+  await openArtView(page);
+  await page.locator("#art-tile").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator("#art-tile")).toHaveAttribute("aria-valuetext", "1, column 1, row 0");
+  await expect(page.locator("#art-tile-number")).toHaveText("1");
+  expect(await editAreaShowsSheetTile(page, 1)).toBe(true);
+});
+
+test("Save works from the art view", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+});
+
+ephemeralTest("going through the art view doesn't put an old run's error on edited code", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "function _update() missing() end";
+  });
+  await page.goto("/");
+  await expect(page.locator("#cart-error")).toContainText("main.lua:1:");
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toContainText("main.lua:1:");
+  await typeCode(page, "x = 1");
+  await expect(page.locator("#code-error")).toBeEmpty();
+
+  await page.locator("#show-art").click();
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("#code-error")).toBeEmpty();
+});
