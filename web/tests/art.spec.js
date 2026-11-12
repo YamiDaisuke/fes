@@ -405,3 +405,18 @@ ephemeralTest("a keyboard paint ends a held stroke, so a later cancel takes back
   painted[7][7] = blankTile[7][7];
   expect(painted).toEqual(blankTile);
 });
+
+ephemeralTest("pressing the edit area hides the cursor ring, and Tab then starts again from the toolbar", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.locator("#art-pixel-apply").focus();
+  expect(await editAreaRingsPixel(page, 0, 0)).toBe(true);
+
+  await pressMouseOnPixel(page, 5, 5);
+  await page.mouse.up();
+  await nextFrame(page);
+
+  expect(await editAreaRingsPixel(page, 0, 0)).toBe(false);
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#run")).toBeFocused();
+});

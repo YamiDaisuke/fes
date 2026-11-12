@@ -17,6 +17,7 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
     switch string(from: arguments[0]) {
     case "start":
         if shownView == .art, let pixel = editAreaPixels(arguments[1])?.first {
+            leavePixelControls()
             stroke = Stroke(
                 tool: artSelection.tool, bank: artSelection.bank, tile: artSelection.tile,
                 tilesBefore: cart.tiles(in: artSelection.bank), lastPixel: pixel)

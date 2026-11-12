@@ -51,6 +51,12 @@ func startPixelControls() {
     _ = pixelGroup.addEventListener("focusout", pixelFocusOut)
 }
 
+func leavePixelControls() {
+    if isPixelCursorShown {
+        _ = document.activeElement.blur()
+    }
+}
+
 func redrawPixelControls(tiles: TileBank) {
     let cursor = artSelection.cursor
     let color = tiles.colorIndex(tile: artSelection.tile, x: cursor.x, y: cursor.y)
