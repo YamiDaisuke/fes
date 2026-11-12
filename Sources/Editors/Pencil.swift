@@ -20,16 +20,16 @@ public func editAreaPixel(atX x: Int, y: Int, in layout: GridLayout) -> ArtPoint
 
 public func linePoints(from start: ArtPoint, to end: ArtPoint) -> [ArtPoint] {
     let width = abs(end.x - start.x)
-    let height = -abs(end.y - start.y)
+    let height = abs(end.y - start.y)
     let stepX = start.x < end.x ? 1 : -1
     let stepY = start.y < end.y ? 1 : -1
-    var error = width + height
+    var error = width - height
     var point = start
     var points = [point]
     while point != end {
         let doubledError = 2 * error
-        if doubledError >= height {
-            error += height
+        if doubledError >= -height {
+            error -= height
             point.x += stepX
         }
         if doubledError <= width {
