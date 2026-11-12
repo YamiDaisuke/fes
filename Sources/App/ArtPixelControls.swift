@@ -74,5 +74,8 @@ func redrawPixelControls(tiles: TileBank) {
 }
 
 private func pixelNumber(in slider: JSValue) -> Int? {
-    string(from: slider.value).flatMap { Int($0) }.flatMap { (0..<TileBank.tileSize).contains($0) ? $0 : nil }
+    guard let number = string(from: slider.value).flatMap({ Int($0) }), (0..<TileBank.tileSize).contains(number) else {
+        return nil
+    }
+    return number
 }
