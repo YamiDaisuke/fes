@@ -24,7 +24,9 @@ nonisolated(unsafe) private let applyClicked = JSClosure { _ in
     var tiles = cart.tiles(in: artSelection.bank)
     applyArtTool(artSelection.tool, tile: artSelection.tile, from: cursor, to: cursor, tiles: &tiles)
     cart.setTiles(tiles, in: artSelection.bank)
-    artSelection.tool = .pencil
+    if artSelection.tool == .picker {
+        artSelection.tool = .pencil
+    }
     redrawArtView()
     return .undefined
 }
