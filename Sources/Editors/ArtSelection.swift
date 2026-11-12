@@ -5,7 +5,7 @@ public enum Bank: String, CaseIterable {
     case background, sprite
 }
 
-public enum ArtTool: String {
+public enum ArtTool: String, CaseIterable {
     case pencil, picker
 }
 
