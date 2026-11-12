@@ -126,6 +126,7 @@ func readSavedCart(folder: String) async -> Cart? {
 }
 
 func openCart(_ opened: Cart, folder: String) {
+    dropArtStroke()
     cart = opened
     lastSavedCart = opened
     cartFolder = folder

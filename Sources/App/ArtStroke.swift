@@ -14,17 +14,18 @@ nonisolated(unsafe) private var stroke: Stroke?
 nonisolated(unsafe) private var isArtRedrawScheduled = false
 
 nonisolated(unsafe) let artStroked = JSClosure { arguments in
-    guard let pixels = editAreaPixels(arguments[1]) else { return .undefined }
     switch string(from: arguments[0]) {
     case "start":
-        if let pixel = pixels.first, shownView == .art {
+        if shownView == .art, let pixel = editAreaPixels(arguments[1])?.first {
             stroke = Stroke(
                 tool: artSelection.tool, bank: artSelection.bank, tile: artSelection.tile,
                 tilesBefore: cart.tiles(in: artSelection.bank), lastPixel: pixel)
             continueStroke(to: [pixel])
         }
     case "move":
-        continueStroke(to: pixels)
+        if let pixels = editAreaPixels(arguments[1]) {
+            continueStroke(to: pixels)
+        }
     case "end":
         finishStroke()
     case "cancel":
@@ -37,6 +38,10 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
         break
     }
     return .undefined
+}
+
+func dropArtStroke() {
+    stroke = nil
 }
 
 nonisolated(unsafe) private let artRedrawFrame = JSClosure { _ in
