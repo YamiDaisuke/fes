@@ -19,6 +19,7 @@ nonisolated(unsafe) private let cursorMoved = JSClosure { _ in
 }
 
 nonisolated(unsafe) private let applyClicked = JSClosure { _ in
+    dropArtStroke()
     let cursor = artSelection.cursor
     var tiles = cart.tiles(in: artSelection.bank)
     applyArtTool(artSelection.tool, tile: artSelection.tile, from: cursor, to: cursor, tiles: &tiles)

@@ -384,3 +384,24 @@ ephemeralTest("a touch tap at the edit area's corner paints only the pixel under
   await expect(page.getByRole("button", { name: "Color 3" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#art-pixel-apply")).not.toBeFocused();
 });
+
+ephemeralTest("a keyboard paint ends a held stroke, so a later cancel takes back neither", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const blankTile = await editTileColors(page);
+  await page.locator("#art-pixel-column").fill("6");
+
+  await pressMouseOnPixel(page, 7, 7);
+  await page.locator("#art-pixel-apply").focus();
+  await page.keyboard.press("Space");
+  await cancelMouseStroke(page);
+  await page.mouse.up();
+  await nextFrame(page);
+
+  const painted = await editTileColors(page);
+  expect(painted[0][6]).not.toBe(blankTile[0][6]);
+  expect(painted[7][7]).not.toBe(blankTile[7][7]);
+  painted[0][6] = blankTile[0][6];
+  painted[7][7] = blankTile[7][7];
+  expect(painted).toEqual(blankTile);
+});
