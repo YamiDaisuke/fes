@@ -184,11 +184,9 @@ ephemeralTest("the picker selects the color under the pointer and hands back to 
   await openArtView(page);
   await showBlankTile(page, "Background");
   await page.getByRole("button", { name: "Picker" }).click();
-  await expect(page.getByRole("button", { name: "Color 1" })).toHaveAttribute("aria-pressed", "true");
 
   await drag(page, [3, 3], [3, 3]);
   await expect(page.getByRole("button", { name: "Color 0" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Color 1" })).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
 });
 

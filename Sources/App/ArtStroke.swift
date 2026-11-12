@@ -69,11 +69,8 @@ private func continueStroke(to pixels: [ArtPoint]) {
         current.lastPixel = pixel
     }
     stroke = current
-    if tiles != tilesBefore {
-        cart.setTiles(tiles, in: current.bank)
-        scheduleArtRedraw()
-    }
-    if artSelection != selectionBefore {
+    cart.setTiles(tiles, in: current.bank)
+    if tiles != tilesBefore || artSelection != selectionBefore {
         scheduleArtRedraw()
     }
 }
