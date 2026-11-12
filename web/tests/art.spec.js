@@ -136,3 +136,113 @@ ephemeralTest("going through the art view doesn't put an old run's error on edit
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator("#code-error")).toBeEmpty();
 });
+
+async function editPixelPoint(page, x, y) {
+  const box = await page.locator("#art-edit").boundingBox();
+  const zoom = await page.evaluate(() => (document.getElementById("art-edit").width - 9) / 8);
+  return { x: box.x + 1 + x * (zoom + 1) + zoom / 2, y: box.y + 1 + y * (zoom + 1) + zoom / 2 };
+}
+
+function editRowColors(page, y) {
+  return page.evaluate((y) => {
+    const edit = document.getElementById("art-edit");
+    const zoom = (edit.width - 9) / 8;
+    const context = edit.getContext("2d");
+    const centerOf = (square) => 1 + square * (zoom + 1) + zoom / 2;
+    return [0, 1, 2, 3, 4, 5, 6, 7].map((x) => context.getImageData(centerOf(x), centerOf(y), 1, 1).data.join());
+  }, y);
+}
+
+async function drag(page, from, to) {
+  const start = await editPixelPoint(page, ...from);
+  const end = await editPixelPoint(page, ...to);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 1 });
+  await page.mouse.up();
+}
+
+async function showBlankTile(page, bank) {
+  await page.getByRole("button", { name: bank }).click();
+  await page.locator("#art-tile").fill("2");
+  await expect(page.locator("#art-tile-number")).toHaveText("2");
+}
+
+ephemeralTest("one fast drag paints every pixel between its ends and nothing around them", async ({ page }) => {
+  await openArtView(page);
+  await showBlankTile(page, "Background");
+  const blankRow = await editRowColors(page, 3);
+
+  await drag(page, [0, 2], [7, 2]);
+  await expect.poll(async () => (await editRowColors(page, 2))[0]).not.toBe(blankRow[0]);
+  expect(new Set(await editRowColors(page, 2)).size).toBe(1);
+  expect(await editRowColors(page, 3)).toEqual(blankRow);
+  expect(await editAreaShowsSheetTile(page, 2)).toBe(true);
+});
+
+ephemeralTest("the picker selects the color under the pointer and hands back to the pencil", async ({ page }) => {
+  await openArtView(page);
+  await showBlankTile(page, "Background");
+  await page.getByRole("button", { name: "Picker" }).click();
+  await expect(page.getByRole("button", { name: "Color 1" })).toHaveAttribute("aria-pressed", "true");
+
+  await drag(page, [3, 3], [3, 3]);
+  await expect(page.getByRole("button", { name: "Color 0" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Color 1" })).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test.describe("with a cart that draws sprite tile 2", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.testCartMainLua = "function _draw() cls() spr(2, 0, 0) end";
+    });
+  });
+
+  test("a drawn sprite shows in Run, and is still there after Save and a reload", async ({ page }) => {
+    await openArtView(page);
+    await showBlankTile(page, "Sprites");
+    await page.getByRole("button", { name: "Color 3" }).click();
+    await drag(page, [0, 0], [0, 0]);
+    await expect.poll(async () => new Set(await editRowColors(page, 0)).size).toBe(2);
+    const drawnColor = (await editRowColors(page, 0))[0];
+
+    await page.getByRole("button", { name: "Run" }).click();
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById("screen").getContext("2d").getImageData(0, 0, 1, 1).data.join()))
+      .toBe(drawnColor);
+
+    await page.getByRole("button", { name: "Code" }).click();
+    await page.locator("#cart-name").fill("Painted");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.locator("#cart-status")).toHaveText("Saved Painted.");
+    await page.reload();
+    await page.locator("#cart-list").getByRole("button", { name: "Painted", includeHidden: true }).dispatchEvent("click");
+    await expect(page.locator("#cart-status")).toHaveText("Loaded Painted.");
+    await page.locator("#show-art").click();
+    await showBlankTile(page, "Sprites");
+    expect((await editRowColors(page, 0))[0]).toBe(drawnColor);
+  });
+
+  test("drawing makes loading another cart ask to discard, and doesn't offer a code-only restore", async ({ page }) => {
+    await openArtView(page);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+    await drag(page, [0, 0], [7, 7]);
+    const questions = [];
+    page.on("dialog", (dialog) => {
+      questions.push(dialog.message());
+      dialog.dismiss();
+    });
+
+    await page.locator("#cart-list").getByRole("button", { name: "Demo", includeHidden: true }).dispatchEvent("click");
+    await expect.poll(() => questions).toEqual(["Discard unsaved changes to Demo?"]);
+
+    await page.getByRole("button", { name: "Code" }).click();
+    await typeCode(page, "-- edited");
+    await typeCode(page, "function _draw() cls() spr(2, 0, 0) end");
+    await page.reload();
+    await expect(page.locator("#cart-list button")).not.toHaveCount(0);
+    expect(questions).toEqual(["Discard unsaved changes to Demo?"]);
+  });
+});
