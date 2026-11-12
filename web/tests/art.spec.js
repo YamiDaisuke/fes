@@ -168,6 +168,15 @@ async function showTile(page, bank, tile) {
   await expect(page.locator("#art-tile-number")).toHaveText(String(tile));
 }
 
+function editAreaRingsPixel(page, x, y) {
+  return page.evaluate(([x, y]) => {
+    const edit = document.getElementById("art-edit");
+    const zoom = (edit.width - 9) / 8;
+    const ringTop = y * (zoom + 1);
+    return edit.getContext("2d").getImageData(1 + x * (zoom + 1) + zoom / 2, ringTop, 1, 1).data.join() === "255,255,255,255";
+  }, [x, y]);
+}
+
 const editTileColors = (page) => Promise.all([0, 1, 2, 3, 4, 5, 6, 7].map((y) => editRowColors(page, y)));
 
 async function pressMouseOnPixel(page, x, y) {
@@ -315,4 +324,45 @@ test("a stroke cancelled after another cart loads leaves that cart's art alone",
 
   await nextFrame(page);
   expect(await editTileColors(page)).toEqual(savedTile);
+});
+
+ephemeralTest("the keyboard paints the pixel under the cursor, which is ringed only while the pixel controls have focus", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const blankTile = await editTileColors(page);
+  await page.getByRole("button", { name: "Color 3" }).click();
+
+  await page.locator("#art-pixel-column").focus();
+  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Tab");
+  for (let i = 0; i < 2; i++) await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Paint pixel" })).toBeFocused();
+  await page.keyboard.press("Space");
+
+  await expect(page.locator("#art-pixel-column")).toHaveAttribute("aria-valuetext", "3, color 3");
+  await expect(page.locator("#art-pixel-row")).toHaveAttribute("aria-valuetext", "2, color 3");
+  expect(await editAreaShowsSheetTile(page, 2)).toBe(true);
+  expect(await editAreaRingsPixel(page, 3, 2)).toBe(true);
+
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#art-pixel-apply")).not.toBeFocused();
+  expect(await editAreaRingsPixel(page, 3, 2)).toBe(false);
+  const painted = await editTileColors(page);
+  expect(painted[2][3]).not.toBe(blankTile[2][3]);
+  painted[2][3] = blankTile[2][3];
+  expect(painted).toEqual(blankTile);
+});
+
+ephemeralTest("Pick color selects the color under the cursor and hands back to the pencil", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.locator("#art-pixel-column").fill("3");
+  await page.locator("#art-pixel-row").fill("3");
+  await page.getByRole("button", { name: "Picker" }).click();
+
+  await page.getByRole("button", { name: "Pick color" }).click();
+  await expect(page.getByRole("button", { name: "Color 0" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#art-pixel-apply")).toHaveText("Paint pixel");
 });
