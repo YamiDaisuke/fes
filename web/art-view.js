@@ -6,6 +6,7 @@ export function createArtView(wasmBuffer) {
     },
     onTap(canvas, listener) {
       canvas.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
         const box = canvas.getBoundingClientRect();
         listener(Math.floor(event.clientX - box.left), Math.floor(event.clientY - box.top));
       });
@@ -17,6 +18,7 @@ export function createArtView(wasmBuffer) {
         return events.flatMap((event) => [Math.floor(event.clientX - box.left), Math.floor(event.clientY - box.top)]);
       };
       canvas.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
         if (event.button !== 0) return;
         if (stroke) {
           // A palm lands as a touch before the Pencil, and iPadOS sends no more finger events once the Pencil touches.

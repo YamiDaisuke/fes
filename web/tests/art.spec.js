@@ -366,3 +366,21 @@ ephemeralTest("Pick color selects the color under the cursor and hands back to t
   await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#art-pixel-apply")).toHaveText("Paint pixel");
 });
+
+ephemeralTest("a touch tap at the edit area's corner paints only the pixel under it", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const blankTile = await editTileColors(page);
+  await page.getByRole("button", { name: "Color 3" }).click();
+
+  const box = await page.locator("#art-edit").boundingBox();
+  await page.touchscreen.tap(box.x + box.width - 5, box.y + box.height - 5);
+  await nextFrame(page);
+
+  const painted = await editTileColors(page);
+  expect(painted[7][7]).not.toBe(blankTile[7][7]);
+  painted[7][7] = blankTile[7][7];
+  expect(painted).toEqual(blankTile);
+  await expect(page.getByRole("button", { name: "Color 3" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#art-pixel-apply")).not.toBeFocused();
+});
