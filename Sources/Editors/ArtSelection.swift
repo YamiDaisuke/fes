@@ -5,10 +5,16 @@ public enum Bank: String, CaseIterable {
     case background, sprite
 }
 
+public enum ArtTool: String {
+    case pencil, picker
+}
+
 public struct ArtSelection: Equatable {
     public var bank = Bank.background
     public var previewPalette = 0
     public var tile = 0
+    public var tool = ArtTool.pencil
+    public var color = 1
 
     public init() {}
 }
@@ -18,6 +24,13 @@ extension Cart {
         switch bank {
         case .background: backgroundTiles
         case .sprite: spriteTiles
+        }
+    }
+
+    public mutating func setTiles(_ tiles: TileBank, in bank: Bank) {
+        switch bank {
+        case .background: backgroundTiles = tiles
+        case .sprite: spriteTiles = tiles
         }
     }
 

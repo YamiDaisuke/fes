@@ -11,8 +11,13 @@ public struct GridLayout: Equatable {
     }
 
     public func square(at position: Int) -> Int? {
-        guard (0..<side).contains(position) else { return nil }
-        return max(position - 1, 0) / (squareSide + 1)
+        let square = unboundedSquare(at: position)
+        return (0..<squares).contains(square) ? square : nil
+    }
+
+    public func unboundedSquare(at position: Int) -> Int {
+        let step = squareSide + 1
+        return position < 0 ? (position + 1) / step - 1 : max(position - 1, 0) / step
     }
 
     public static func largest(squares: Int, pixelsPerSquare: Int, fittingWidth width: Int, height: Int) -> GridLayout {

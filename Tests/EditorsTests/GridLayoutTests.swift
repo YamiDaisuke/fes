@@ -30,3 +30,13 @@ import Testing
     #expect(layout.square(at: -1) == nil)
     #expect(layout.square(at: layout.side) == nil)
 }
+
+@Test func positionsOutsideTheImageMapToSquaresBeyondTheEdges() {
+    let layout = tileSheetLayout(fittingWidth: 145, height: 145)
+    let step = layout.squareSide + 1
+    #expect(layout.unboundedSquare(at: -1) == -1)
+    #expect(layout.unboundedSquare(at: -step) == -1)
+    #expect(layout.unboundedSquare(at: -step - 1) == -2)
+    #expect(layout.unboundedSquare(at: layout.side - 1) == 15)
+    #expect(layout.unboundedSquare(at: layout.side) == 16)
+}
