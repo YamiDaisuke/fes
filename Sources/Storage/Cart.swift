@@ -3,6 +3,7 @@ import Console
 public struct Cart: Equatable {
     public var name: String
     public var mainLua: String
+    public var mainPalette = MainPalette()
     public var backgroundTiles = TileBank()
     public var spriteTiles = TileBank()
     public var backgroundPalettes = PaletteBank()

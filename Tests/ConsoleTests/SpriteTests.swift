@@ -87,13 +87,13 @@ private func rgba(_ color: Color) -> [UInt8] {
 
 @Test func spritesDrawFromTheSpriteBanksNotTheBackgroundBanks() {
     var ppu = PPU()
-    ppu.spritePalettes.setMasterIndex(40, palette: 0, index: 7)
-    ppu.spritePalettes.setMasterIndex(41, palette: 0, index: 0)
+    ppu.spritePalettes.setMainPaletteIndex(40, palette: 0, index: 7)
+    ppu.spritePalettes.setMainPaletteIndex(41, palette: 0, index: 0)
     ppu.background[column: 2, row: 0] = Tilemap.Cell(tile: solid, palette: 0)
     ppu.sprites[0] = Sprite(x: 0, y: 0, tile: solid, palette: 0)
     let frame = frameWithSpriteTiles(ppu)
-    #expect(rgba(frame, x: 0, y: 0) == rgba(MasterPalette.colors[40]))
-    #expect(rgba(frame, x: 16, y: 0) == rgba(MasterPalette.colors[0]))
+    #expect(rgba(frame, x: 0, y: 0) == rgba(ppu.mainPalette[40]))
+    #expect(rgba(frame, x: 16, y: 0) == rgba(ppu.mainPalette[0]))
 }
 
 @Test func backgroundScrollDoesNotMoveSprites() {

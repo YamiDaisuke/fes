@@ -24,26 +24,25 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     var cart = Cart(name: "Ünï cart 🎮", mainLua: "print(\"a\\0b\")\n-- \u{0}\n")
     cart.backgroundTiles.setPixel(tile: 255, x: 7, y: 7, color: 7)
     cart.spriteTiles.setPixel(tile: 1, x: 0, y: 3, color: 2)
-    cart.backgroundPalettes.setMasterIndex(12, palette: 3, index: 1)
-    cart.spritePalettes.setMasterIndex(63, palette: 7, index: 7)
+    cart.backgroundPalettes.setMainPaletteIndex(12, palette: 3, index: 1)
+    cart.spritePalettes.setMainPaletteIndex(63, palette: 7, index: 7)
     cart.background[column: 31, row: 31] = Tilemap.Cell(tile: 255, palette: 7)
 
     #expect(try Cart(fesArchive: cart.fesArchive) == cart)
 }
 
-private func fixture(_ name: String) throws -> [UInt8] {
-    let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/\(name)")
-    return Array(try #require(FileManager.default.contents(atPath: url.path)))
+@Test func formatOneArchiveMadeByInfoZipLoadsWithTheDefaultMainPalette() throws {
+    // Made with: zip -0 -X -D made-by-zip.fes * in a folder holding T15b's format 1 Cart(name: "Fixture", mainLua: "print(1)").files.
+    let cart = try Cart(fesArchive: fixture("made-by-zip.fes"))
+    #expect(cart == Cart(name: "Fixture", mainLua: "print(1)"))
+    #expect(cart.mainPalette == MainPalette())
 }
 
-@Test func archiveMadeByInfoZipReadsAsItsCart() throws {
-    // Made with: zip -0 -X -D made-by-zip.fes * in a folder holding Cart(name: "Fixture", mainLua: "print(1)").files.
-    #expect(try Cart(fesArchive: fixture("made-by-zip.fes")) == Cart(name: "Fixture", mainLua: "print(1)"))
-}
-
-@Test func archiveMadeByInfoZipWithExtraFieldsAndACommentReadsAsItsCart() throws {
-    // Made with: echo "A cart for FES" | zip -0 -D -z made-by-zip-with-extras-and-a-comment.fes * in the same folder.
-    #expect(try Cart(fesArchive: fixture("made-by-zip-with-extras-and-a-comment.fes")) == Cart(name: "Fixture", mainLua: "print(1)"))
+@Test func formatOneArchiveMadeByInfoZipWithExtraFieldsAndACommentLoadsWithTheDefaultMainPalette() throws {
+    // Made with: echo "A cart for FES" | zip -0 -D -z made-by-zip-with-extras-and-a-comment.fes * in the same format 1 folder.
+    let cart = try Cart(fesArchive: fixture("made-by-zip-with-extras-and-a-comment.fes"))
+    #expect(cart == Cart(name: "Fixture", mainLua: "print(1)"))
+    #expect(cart.mainPalette == MainPalette())
 }
 
 @Test func unknownEntriesAreIgnored() throws {

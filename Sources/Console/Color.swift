@@ -8,4 +8,10 @@ public struct Color: Hashable, Sendable {
         self.green = green
         self.blue = blue
     }
+
+    public init(rgb: Int) {
+        red = UInt8(truncatingIfNeeded: rgb >> 16)
+        green = UInt8(truncatingIfNeeded: rgb >> 8)
+        blue = UInt8(truncatingIfNeeded: rgb)
+    }
 }

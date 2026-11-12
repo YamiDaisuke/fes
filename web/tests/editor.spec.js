@@ -19,8 +19,8 @@ test("code typed in the editor runs when Run is pressed", async ({ page }) => {
 test("the controller's keys type into the code editor", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Code" }).click();
+  await typeCode(page, "");
   const editor = page.locator(".cm-content");
-  await editor.fill("");
   await editor.pressSequentially("zx");
   await editor.press("Enter");
   await editor.press("Shift+KeyY");

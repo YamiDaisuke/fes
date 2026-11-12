@@ -1,4 +1,5 @@
 public struct PPU {
+    public var mainPalette = MainPalette()
     public var backgroundTiles = TileBank()
     public var backgroundPalettes = PaletteBank()
     public var spriteTiles = TileBank()
@@ -29,7 +30,7 @@ public struct PPU {
             let mapX = (x + wrappedScrollX) & mapWidthMask
             let cell = background[column: mapX / size, row: mapY / size]
             let index = backgroundTiles.colorIndex(tile: cell.tile, x: mapX % size, y: mapY % size)
-            framebuffer.setPixel(x: x, y: y, to: backgroundPalettes.color(palette: cell.palette, index: index))
+            framebuffer.setPixel(x: x, y: y, to: mainPalette[backgroundPalettes.mainPaletteIndex(palette: cell.palette, index: index)])
             colorIndices.append(index)
         }
         return colorIndices
@@ -51,7 +52,7 @@ public struct PPU {
                 let tileX = sprite.isFlippedHorizontally ? lastPixel - column : column
                 let index = spriteTiles.colorIndex(tile: sprite.tile, x: tileX, y: row)
                 if index == 0 { continue }
-                framebuffer.setPixel(x: x, y: y, to: spritePalettes.color(palette: sprite.palette, index: index))
+                framebuffer.setPixel(x: x, y: y, to: mainPalette[spritePalettes.mainPaletteIndex(palette: sprite.palette, index: index)])
             }
         }
     }
