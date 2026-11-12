@@ -339,6 +339,8 @@ ephemeralTest("the keyboard paints the pixel under the cursor, which is ringed o
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Paint pixel" })).toBeFocused();
   await page.keyboard.press("Space");
+  await page.getByRole("button", { name: "Color 5" }).click();
+  await page.locator("#art-pixel-apply").focus();
 
   await expect(page.locator("#art-pixel-column")).toHaveAttribute("aria-valuetext", "3, color 3");
   await expect(page.locator("#art-pixel-row")).toHaveAttribute("aria-valuetext", "2, color 3");
