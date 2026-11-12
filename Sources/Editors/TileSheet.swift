@@ -20,13 +20,7 @@ public func tileSheetImage(tiles: TileBank, colors: [Color?], selectedTile: Int,
     }
 
     let ringTile = selectedTile & 0xFF
-    let ringLeft = layout.origin(ofSquare: ringTile % sheetColumns) - 1
-    let ringTop = layout.origin(ofSquare: ringTile / sheetColumns) - 1
-    let ringSide = layout.squareSide + 2
-    image.fill(x: ringLeft, y: ringTop, width: ringSide, height: 1, color: selectionColor)
-    image.fill(x: ringLeft, y: ringTop + ringSide - 1, width: ringSide, height: 1, color: selectionColor)
-    image.fill(x: ringLeft, y: ringTop, width: 1, height: ringSide, color: selectionColor)
-    image.fill(x: ringLeft + ringSide - 1, y: ringTop, width: 1, height: ringSide, color: selectionColor)
+    image.ringSquare(column: ringTile % sheetColumns, row: ringTile / sheetColumns, in: layout)
     return image
 }
 

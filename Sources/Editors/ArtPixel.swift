@@ -14,6 +14,16 @@ extension RGBAImage {
         fill(x: x, y: y, width: zoom, height: zoom, color: color)
     }
 
+    mutating func ringSquare(column: Int, row: Int, in layout: GridLayout) {
+        let left = layout.origin(ofSquare: column) - 1
+        let top = layout.origin(ofSquare: row) - 1
+        let side = layout.squareSide + 2
+        fill(x: left, y: top, width: side, height: 1, color: selectionColor)
+        fill(x: left, y: top + side - 1, width: side, height: 1, color: selectionColor)
+        fill(x: left, y: top, width: 1, height: side, color: selectionColor)
+        fill(x: left + side - 1, y: top, width: 1, height: side, color: selectionColor)
+    }
+
     private mutating func fillChecker(x: Int, y: Int, zoom: Int) {
         let half = zoom / 2
         fill(x: x, y: y, width: zoom, height: zoom, color: checkerLightColor)
