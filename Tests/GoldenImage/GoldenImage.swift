@@ -8,10 +8,28 @@ public func expectFrameMatchesGolden(
     filePath: StaticString = #filePath,
     sourceLocation: SourceLocation = #_sourceLocation
 ) throws {
+    try expectImageMatchesGolden(
+        rgba: frame.rgba,
+        width: Screen.width,
+        height: Screen.height,
+        named: name,
+        filePath: filePath,
+        sourceLocation: sourceLocation
+    )
+}
+
+public func expectImageMatchesGolden(
+    rgba: [UInt8],
+    width: Int,
+    height: Int,
+    named name: String,
+    filePath: StaticString = #filePath,
+    sourceLocation: SourceLocation = #_sourceLocation
+) throws {
     let goldenDirectory = URL(fileURLWithPath: "\(filePath)").deletingLastPathComponent().appendingPathComponent("Golden")
     let goldenURL = goldenDirectory.appendingPathComponent("\(name).png")
     let actualURL = goldenDirectory.appendingPathComponent("\(name).actual.png")
-    let png = Data(pngData(rgba: frame.rgba, width: Screen.width, height: Screen.height))
+    let png = Data(pngData(rgba: rgba, width: width, height: height))
 
     if ProcessInfo.processInfo.environment["FES_RECORD_GOLDENS"] == "1" {
         try png.write(to: goldenURL)
@@ -24,7 +42,7 @@ public func expectFrameMatchesGolden(
         Issue.record(
             """
             Golden \(goldenURL.path) is missing.
-            Actual frame written to \(actualURL.path).
+            Actual image written to \(actualURL.path).
             Record it with FES_RECORD_GOLDENS=1 swift test.
             """,
             sourceLocation: sourceLocation
@@ -40,8 +58,8 @@ public func expectFrameMatchesGolden(
     try png.write(to: actualURL)
     Issue.record(
         """
-        Frame does not match golden \(goldenURL.path).
-        Actual frame written to \(actualURL.path).
+        Image does not match golden \(goldenURL.path).
+        Actual image written to \(actualURL.path).
         If the change is intended, re-record with FES_RECORD_GOLDENS=1 swift test.
         """,
         sourceLocation: sourceLocation
