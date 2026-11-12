@@ -23,8 +23,8 @@ export function createArtView(wasmBuffer) {
           if (event.pointerType !== "pen" || stroke.pointerType === "pen") return;
           listener("cancel", []);
         }
-        stroke = { pointerId: event.pointerId, pointerType: event.pointerType };
         canvas.setPointerCapture(event.pointerId);
+        stroke = { pointerId: event.pointerId, pointerType: event.pointerType };
         listener("start", positions([event]));
       });
       canvas.addEventListener("pointermove", (event) => {
