@@ -91,6 +91,7 @@ test("Save works from the art view", async ({ page }) => {
 
 test("loading a cart while the art view is shown redraws the sheet in its colors", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator("#cart-name")).toHaveValue("Demo");
   await page.getByRole("button", { name: "Code" }).click();
   await page.locator("#cart-name").fill("Recolored");
   await page.getByRole("button", { name: "Save", exact: true }).click();
