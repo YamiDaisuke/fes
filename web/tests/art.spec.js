@@ -360,11 +360,14 @@ ephemeralTest("Pick color selects the color under the cursor and hands back to t
   await openArtView(page);
   await showTile(page, "Background", 2);
   await page.locator("#art-pixel-column").fill("3");
-  await page.locator("#art-pixel-row").fill("3");
+  await page.locator("#art-pixel-row").fill("1");
+  await page.getByRole("button", { name: "Color 5" }).click();
+  await page.getByRole("button", { name: "Paint pixel" }).click();
+  await page.getByRole("button", { name: "Color 2" }).click();
   await page.getByRole("button", { name: "Picker" }).click();
 
   await page.getByRole("button", { name: "Pick color" }).click();
-  await expect(page.getByRole("button", { name: "Color 0" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Color 5" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#art-pixel-apply")).toHaveText("Paint pixel");
 });
