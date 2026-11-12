@@ -6,6 +6,7 @@ export function createArtView(wasmBuffer) {
     },
     onTap(canvas, listener) {
       canvas.addEventListener("pointerdown", (event) => {
+        // Without this, WebKit's touch adjustment sends a tap near the canvas edge's click and focus to the nearest control (decision 024).
         event.preventDefault();
         const box = canvas.getBoundingClientRect();
         listener(Math.floor(event.clientX - box.left), Math.floor(event.clientY - box.top));
@@ -18,6 +19,7 @@ export function createArtView(wasmBuffer) {
         return events.flatMap((event) => [Math.floor(event.clientX - box.left), Math.floor(event.clientY - box.top)]);
       };
       canvas.addEventListener("pointerdown", (event) => {
+        // Without this, WebKit's touch adjustment sends a tap near the canvas edge's click and focus to the nearest control (decision 024).
         event.preventDefault();
         if (event.button !== 0) return;
         if (stroke) {
