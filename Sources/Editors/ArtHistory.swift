@@ -42,7 +42,6 @@ public struct ArtHistory {
     public mutating func redo(current: CartArt) -> (edit: String, art: CartArt)? {
         guard let step = redoSteps.popLast() else { return nil }
         undoSteps.append(Step(edit: step.edit, art: current))
-        isMerging = false
         return (step.edit, step.art)
     }
 }

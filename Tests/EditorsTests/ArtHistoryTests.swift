@@ -89,6 +89,29 @@ private func art(_ step: Int) -> CartArt {
     #expect(history.undo(current: art(4))?.art == art(3))
 }
 
+@Test func stopMergingMakesTheNextValueANewStep() {
+    var history = ArtHistory()
+    history.record("main color 3", before: art(3), after: art(4), merging: true)
+    history.stopMerging()
+    history.record("main color 3", before: art(4), after: art(5), merging: true)
+
+    #expect(history.undo(current: art(5))?.art == art(4))
+    #expect(history.undo(current: art(4))?.art == art(3))
+}
+
+@Test func undoStopsMergingSoTheNextValueDropsTheRedoSteps() {
+    var history = ArtHistory()
+    history.record("main color 3", before: art(0), after: art(1), merging: true)
+    history.stopMerging()
+    history.record("main color 3", before: art(1), after: art(2), merging: true)
+    _ = history.undo(current: art(2))
+    history.record("main color 3", before: art(1), after: art(3), merging: true)
+
+    #expect(history.nextRedo == nil)
+    #expect(history.undo(current: art(3))?.art == art(1))
+    #expect(history.undo(current: art(1))?.art == art(0))
+}
+
 @Test func undoAndRedoOnAnEmptyHistoryReturnNothing() {
     var history = ArtHistory()
     #expect(history.undo(current: art(0)) == nil)
