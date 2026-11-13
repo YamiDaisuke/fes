@@ -18,7 +18,7 @@ import Testing
     let image = tileSheetImage(
         tiles: cart.tiles(in: .sprite),
         colors: cart.previewColors(bank: .sprite, palette: 2),
-        selectedTile: 17,
+        block: TileBlock(selectedTile: 17, size: .one),
         layout: layout
     )
     try expectImageMatchesGolden(
@@ -32,11 +32,24 @@ import Testing
     let image = tileSheetImage(
         tiles: cart.tiles(in: .background),
         colors: cart.previewColors(bank: .background, palette: 0),
-        selectedTile: 255,
+        block: TileBlock(selectedTile: 255, size: .one),
         layout: layout
     )
     try expectImageMatchesGolden(
         rgba: image.rgba, width: image.width, height: image.height, named: "sheet-background-palette-0-tile-255")
+}
+
+@Test func sheetRingsTheWholeBlockShiftedInsideTheSheet() throws {
+    let cart = cartWithPatternTiles()
+    let layout = tileSheetLayout(fittingWidth: 273, height: 273)
+    let image = tileSheetImage(
+        tiles: cart.tiles(in: .sprite),
+        colors: cart.previewColors(bank: .sprite, palette: 2),
+        block: TileBlock(selectedTile: 15, size: .two),
+        layout: layout
+    )
+    try expectImageMatchesGolden(
+        rgba: image.rgba, width: image.width, height: image.height, named: "sheet-sprite-palette-2-block-2-tile-15")
 }
 
 @Test func sheetRingWrapsTileNumbersLikeTheTileBank() {
@@ -46,7 +59,7 @@ import Testing
         tileSheetImage(
             tiles: cart.tiles(in: .background),
             colors: cart.previewColors(bank: .background, palette: 0),
-            selectedTile: tile,
+            block: TileBlock(selectedTile: tile, size: .one),
             layout: layout
         )
     }

@@ -22,7 +22,7 @@ nonisolated(unsafe) private let applyClicked = JSClosure { _ in
     dropArtStroke()
     let cursor = artSelection.cursor
     var tiles = cart.tiles(in: artSelection.bank)
-    applyArtTool(artSelection.tool, tile: artSelection.tile, from: cursor, to: cursor, tiles: &tiles)
+    applyArtTool(artSelection.tool, block: artSelection.block, from: cursor, to: cursor, tiles: &tiles)
     cart.setTiles(tiles, in: artSelection.bank)
     keepRecoveryCopy()
     if artSelection.tool == .picker {
@@ -54,6 +54,12 @@ func startPixelControls() {
     _ = pixelGroup.addEventListener("focusout", pixelFocusOut)
 }
 
+func pullPixelCursorInsideBlock() {
+    let lastPixel = artSelection.block.pixelsPerSide - 1
+    let cursor = artSelection.cursor
+    artSelection.cursor = ArtPoint(x: min(cursor.x, lastPixel), y: min(cursor.y, lastPixel))
+}
+
 func leavePixelControls() {
     if isPixelCursorShown {
         _ = document.activeElement.blur()
@@ -62,7 +68,12 @@ func leavePixelControls() {
 
 func redrawPixelControls(tiles: TileBank) {
     let cursor = artSelection.cursor
-    let color = tiles.colorIndex(tile: artSelection.tile, x: cursor.x, y: cursor.y)
+    let block = artSelection.block
+    let color = tiles.colorIndex(at: cursor, in: block)
+    let lastPixel = String(block.pixelsPerSide - 1)
+    // The browser clamps value to the old max, so max goes first.
+    _ = columnSlider.setAttribute("max", lastPixel)
+    _ = rowSlider.setAttribute("max", lastPixel)
     columnSlider.value = .string(String(cursor.x))
     rowSlider.value = .string(String(cursor.y))
     _ = columnSlider.setAttribute("aria-valuetext", "\(cursor.x), color \(color)")
@@ -75,7 +86,7 @@ func redrawPixelControls(tiles: TileBank) {
 }
 
 private func pixelNumber(in slider: JSValue) -> Int? {
-    guard let number = string(from: slider.value).flatMap({ Int($0) }), (0..<TileBank.tileSize).contains(number) else {
+    guard let number = string(from: slider.value).flatMap({ Int($0) }), (0..<artSelection.block.pixelsPerSide).contains(number) else {
         return nil
     }
     return number

@@ -9,9 +9,10 @@ public struct TileBlock: Equatable {
     public let size: BlockSize
 
     public init(selectedTile: Int, size: BlockSize) {
-        let lastFirstColumn = sheetColumns - size.rawValue
-        let column = min(selectedTile % sheetColumns, lastFirstColumn)
-        let row = min(selectedTile / sheetColumns, lastFirstColumn)
+        let tile = selectedTile & 0xFF
+        let farthestStart = sheetColumns - size.rawValue
+        let column = min(tile % sheetColumns, farthestStart)
+        let row = min(tile / sheetColumns, farthestStart)
         firstTile = row * sheetColumns + column
         self.size = size
     }

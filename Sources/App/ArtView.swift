@@ -11,6 +11,7 @@ nonisolated(unsafe) private let editCanvas = document.getElementById("art-edit")
 nonisolated(unsafe) private let bankGroup = document.getElementById("art-bank")
 nonisolated(unsafe) private let paletteGroup = document.getElementById("art-palette")
 nonisolated(unsafe) private let toolGroup = document.getElementById("art-tool")
+nonisolated(unsafe) private let blockSizeGroup = document.getElementById("art-block-size")
 nonisolated(unsafe) private let colorGroup = document.getElementById("art-colors")
 nonisolated(unsafe) private let tileSlider = document.getElementById("art-tile")
 nonisolated(unsafe) private let tileNumber = document.getElementById("art-tile-number")
@@ -49,6 +50,16 @@ nonisolated(unsafe) private let toolClicked = JSClosure { arguments in
     if let button = arguments[0].target.closest("[data-tool]").object,
        let tool = string(from: button.dataset.tool).flatMap(ArtTool.init(rawValue:)) {
         artSelection.tool = tool
+        redrawArtView()
+    }
+    return .undefined
+}
+
+nonisolated(unsafe) private let blockSizeClicked = JSClosure { arguments in
+    if let button = arguments[0].target.closest("[data-block-size]").object,
+       let size = string(from: button.dataset.blockSize).flatMap({ Int($0) }).flatMap(BlockSize.init(rawValue:)) {
+        artSelection.blockSize = size
+        pullPixelCursorInsideBlock()
         redrawArtView()
     }
     return .undefined
@@ -93,6 +104,7 @@ func startArtView() {
     _ = bankGroup.addEventListener("click", bankClicked)
     _ = paletteGroup.addEventListener("click", paletteClicked)
     _ = toolGroup.addEventListener("click", toolClicked)
+    _ = blockSizeGroup.addEventListener("click", blockSizeClicked)
     _ = colorGroup.addEventListener("click", colorClicked)
     _ = tileSlider.addEventListener("input", tileChanged)
     _ = artView.onTap(sheetCanvas, sheetTapped)
@@ -108,13 +120,14 @@ func redrawArtView() {
     let sheetBox = flooredSize(of: sheetArea)
     let editBox = flooredSize(of: editArea)
     let sheetLayout = tileSheetLayout(fittingWidth: sheetBox.width, height: sheetBox.height)
-    let editLayout = editAreaLayout(fittingWidth: editBox.width, height: editBox.height)
+    let block = artSelection.block
+    let editLayout = editAreaLayout(fittingWidth: editBox.width, height: editBox.height, block: block)
     let tiles = cart.tiles(in: artSelection.bank)
     let colors = cart.previewColors(bank: artSelection.bank, palette: artSelection.previewPalette)
     let tile = artSelection.tile
-    blit(tileSheetImage(tiles: tiles, colors: colors, selectedTile: tile, layout: sheetLayout), into: sheetCanvas)
+    blit(tileSheetImage(tiles: tiles, colors: colors, block: block, layout: sheetLayout), into: sheetCanvas)
     let cursor = isPixelCursorShown ? artSelection.cursor : nil
-    blit(editAreaImage(tiles: tiles, tile: tile, colors: colors, layout: editLayout, cursor: cursor), into: editCanvas)
+    blit(editAreaImage(tiles: tiles, block: block, colors: colors, layout: editLayout, cursor: cursor), into: editCanvas)
     shownSheetLayout = sheetLayout
     shownEditLayout = editLayout
 
@@ -127,6 +140,9 @@ func redrawArtView() {
     for tool in ArtTool.allCases {
         setPressed(toolGroup.querySelector("[data-tool='\(tool.rawValue)']"), tool == artSelection.tool)
     }
+    for size in BlockSize.allCases {
+        setPressed(blockSizeGroup.querySelector("[data-block-size='\(size.rawValue)']"), size == artSelection.blockSize)
+    }
     for (index, color) in colors.enumerated() {
         let button = colorGroup.querySelector("[data-color='\(index)']")
         setPressed(button, index == artSelection.color)
@@ -135,7 +151,8 @@ func redrawArtView() {
         button.style.background = .string(color.map { "rgb(\($0.red) \($0.green) \($0.blue))" } ?? "")
     }
     tileSlider.value = .string(String(tile))
-    _ = tileSlider.setAttribute("aria-valuetext", "\(tile), column \(tile % sheetColumns), row \(tile / sheetColumns)")
+    let blockStart = block.firstTile == tile ? "" : ", block from tile \(block.firstTile)"
+    _ = tileSlider.setAttribute("aria-valuetext", "\(tile), column \(tile % sheetColumns), row \(tile / sheetColumns)\(blockStart)")
     tileNumber.textContent = .string(String(tile))
     redrawPixelControls(tiles: tiles)
 }

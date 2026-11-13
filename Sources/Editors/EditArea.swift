@@ -1,19 +1,24 @@
 import Console
 
-public func editAreaLayout(fittingWidth width: Int, height: Int) -> GridLayout {
-    .largest(squares: TileBank.tileSize, pixelsPerSquare: 1, fittingWidth: width, height: height)
+public func editAreaLayout(fittingWidth width: Int, height: Int, block: TileBlock) -> GridLayout {
+    .largest(squares: block.pixelsPerSide, pixelsPerSquare: 1, fittingWidth: width, height: height)
 }
 
-public func editAreaImage(tiles: TileBank, tile: Int, colors: [Color?], layout: GridLayout, cursor: ArtPoint?) -> RGBAImage {
+public func editAreaImage(tiles: TileBank, block: TileBlock, colors: [Color?], layout: GridLayout, cursor: ArtPoint?) -> RGBAImage {
     var image = RGBAImage(width: layout.side, height: layout.side, color: gridLineColor)
-    for y in 0..<TileBank.tileSize {
-        for x in 0..<TileBank.tileSize {
-            let color = colors[tiles.colorIndex(tile: tile, x: x, y: y)]
+    for firstPixelOfTile in stride(from: TileBank.tileSize, to: block.pixelsPerSide, by: TileBank.tileSize) {
+        let line = layout.origin(ofSquare: firstPixelOfTile) - 1
+        image.fill(x: line, y: 1, width: 1, height: layout.side - 2, color: tileBorderColor)
+        image.fill(x: 1, y: line, width: layout.side - 2, height: 1, color: tileBorderColor)
+    }
+    for y in 0..<block.pixelsPerSide {
+        for x in 0..<block.pixelsPerSide {
+            let color = colors[tiles.colorIndex(at: ArtPoint(x: x, y: y), in: block)]
             image.fillArtPixel(x: layout.origin(ofSquare: x), y: layout.origin(ofSquare: y), zoom: layout.zoom, color: color)
         }
     }
     if let cursor {
-        image.ringSquare(column: cursor.x, row: cursor.y, in: layout)
+        image.ringSquares(column: cursor.x, row: cursor.y, count: 1, in: layout)
     }
     return image
 }
