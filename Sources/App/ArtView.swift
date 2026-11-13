@@ -112,6 +112,7 @@ func startArtView() {
     _ = artView.onStroke(editCanvas, artStroked)
     startPixelControls()
     startBlockActions()
+    startPaletteEditor()
     let resizeObserver = JSObject.global.ResizeObserver.function!.new(artResized)
     _ = resizeObserver.observe!(sheetArea)
     _ = resizeObserver.observe!(editArea)
@@ -158,6 +159,7 @@ func redrawArtView() {
     tileNumber.textContent = .string(String(tile))
     redrawPixelControls(tiles: tiles)
     redrawBlockActions()
+    redrawPaletteEditor()
 }
 
 private func flooredSize(of element: JSValue) -> (width: Int, height: Int) {

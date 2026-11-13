@@ -3,10 +3,7 @@ import Storage
 
 extension Color {
     public var hexCode: String {
-        "#" + [red, green, blue].map { component in
-            let digits = String(component, radix: 16)
-            return digits.count == 1 ? "0" + digits : digits
-        }.joined()
+        "#" + lowercaseHex(Int(red) << 16 | Int(green) << 8 | Int(blue), digits: 6)
     }
 }
 

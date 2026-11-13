@@ -25,7 +25,7 @@ func hexValue(_ text: Substring) -> Int? {
     return Int(text, radix: 16)
 }
 
-func lowercaseHex(_ value: Int, digits: Int) -> String {
+public func lowercaseHex(_ value: Int, digits: Int) -> String {
     let hex = String(value, radix: 16)
     return String(repeating: "0", count: digits - hex.count) + hex
 }
