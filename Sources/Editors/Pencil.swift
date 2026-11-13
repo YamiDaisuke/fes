@@ -8,10 +8,6 @@ public struct ArtPoint: Equatable {
         self.x = x
         self.y = y
     }
-
-    var isInsideTile: Bool {
-        (0..<TileBank.tileSize).contains(x) && (0..<TileBank.tileSize).contains(y)
-    }
 }
 
 public func editAreaPixel(atX x: Int, y: Int, in layout: GridLayout) -> ArtPoint {
@@ -41,14 +37,17 @@ public func linePoints(from start: ArtPoint, to end: ArtPoint) -> [ArtPoint] {
     return points
 }
 
-public func colorIndex(at point: ArtPoint, tiles: TileBank, tile: Int) -> Int? {
-    point.isInsideTile ? tiles.colorIndex(tile: tile, x: point.x, y: point.y) : nil
-}
-
 extension TileBank {
-    public mutating func paintLine(tile: Int, from start: ArtPoint, to end: ArtPoint, color: Int) {
-        for point in linePoints(from: start, to: end) where point.isInsideTile {
-            setPixel(tile: tile, x: point.x, y: point.y, color: color)
+    public func colorIndex(at point: ArtPoint, in block: TileBlock) -> Int {
+        precondition(block.contains(point))
+        let pixel = block.tileAndPixel(at: point)
+        return colorIndex(tile: pixel.tile, x: pixel.x, y: pixel.y)
+    }
+
+    public mutating func paintLine(in block: TileBlock, from start: ArtPoint, to end: ArtPoint, color: Int) {
+        for point in linePoints(from: start, to: end) where block.contains(point) {
+            let pixel = block.tileAndPixel(at: point)
+            setPixel(tile: pixel.tile, x: pixel.x, y: pixel.y, color: color)
         }
     }
 }

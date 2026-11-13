@@ -6,7 +6,7 @@ public func tileSheetLayout(fittingWidth width: Int, height: Int) -> GridLayout 
     .largest(squares: sheetColumns, pixelsPerSquare: TileBank.tileSize, fittingWidth: width, height: height)
 }
 
-public func tileSheetImage(tiles: TileBank, colors: [Color?], selectedTile: Int, layout: GridLayout) -> RGBAImage {
+public func tileSheetImage(tiles: TileBank, colors: [Color?], block: TileBlock, layout: GridLayout) -> RGBAImage {
     var image = RGBAImage(width: layout.side, height: layout.side, color: gridLineColor)
     for tile in 0..<TileBank.tileCount {
         let left = layout.origin(ofSquare: tile % sheetColumns)
@@ -19,8 +19,8 @@ public func tileSheetImage(tiles: TileBank, colors: [Color?], selectedTile: Int,
         }
     }
 
-    let ringTile = selectedTile & 0xFF
-    image.ringSquare(column: ringTile % sheetColumns, row: ringTile / sheetColumns, in: layout)
+    let first = block.firstTile
+    image.ringSquares(column: first % sheetColumns, row: first / sheetColumns, count: block.size.rawValue, in: layout)
     return image
 }
 

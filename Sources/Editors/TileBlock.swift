@@ -1,0 +1,31 @@
+import Console
+
+public enum BlockSize: Int, CaseIterable {
+    case one = 1, two = 2, four = 4
+}
+
+public struct TileBlock: Equatable {
+    public let firstTile: Int
+    public let size: BlockSize
+
+    public init(selectedTile: Int, size: BlockSize) {
+        let tile = selectedTile & 0xFF
+        let farthestStart = sheetColumns - size.rawValue
+        let column = min(tile % sheetColumns, farthestStart)
+        let row = min(tile / sheetColumns, farthestStart)
+        firstTile = row * sheetColumns + column
+        self.size = size
+    }
+
+    public var pixelsPerSide: Int { TileBank.tileSize * size.rawValue }
+
+    public func contains(_ point: ArtPoint) -> Bool {
+        (0..<pixelsPerSide).contains(point.x) && (0..<pixelsPerSide).contains(point.y)
+    }
+
+    public func tileAndPixel(at point: ArtPoint) -> (tile: Int, x: Int, y: Int) {
+        let tileSide = TileBank.tileSize
+        let tile = firstTile + (point.y / tileSide) * sheetColumns + point.x / tileSide
+        return (tile, point.x % tileSide, point.y % tileSide)
+    }
+}

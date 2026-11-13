@@ -5,7 +5,7 @@ import JavaScriptKit
 private struct Stroke {
     let tool: ArtTool
     let bank: Bank
-    let tile: Int
+    let block: TileBlock
     let tilesBefore: TileBank
     var lastPixel: ArtPoint
 }
@@ -19,7 +19,7 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
         if shownView == .art, let pixel = editAreaPixels(arguments[1])?.first {
             leavePixelControls()
             stroke = Stroke(
-                tool: artSelection.tool, bank: artSelection.bank, tile: artSelection.tile,
+                tool: artSelection.tool, bank: artSelection.bank, block: artSelection.block,
                 tilesBefore: cart.tiles(in: artSelection.bank), lastPixel: pixel)
             continueStroke(to: [pixel])
         }
@@ -69,7 +69,7 @@ private func continueStroke(to pixels: [ArtPoint]) {
     var tiles = cart.tiles(in: current.bank)
     let tilesBefore = tiles
     for pixel in pixels {
-        applyArtTool(current.tool, tile: current.tile, from: current.lastPixel, to: pixel, tiles: &tiles)
+        applyArtTool(current.tool, block: current.block, from: current.lastPixel, to: pixel, tiles: &tiles)
         current.lastPixel = pixel
     }
     stroke = current
@@ -79,12 +79,14 @@ private func continueStroke(to pixels: [ArtPoint]) {
     }
 }
 
-func applyArtTool(_ tool: ArtTool, tile: Int, from start: ArtPoint, to end: ArtPoint, tiles: inout TileBank) {
+func applyArtTool(_ tool: ArtTool, block: TileBlock, from start: ArtPoint, to end: ArtPoint, tiles: inout TileBank) {
     switch tool {
     case .pencil:
-        tiles.paintLine(tile: tile, from: start, to: end, color: artSelection.color)
+        tiles.paintLine(in: block, from: start, to: end, color: artSelection.color)
     case .picker:
-        artSelection.color = colorIndex(at: end, tiles: tiles, tile: tile) ?? artSelection.color
+        if block.contains(end) {
+            artSelection.color = tiles.colorIndex(at: end, in: block)
+        }
     }
 }
 

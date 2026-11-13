@@ -16,6 +16,9 @@ public struct ArtSelection: Equatable {
     public var tool = ArtTool.pencil
     public var color = 1
     public var cursor = ArtPoint(x: 0, y: 0)
+    public var blockSize = BlockSize.one
+
+    public var block: TileBlock { TileBlock(selectedTile: tile, size: blockSize) }
 
     public init() {}
 }

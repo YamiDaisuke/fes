@@ -36,6 +36,16 @@ function editAreaShowsSheetTile(page, tile) {
   }, tile);
 }
 
+function sheetTilePixels(page, tile) {
+  return page.evaluate((tile) => {
+    const sheet = document.getElementById("art-sheet");
+    const zoom = (sheet.width - 17) / 128;
+    const origin = (square) => 1 + square * (8 * zoom + 1);
+    const side = 8 * zoom;
+    return sheet.getContext("2d").getImageData(origin(tile % 16), origin(Math.floor(tile / 16)), side, side).data.join();
+  }, tile);
+}
+
 const sheetPixels = (page) => page.evaluate(() => document.getElementById("art-sheet").toDataURL());
 
 ephemeralTest("tapping a tile in the sheet shows it in the edit area", async ({ page }) => {
@@ -137,9 +147,9 @@ ephemeralTest("going through the art view doesn't put an old run's error on edit
   await expect(page.locator("#code-error")).toBeEmpty();
 });
 
-async function editPixelPoint(page, x, y) {
+async function editPixelPoint(page, x, y, squares = 8) {
   const box = await page.locator("#art-edit").boundingBox();
-  const zoom = await page.evaluate(() => (document.getElementById("art-edit").width - 9) / 8);
+  const zoom = await page.evaluate((squares) => (document.getElementById("art-edit").width - squares - 1) / squares, squares);
   return { x: box.x + 1 + x * (zoom + 1) + zoom / 2, y: box.y + 1 + y * (zoom + 1) + zoom / 2 };
 }
 
@@ -153,9 +163,9 @@ function editRowColors(page, y) {
   }, y);
 }
 
-async function drag(page, from, to) {
-  const start = await editPixelPoint(page, ...from);
-  const end = await editPixelPoint(page, ...to);
+async function drag(page, from, to, squares = 8) {
+  const start = await editPixelPoint(page, ...from, squares);
+  const end = await editPixelPoint(page, ...to, squares);
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
   await page.mouse.move(end.x, end.y, { steps: 1 });
@@ -249,6 +259,29 @@ ephemeralTest("the picker selects the color under the pointer and hands back to 
   await drag(page, [3, 3], [3, 3]);
   await expect(page.getByRole("button", { name: "Color 0" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
+});
+
+ephemeralTest("a picker drag from an edge pixel to past the edit area keeps that pixel's color", async ({ page }) => {
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "Color 5" }).click();
+  await drag(page, [7, 3], [7, 3]);
+  await page.getByRole("button", { name: "Color 2" }).click();
+  await page.getByRole("button", { name: "Picker" }).click();
+
+  const start = await editPixelPoint(page, 7, 3);
+  const box = await page.locator("#art-edit").boundingBox();
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width + 40, start.y, { steps: 1 });
+  await page.mouse.up();
+
+  await expect(page.getByRole("button", { name: "Color 5" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
+  await showTile(page, "Background", 3);
+  expect(pageErrors).toEqual([]);
 });
 
 test.describe("with a cart that draws sprite tile 2", () => {
@@ -493,4 +526,54 @@ ephemeralTest("pressing the edit area hides the cursor ring, and Tab then starts
   expect(await editAreaRingsPixel(page, 0, 0)).toBe(false);
   await page.keyboard.press("Tab");
   await expect(page.locator("#run")).toBeFocused();
+});
+
+ephemeralTest("at 2 by 2 one drag across the tile border paints both tiles", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "2 by 2" }).click();
+  await expect(page.getByRole("button", { name: "2 by 2" })).toHaveAttribute("aria-pressed", "true");
+  const [blank2, blank3, blank4] = await Promise.all([2, 3, 4].map((tile) => sheetTilePixels(page, tile)));
+
+  await drag(page, [4, 3], [20, 3], 16);
+
+  await expect.poll(() => sheetTilePixels(page, 3)).not.toBe(blank3);
+  expect(await sheetTilePixels(page, 2)).not.toBe(blank2);
+  expect(await sheetTilePixels(page, 4)).toBe(blank4);
+});
+
+ephemeralTest("changing the block size ends a held stroke, so later moves paint nothing", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "2 by 2" }).click();
+  const start = await editPixelPoint(page, 12, 12, 16);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await nextFrame(page);
+  const blockTiles = [2, 3, 18, 19];
+  const afterPress = await Promise.all(blockTiles.map((tile) => sheetTilePixels(page, tile)));
+
+  await page.getByRole("button", { name: "1 by 1" }).focus();
+  await page.keyboard.press("Space");
+  const end = await editPixelPoint(page, 1, 1);
+  await page.mouse.move(end.x, end.y, { steps: 1 });
+  await page.mouse.up();
+  await nextFrame(page);
+
+  expect(await Promise.all(blockTiles.map((tile) => sheetTilePixels(page, tile)))).toEqual(afterPress);
+});
+
+ephemeralTest("at 4 by 4 the pixel sliders reach 31, and 1 by 1 brings the cursor back inside the tile", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "4 by 4" }).click();
+  await page.locator("#art-tile").fill("255");
+  await expect(page.locator("#art-tile")).toHaveAttribute("aria-valuetext", "255, column 15, row 15, block from tile 204");
+
+  await page.locator("#art-pixel-column").fill("31");
+  await expect(page.locator("#art-pixel-column")).toHaveAttribute("aria-valuetext", /^31, /);
+
+  await page.getByRole("button", { name: "1 by 1" }).click();
+  await expect(page.locator("#art-pixel-column")).toHaveValue("7");
+  await expect(page.locator("#art-pixel-column")).toHaveAttribute("aria-valuetext", /^7, /);
+  await expect(page.locator("#art-tile")).toHaveAttribute("aria-valuetext", "255, column 15, row 15");
 });

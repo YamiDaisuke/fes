@@ -12,7 +12,7 @@ import Testing
 }
 
 @Test func editAreaZoomFitsItsGridLines() {
-    #expect(editAreaLayout(fittingWidth: 57, height: 57).zoom == 6)
+    #expect(editAreaLayout(fittingWidth: 57, height: 57, block: TileBlock(selectedTile: 0, size: .one)).zoom == 6)
 }
 
 @Test func gridLineBelongsToTheSquareBeforeIt() {
