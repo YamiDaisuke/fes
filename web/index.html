@@ -106,6 +106,9 @@
     #art-palettes h2 { margin: 0 0 8px; font-size: 18px; }
     #art-palettes > div { width: min-content; }
     #art-main-hint { margin: 0 0 8px; }
+    #art-main-edit { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    #art-main-color-picker { min-width: 88px; min-height: 44px; }
+    #art-palettes #art-main-palette-reset { width: auto; padding: 0 12px; margin-top: 8px; font: inherit; }
     #art-palette-entries, #art-main-colors { display: grid; grid-template-columns: repeat(8, 44px); gap: 2px; }
     #art-palettes button { width: 44px; height: 44px; padding: 0; touch-action: manipulation; }
     #art-view .swatches button { border: 2px solid #808080; }
@@ -209,7 +212,12 @@
       <div>
         <h2 id="art-main-colors-heading">Main palette</h2>
         <p id="art-main-hint"></p>
+        <div id="art-main-edit">
+          <label for="art-main-color-picker" id="art-main-color-picker-label">Edit main color</label>
+          <input type="color" id="art-main-color-picker">
+        </div>
         <div id="art-main-colors" class="swatches" role="group" aria-labelledby="art-main-colors-heading" aria-describedby="art-main-hint"></div>
+        <button type="button" id="art-main-palette-reset">Reset main palette</button>
       </div>
     </section>
   </div>

@@ -72,6 +72,7 @@ func startPaletteEditor() {
     _ = toggleButton.addEventListener("click", toggleClicked)
     _ = entryGroup.addEventListener("click", entryClicked)
     _ = mainColorGroup.addEventListener("click", mainColorClicked)
+    startMainColorEditor()
 }
 
 func redrawPaletteEditor() {
@@ -103,6 +104,7 @@ func redrawPaletteEditor() {
         button.style.background = .string(cart.mainPalette[mainIndex].hexCode)
         button.disabled = .boolean(isSelectionTransparent)
     }
+    redrawMainColorEditor()
 }
 
 private func newButton() -> JSValue {
