@@ -25,24 +25,28 @@ func parseJSONObject(_ text: String) throws(JSONError) -> [String: JSONValue] {
     return fields
 }
 
+private let hexDigits = Array("0123456789abcdef".utf8)
+
 func jsonString(_ string: String) -> String {
-    var quoted = "\""
-    for scalar in string.unicodeScalars {
-        switch scalar {
-        case "\"": quoted += "\\\""
-        case "\\": quoted += "\\\\"
-        case "\u{8}": quoted += "\\b"
-        case "\u{c}": quoted += "\\f"
-        case "\n": quoted += "\\n"
-        case "\r": quoted += "\\r"
-        case "\t": quoted += "\\t"
-        case let control where control.value < 0x20:
-            let hex = String(control.value, radix: 16)
-            quoted += "\\u" + String(repeating: "0", count: 4 - hex.count) + hex
-        default: quoted.unicodeScalars.append(scalar)
+    var bytes = [UInt8(ascii: "\"")]
+    bytes.reserveCapacity(string.utf8.count + 2)
+    for byte in string.utf8 {
+        switch byte {
+        case UInt8(ascii: "\""): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "\"")]
+        case UInt8(ascii: "\\"): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "\\")]
+        case UInt8(ascii: "\u{8}"): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "b")]
+        case UInt8(ascii: "\u{c}"): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "f")]
+        case UInt8(ascii: "\n"): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "n")]
+        case UInt8(ascii: "\r"): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "r")]
+        case UInt8(ascii: "\t"): bytes += [UInt8(ascii: "\\"), UInt8(ascii: "t")]
+        case let control where control < 0x20:
+            bytes += [UInt8(ascii: "\\"), UInt8(ascii: "u"), UInt8(ascii: "0"), UInt8(ascii: "0")]
+            bytes += [hexDigits[Int(control >> 4)], hexDigits[Int(control & 0xF)]]
+        default: bytes.append(byte)
         }
     }
-    return quoted + "\""
+    bytes.append(UInt8(ascii: "\""))
+    return String(decoding: bytes, as: UTF8.self)
 }
 
 private struct JSONReader {

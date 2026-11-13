@@ -167,6 +167,11 @@ private func refusal(cartJSON: String) -> String? {
     #expect(cart.files["cart.json"] == "{\n  \"format\" : 2,\n  \"name\" : \"a\\tb\\u001fc\"\n}\n")
 }
 
+@Test func cartJSONNameEscapesQuotesBackslashesAndShortFormControlsButNotNonASCII() {
+    let cart = Cart(name: "\u{8}\u{c}\"\\é🎮", mainLua: "")
+    #expect(cart.files["cart.json"] == "{\n  \"format\" : 2,\n  \"name\" : \"\\b\\f\\\"\\\\é🎮\"\n}\n")
+}
+
 @Test func invalidStringsInCartJSONAreRefused() {
     for name in ["\\ud83c", "\\ud83cx", "\\udfae", "\\ud83c\\u0041", "\\x", "\\u12g4", "\\u+123", "a\tb"] {
         #expect(refusal(cartJSON: "{\"format\": 1, \"name\": \"\(name)\"}") == "cart.json: not valid JSON")
