@@ -20,7 +20,7 @@ func spaceSeparatedFields(
     return fields
 }
 
-func hexValue(_ text: Substring) -> Int? {
+public func hexValue(_ text: Substring) -> Int? {
     guard text.allSatisfy({ $0.isASCII && $0.isHexDigit }) else { return nil }
     return Int(text, radix: 16)
 }

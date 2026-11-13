@@ -3,11 +3,6 @@ import Editors
 import Storage
 import Testing
 
-@Test func hexCodeKeepsLeadingZeros() {
-    #expect(Color(rgb: 0x0d7185).hexCode == "#0d7185")
-    #expect(Color(rgb: 0).hexCode == "#000000")
-}
-
 @Test func spriteColorZeroIsLabelledTransparentWhateverItStores() {
     var cart = Cart(name: "Labels", mainLua: "")
     cart.spritePalettes.setMainPaletteIndex(9, palette: 1, index: 0)

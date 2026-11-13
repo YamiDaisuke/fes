@@ -1,12 +1,6 @@
 import Console
 import Storage
 
-extension Color {
-    public var hexCode: String {
-        "#" + lowercaseHex(Int(red) << 16 | Int(green) << 8 | Int(blue), digits: 6)
-    }
-}
-
 extension Bank {
     fileprivate var displayName: String {
         switch self {
