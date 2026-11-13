@@ -10,11 +10,14 @@ nonisolated(unsafe) private let sheetCanvas = document.getElementById("art-sheet
 nonisolated(unsafe) private let editCanvas = document.getElementById("art-edit")
 nonisolated(unsafe) private let bankGroup = document.getElementById("art-bank")
 nonisolated(unsafe) private let paletteGroup = document.getElementById("art-palette")
+nonisolated(unsafe) private let toolGroup = document.getElementById("art-tool")
+nonisolated(unsafe) private let colorGroup = document.getElementById("art-colors")
 nonisolated(unsafe) private let tileSlider = document.getElementById("art-tile")
 nonisolated(unsafe) private let tileNumber = document.getElementById("art-tile-number")
 
-nonisolated(unsafe) private var artSelection = ArtSelection()
+nonisolated(unsafe) var artSelection = ArtSelection()
 nonisolated(unsafe) private var shownSheetLayout: GridLayout?
+nonisolated(unsafe) var shownEditLayout: GridLayout?
 
 nonisolated(unsafe) private let artClicked = JSClosure { _ in
     show(.art)
@@ -37,6 +40,25 @@ nonisolated(unsafe) private let paletteClicked = JSClosure { arguments in
        let palette = string(from: button.dataset.palette).flatMap({ Int($0) }),
        (0..<PaletteBank.paletteCount).contains(palette) {
         artSelection.previewPalette = palette
+        redrawArtView()
+    }
+    return .undefined
+}
+
+nonisolated(unsafe) private let toolClicked = JSClosure { arguments in
+    if let button = arguments[0].target.closest("[data-tool]").object,
+       let tool = string(from: button.dataset.tool).flatMap(ArtTool.init(rawValue:)) {
+        artSelection.tool = tool
+        redrawArtView()
+    }
+    return .undefined
+}
+
+nonisolated(unsafe) private let colorClicked = JSClosure { arguments in
+    if let button = arguments[0].target.closest("[data-color]").object,
+       let color = string(from: button.dataset.color).flatMap({ Int($0) }),
+       (0..<PaletteBank.colorsPerPalette).contains(color) {
+        artSelection.color = color
         redrawArtView()
     }
     return .undefined
@@ -70,8 +92,11 @@ func startArtView() {
     _ = document.getElementById("show-art").addEventListener("click", artClicked)
     _ = bankGroup.addEventListener("click", bankClicked)
     _ = paletteGroup.addEventListener("click", paletteClicked)
+    _ = toolGroup.addEventListener("click", toolClicked)
+    _ = colorGroup.addEventListener("click", colorClicked)
     _ = tileSlider.addEventListener("input", tileChanged)
     _ = artView.onTap(sheetCanvas, sheetTapped)
+    _ = artView.onStroke(editCanvas, artStroked)
     let resizeObserver = JSObject.global.ResizeObserver.function!.new(artResized)
     _ = resizeObserver.observe!(sheetArea)
     _ = resizeObserver.observe!(editArea)
@@ -89,12 +114,23 @@ func redrawArtView() {
     blit(tileSheetImage(tiles: tiles, colors: colors, selectedTile: tile, layout: sheetLayout), into: sheetCanvas)
     blit(editAreaImage(tiles: tiles, tile: tile, colors: colors, layout: editLayout), into: editCanvas)
     shownSheetLayout = sheetLayout
+    shownEditLayout = editLayout
 
     for bank in Bank.allCases {
         setPressed(bankGroup.querySelector("[data-bank='\(bank.rawValue)']"), bank == artSelection.bank)
     }
     for palette in 0..<PaletteBank.paletteCount {
         setPressed(paletteGroup.querySelector("[data-palette='\(palette)']"), palette == artSelection.previewPalette)
+    }
+    for tool in ArtTool.allCases {
+        setPressed(toolGroup.querySelector("[data-tool='\(tool.rawValue)']"), tool == artSelection.tool)
+    }
+    for (index, color) in colors.enumerated() {
+        let button = colorGroup.querySelector("[data-color='\(index)']")
+        setPressed(button, index == artSelection.color)
+        _ = button.setAttribute("aria-label", color == nil ? "Color \(index), transparent" : "Color \(index)")
+        _ = button.classList.toggle("transparent", color == nil)
+        button.style.background = .string(color.map { "rgb(\($0.red) \($0.green) \($0.blue))" } ?? "")
     }
     tileSlider.value = .string(String(tile))
     _ = tileSlider.setAttribute("aria-valuetext", "\(tile), column \(tile % sheetColumns), row \(tile / sheetColumns)")

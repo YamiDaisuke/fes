@@ -18,7 +18,7 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - CPU and memory errors give no hint of which budget number was hit or how close the cart came: there is no usage display yet; revisit with the owner's limits.
 - Saving a cart writes its files one at a time (cart.json last), so a failure partway leaves a mix of new and old files in the folder: OPFS has no multi-file transaction or portable directory move (decision 014); revisit with M6's content-addressed store.
 - An import or first save interrupted mid-write (an 8 MiB import takes about 0.7 s, and iPadOS kills background apps) leaves a folder without cart.json that the list shows as "Damaged cart" for good (T15c QA-1): there is no cart deletion; revisit when deleting carts is planned, or with M6's store.
-- The recovery copy holds only main.lua and only one cart per origin: the code editor is the only editor and M6 brings history; revisit in M3 when tiles and maps become editable.
+- The recovery copy holds only main.lua and the name, and only one cart per origin, so art edits since the last Save are lost on a reload or a frozen tab: T19 copies every cart file; M6 brings history.
 - Code typed before the restore prompt shows is replaced without asking when the user accepts it (T13b QA-2): the window is the OPFS cart listing at boot, a few milliseconds on an iPad; revisit if anyone hits it.
 - App icon is placeholder art in scripts/make-icons.js: the owner is a pixel artist; revisit when the owner draws it (edit the grid, run `node scripts/make-icons.js`).
 - The Home Screen hint's wording and 7-day reminder are placeholders: revisit when the owner reviews them.

@@ -5,7 +5,7 @@ nonisolated(unsafe) private let storage = JSObject.global.fesStorage.object!
 
 func keepUnsavedCodeCopy() {
     do {
-        if cart == lastSavedCart {
+        if cart.mainLua == lastSavedCart.mainLua && cart.name == lastSavedCart.name {
             _ = try storage.throwing.removeUnsavedCode!()
         } else {
             _ = try storage.throwing.writeUnsavedCode!(UnsavedCode(folder: cartFolder, name: cart.name, mainLua: cart.mainLua).text)
