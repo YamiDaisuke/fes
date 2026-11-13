@@ -353,6 +353,29 @@ test("a stroke writes the recovery copy only when it ends, and a cancel back to 
   expect(await readCopy()).not.toBeNull();
 });
 
+test("Run during a held stroke writes the recovery copy before the cart starts", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await showTile(page, "Background", 2);
+  const blankRow = await editRowColors(page, 2);
+  await pressMouseOnPixel(page, 0, 2);
+  await expect.poll(() => editRowColors(page, 2)).not.toEqual(blankRow);
+  await page.evaluate(() => {
+    window.viewsAtWrite = [];
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      viewsAtWrite.push(document.body.dataset.view);
+      setItem.call(this, key, value);
+    };
+  });
+
+  await page.locator("#run").dispatchEvent("click");
+  await page.mouse.up();
+
+  expect(await page.evaluate(() => viewsAtWrite)).toEqual(["art"]);
+});
+
 test("a stroke cancelled after another cart loads leaves that cart's art alone", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
