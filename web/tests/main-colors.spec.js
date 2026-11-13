@@ -11,7 +11,6 @@ async function openPalettes(page) {
 const button = (page, name) => page.getByRole("button", { name, exact: true });
 const picker = (page) => page.getByLabel("Edit main color", { exact: false });
 const sheetPixels = (page) => page.evaluate(() => document.getElementById("art-sheet").toDataURL());
-const readCopy = (page) => page.evaluate(() => fesStorage.readRecoveryCopy());
 
 test("an edited main color recolors every entry using it, shows in Run, and is still there after Save and a reload", async ({ page }) => {
   await page.addInitScript(() => {
@@ -54,15 +53,24 @@ test("an edited main color recolors every entry using it, shows in Run, and is s
   await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
 });
 
-ephemeralTest("an edited main color reaches the recovery copy after the picker settles", async ({ page }) => {
+test("a reload 100 ms after a picker value restores that color", async ({ page }) => {
   await openPalettes(page);
   await page.getByRole("button", { name: /^Background palette 0, color 3:/ }).click();
   await picker(page).fill("#123456");
   await picker(page).fill("#ff0000");
+  await page.waitForTimeout(100);
 
-  await expect.poll(() => readCopy(page)).not.toBeNull();
-  const mainPalette = JSON.parse(await readCopy(page)).files["main-palette.hex"].split("\n");
-  expect(mainPalette[3]).toBe("ff0000");
+  const prompts = [];
+  page.on("dialog", (dialog) => {
+    prompts.push(dialog.message());
+    dialog.accept();
+  });
+  await page.reload();
+  await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Demo.");
+  expect(prompts).toEqual(["Restore unsaved changes to Demo?"]);
+  await page.locator("#show-art").click();
+  await button(page, "Palettes").click();
+  await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
 });
 
 ephemeralTest("Reset asks first, then puts back Z64 and is disabled until a color changes again", async ({ page }) => {

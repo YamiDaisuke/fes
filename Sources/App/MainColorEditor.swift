@@ -7,14 +7,12 @@ nonisolated(unsafe) private let colorPicker = document.getElementById("art-main-
 nonisolated(unsafe) private let colorPickerLabel = document.getElementById("art-main-color-picker-label")
 nonisolated(unsafe) private let resetButton = document.getElementById("art-main-palette-reset")
 
-nonisolated(unsafe) private var pendingMainColorCopy: JSTimer?
-
 nonisolated(unsafe) private let colorPicked = JSClosure { _ in
     guard let mainIndex = selectedMainIndex() else { return .undefined }
     let value = string(from: colorPicker.value) ?? ""
     if let color = Color(hexCode: value) {
         cart.mainPalette[mainIndex] = color
-        pendingMainColorCopy = JSTimer(millisecondsDelay: 500) { keepRecoveryCopy() }
+        keepRecoveryCopy()
     } else {
         showStatus("Can't use the color \(value): expected #rrggbb")
     }
@@ -49,12 +47,6 @@ func redrawMainColorEditor() {
         colorPicker.disabled = .boolean(true)
     }
     resetButton.disabled = .boolean(cart.mainPalette == MainPalette())
-}
-
-func keepPendingMainColorCopy() {
-    guard pendingMainColorCopy != nil else { return }
-    pendingMainColorCopy = nil
-    keepRecoveryCopy()
 }
 
 private func selectedMainIndex() -> Int? {
