@@ -105,7 +105,7 @@ private func finishStroke() {
     stroke = nil
 }
 
-private func scheduleArtRedraw() {
+func scheduleArtRedraw() {
     guard !isArtRedrawScheduled else { return }
     isArtRedrawScheduled = true
     _ = JSObject.global.requestAnimationFrame!(artRedrawFrame)

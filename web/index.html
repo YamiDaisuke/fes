@@ -97,9 +97,24 @@
     #art-tools [role="group"] { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
     #art-tools button { min-width: 44px; min-height: 44px; font: inherit; touch-action: manipulation; }
     #art-tools button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
-    #art-colors button { border: 2px solid #808080; }
-    #art-colors button[aria-pressed="true"] { outline: 3px solid #fff; outline-offset: -1px; }
-    #art-colors button.transparent { background: repeating-conic-gradient(#b0b0b0 0 25%, #808080 0 50%) 0 0 / 16px 16px; }
+    #art-palettes-toggle { margin-bottom: 16px; }
+    #art-palettes {
+      grid-area: edit; overflow: auto; display: flex; flex-wrap: wrap; gap: 16px; align-content: start;
+      color: #fff; font: 16px system-ui, sans-serif;
+    }
+    #art-view:not([data-panel="palettes"]) #art-palettes, #art-view[data-panel="palettes"] #art-edit-area { display: none; }
+    #art-palettes h2 { margin: 0 0 8px; font-size: 18px; }
+    #art-palettes > div { width: min-content; }
+    #art-main-hint { margin: 0 0 8px; }
+    #art-main-edit { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    #art-main-color-picker { min-width: 88px; min-height: 44px; }
+    #art-palettes #art-main-palette-reset { width: auto; padding: 0 12px; margin-top: 8px; font: inherit; }
+    #art-palette-entries, #art-main-colors { display: grid; grid-template-columns: repeat(8, 44px); gap: 2px; }
+    #art-palettes button { width: 44px; height: 44px; padding: 0; touch-action: manipulation; }
+    #art-view .swatches button { border: 2px solid #808080; }
+    #art-view .swatches button[aria-pressed="true"] { outline: 3px solid #fff; outline-offset: -1px; }
+    #art-view .swatches button.transparent { background: repeating-conic-gradient(#b0b0b0 0 25%, #808080 0 50%) 0 0 / 16px 16px; }
+    #art-view .swatches button:disabled { opacity: 0.4; }
     #art-tools input[type="range"] { display: block; width: 100%; min-height: 44px; }
     #art-pixel { flex-direction: column; align-items: start; margin-top: 16px; }
   </style>
@@ -138,6 +153,7 @@
     <div id="art-sheet-area"><canvas id="art-sheet" aria-hidden="true"></canvas></div>
     <div id="art-edit-area"><canvas id="art-edit" aria-hidden="true"></canvas></div>
     <section id="art-tools" aria-label="Art tools">
+      <button type="button" id="art-palettes-toggle" aria-pressed="false">Palettes</button>
       <div id="art-bank" role="group" aria-label="Bank">
         <button type="button" data-bank="background">Background</button>
         <button type="button" data-bank="sprite">Sprites</button>
@@ -168,7 +184,7 @@
         <button type="button" id="art-copy">Copy</button>
         <button type="button" id="art-paste" disabled>Paste</button>
       </div>
-      <div id="art-colors" role="group" aria-label="Color">
+      <div id="art-colors" class="swatches" role="group" aria-label="Color">
         <button type="button" data-color="0" aria-label="Color 0"></button>
         <button type="button" data-color="1" aria-label="Color 1"></button>
         <button type="button" data-color="2" aria-label="Color 2"></button>
@@ -186,6 +202,22 @@
         <label for="art-pixel-row">Pixel row</label>
         <input type="range" id="art-pixel-row" min="0" max="7" value="0">
         <button type="button" id="art-pixel-apply">Paint pixel</button>
+      </div>
+    </section>
+    <section id="art-palettes" aria-label="Palette editor">
+      <div>
+        <h2 id="art-palette-entries-heading">Background palettes</h2>
+        <div id="art-palette-entries" class="swatches" role="group" aria-labelledby="art-palette-entries-heading"></div>
+      </div>
+      <div>
+        <h2 id="art-main-colors-heading">Main palette</h2>
+        <p id="art-main-hint"></p>
+        <div id="art-main-edit">
+          <label for="art-main-color-picker" id="art-main-color-picker-label">Edit main color</label>
+          <input type="color" id="art-main-color-picker">
+        </div>
+        <div id="art-main-colors" class="swatches" role="group" aria-labelledby="art-main-colors-heading" aria-describedby="art-main-hint"></div>
+        <button type="button" id="art-main-palette-reset">Reset main palette</button>
       </div>
     </section>
   </div>

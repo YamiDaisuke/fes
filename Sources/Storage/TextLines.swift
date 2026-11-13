@@ -20,12 +20,12 @@ func spaceSeparatedFields(
     return fields
 }
 
-func hexValue(_ text: Substring) -> Int? {
+public func hexValue(_ text: Substring) -> Int? {
     guard text.allSatisfy({ $0.isASCII && $0.isHexDigit }) else { return nil }
     return Int(text, radix: 16)
 }
 
-func lowercaseHex(_ value: Int, digits: Int) -> String {
+public func lowercaseHex(_ value: Int, digits: Int) -> String {
     let hex = String(value, radix: 16)
     return String(repeating: "0", count: digits - hex.count) + hex
 }
