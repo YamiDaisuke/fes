@@ -3,6 +3,10 @@ import Storage
 
 public enum Bank: String, CaseIterable {
     case background, sprite
+
+    public func isTransparent(colorIndex: Int) -> Bool {
+        self == .sprite && colorIndex == 0
+    }
 }
 
 public enum ArtTool: String, CaseIterable {
@@ -45,17 +49,24 @@ extension Cart {
         }
     }
 
-    func palettes(in bank: Bank) -> PaletteBank {
+    public func palettes(in bank: Bank) -> PaletteBank {
         switch bank {
         case .background: backgroundPalettes
         case .sprite: spritePalettes
         }
     }
 
+    public mutating func setPalettes(_ palettes: PaletteBank, in bank: Bank) {
+        switch bank {
+        case .background: backgroundPalettes = palettes
+        case .sprite: spritePalettes = palettes
+        }
+    }
+
     public func previewColors(bank: Bank, palette: Int) -> [Color?] {
         let bankPalettes = palettes(in: bank)
         return (0..<PaletteBank.colorsPerPalette).map { index in
-            if bank == .sprite && index == 0 {
+            if bank.isTransparent(colorIndex: index) {
                 return nil
             }
             return mainPalette[bankPalettes.mainPaletteIndex(palette: palette, index: index)]
