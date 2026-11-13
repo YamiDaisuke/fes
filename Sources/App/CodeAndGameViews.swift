@@ -34,6 +34,7 @@ func showCodeInEditor(_ code: String) {
 }
 
 func runCart() {
+    dropArtStroke()
     checkSyntaxNow()
     runningCart = RunningCart(mainLua: cart.mainLua, ppu: cart.ppu)
     isErrorShown = false

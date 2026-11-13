@@ -42,6 +42,9 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
 }
 
 func dropArtStroke() {
+    if stroke?.tool == .pencil {
+        keepRecoveryCopy()
+    }
     stroke = nil
 }
 
@@ -86,9 +89,14 @@ func applyArtTool(_ tool: ArtTool, tile: Int, from start: ArtPoint, to end: ArtP
 }
 
 private func finishStroke() {
-    if stroke?.tool == .picker {
+    switch stroke?.tool {
+    case .pencil:
+        keepRecoveryCopy()
+    case .picker:
         artSelection.tool = .pencil
         scheduleArtRedraw()
+    case nil:
+        break
     }
     stroke = nil
 }
