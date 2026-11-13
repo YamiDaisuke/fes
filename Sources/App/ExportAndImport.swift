@@ -67,9 +67,7 @@ private func importCart(from file: JSValue) async {
     }
     let bytes: [UInt8]
     do {
-        let buffer = try await JSPromise(file.arrayBuffer().object!)!.value
-        let view = JSTypedArray<UInt8>(unsafelyWrapping: JSObject.global.Uint8Array.function!.new(buffer))
-        bytes = view.withUnsafeBytes { Array($0) }
+        bytes = try await fileBytes(file)
     } catch {
         showStatus("Can't import \(fileName): \(error.thrownValue)")
         return
