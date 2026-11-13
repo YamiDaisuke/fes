@@ -111,6 +111,7 @@ func startArtView() {
     _ = artView.onTap(sheetCanvas, sheetTapped)
     _ = artView.onStroke(editCanvas, artStroked)
     startPixelControls()
+    startBlockActions()
     let resizeObserver = JSObject.global.ResizeObserver.function!.new(artResized)
     _ = resizeObserver.observe!(sheetArea)
     _ = resizeObserver.observe!(editArea)
@@ -156,6 +157,7 @@ func redrawArtView() {
     _ = tileSlider.setAttribute("aria-valuetext", "\(tile), column \(tile % sheetColumns), row \(tile / sheetColumns)\(blockStart)")
     tileNumber.textContent = .string(String(tile))
     redrawPixelControls(tiles: tiles)
+    redrawBlockActions()
 }
 
 private func flooredSize(of element: JSValue) -> (width: Int, height: Int) {

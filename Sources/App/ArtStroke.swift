@@ -24,13 +24,13 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
             continueStroke(to: [pixel])
         }
     case "move":
-        if let pixels = editAreaPixels(arguments[1]) {
+        if stroke?.tool != .fill, let pixels = editAreaPixels(arguments[1]) {
             continueStroke(to: pixels)
         }
     case "end":
         finishStroke()
     case "cancel":
-        if let stroke, stroke.tool == .pencil {
+        if let stroke, stroke.tool.changesTiles {
             cart.setTiles(stroke.tilesBefore, in: stroke.bank)
             scheduleArtRedraw()
         }
@@ -42,7 +42,7 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
 }
 
 func dropArtStroke() {
-    if stroke?.tool == .pencil {
+    if stroke?.tool.changesTiles == true {
         keepRecoveryCopy()
     }
     stroke = nil
@@ -87,12 +87,14 @@ func applyArtTool(_ tool: ArtTool, block: TileBlock, from start: ArtPoint, to en
         if block.contains(end) {
             artSelection.color = tiles.colorIndex(at: end, in: block)
         }
+    case .fill:
+        tiles.fill(in: block, from: end, color: artSelection.color)
     }
 }
 
 private func finishStroke() {
     switch stroke?.tool {
-    case .pencil:
+    case .pencil, .fill:
         keepRecoveryCopy()
     case .picker:
         artSelection.tool = .pencil
