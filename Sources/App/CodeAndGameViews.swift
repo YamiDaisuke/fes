@@ -6,7 +6,7 @@ nonisolated(unsafe) let codeEditor = JSObject.global.fesCodeEditor
 
 nonisolated(unsafe) private let codeChanged = JSClosure { arguments in
     cart.mainLua = string(from: arguments[0])!
-    keepUnsavedCodeCopy()
+    keepRecoveryCopy()
     checkSyntaxSoon()
     return .undefined
 }
@@ -34,6 +34,7 @@ func showCodeInEditor(_ code: String) {
 }
 
 func runCart() {
+    dropArtStroke()
     checkSyntaxNow()
     runningCart = RunningCart(mainLua: cart.mainLua, ppu: cart.ppu)
     isErrorShown = false

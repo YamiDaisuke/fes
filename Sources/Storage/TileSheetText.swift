@@ -4,15 +4,16 @@ private let tilesPerRow = 16
 private let sheetSide = tilesPerRow * TileBank.tileSize
 
 func tileSheetText(_ bank: TileBank) -> String {
-    var text = ""
+    var bytes: [UInt8] = []
+    bytes.reserveCapacity(sheetSide * (sheetSide + 1))
     for sheetY in 0..<sheetSide {
         for sheetX in 0..<sheetSide {
             let pixel = sheetPixel(sheetX, sheetY)
-            text += String(bank.colorIndex(tile: pixel.tile, x: pixel.x, y: pixel.y))
+            bytes.append(UInt8(ascii: "0") + UInt8(bank.colorIndex(tile: pixel.tile, x: pixel.x, y: pixel.y)))
         }
-        text += "\n"
+        bytes.append(UInt8(ascii: "\n"))
     }
-    return text
+    return String(decoding: bytes, as: UTF8.self)
 }
 
 func parseTileSheet(_ text: String, file: String) throws(CartFileError) -> TileBank {

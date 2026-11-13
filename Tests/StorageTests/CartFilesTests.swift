@@ -2,17 +2,6 @@ import Console
 import Storage
 import Testing
 
-private func sampleCart() -> Cart {
-    var cart = Cart(name: "Ünï \"quoted\" cart 🎮", mainLua: "print(\"héllo\")\nx = 1\n")
-    cart.backgroundTiles.setPixel(tile: 255, x: 7, y: 7, color: 7)
-    cart.spriteTiles.setPixel(tile: 255, x: 7, y: 7, color: 3)
-    cart.spritePalettes.setMainPaletteIndex(63, palette: 7, index: 7)
-    cart.mainPalette[63] = Color(rgb: 0x0a0b0c)
-    cart.mainPalette[0] = Color(rgb: 0xabcdef)
-    cart.background[column: 31, row: 31] = Tilemap.Cell(tile: 255, palette: 7)
-    return cart
-}
-
 private func lines(_ text: String?) -> [Substring] {
     text!.split(separator: "\n")
 }
@@ -165,6 +154,11 @@ private func refusal(cartJSON: String) -> String? {
 @Test func cartJSONNameWithAControlCharacterIsWrittenEscaped() {
     let cart = Cart(name: "a\tb\u{1f}c", mainLua: "")
     #expect(cart.files["cart.json"] == "{\n  \"format\" : 2,\n  \"name\" : \"a\\tb\\u001fc\"\n}\n")
+}
+
+@Test func cartJSONNameEscapesQuotesBackslashesAndShortFormControlsButNotNonASCII() {
+    let cart = Cart(name: "\u{8}\u{c}\"\\é🎮", mainLua: "")
+    #expect(cart.files["cart.json"] == "{\n  \"format\" : 2,\n  \"name\" : \"\\b\\f\\\"\\\\é🎮\"\n}\n")
 }
 
 @Test func invalidStringsInCartJSONAreRefused() {

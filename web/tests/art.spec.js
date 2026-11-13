@@ -283,28 +283,97 @@ test.describe("with a cart that draws sprite tile 2", () => {
     expect((await editRowColors(page, 0))[0]).toBe(drawnColor);
   });
 
-  test("drawing makes loading another cart ask to discard, and doesn't offer a code-only restore", async ({ page }) => {
-    await openArtView(page);
+  test("unsaved drawing and code come back after a reload", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#cart-name")).toHaveValue("Demo");
+    await page.getByRole("button", { name: "Code" }).click();
+    await page.locator("#cart-name").fill("Mine");
     await page.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
-    await drag(page, [0, 0], [7, 7]);
+    await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
+    await page.locator("#show-art").click();
+    await page.getByRole("button", { name: "Color 3" }).click();
+    await showTile(page, "Background", 5);
+    const blankRow = await editRowColors(page, 0);
+    await drag(page, [0, 0], [7, 0]);
+    await expect.poll(() => editRowColors(page, 0)).not.toEqual(blankRow);
+    const backgroundRow = await editRowColors(page, 0);
+    await showTile(page, "Sprites", 2);
+    await drag(page, [0, 0], [0, 0]);
+    await expect.poll(async () => new Set(await editRowColors(page, 0)).size).toBe(2);
+    const drawnColor = (await editRowColors(page, 0))[0];
+    await page.getByRole("button", { name: "Code" }).click();
+    await typeCode(page, "function _draw() cls() spr(2, 1, 0) end");
     const questions = [];
     page.on("dialog", (dialog) => {
       questions.push(dialog.message());
-      dialog.dismiss();
+      dialog.accept();
     });
 
-    await page.locator("#cart-list").getByRole("button", { name: "Demo", includeHidden: true }).dispatchEvent("click");
-    await expect.poll(() => questions).toEqual(["Discard unsaved changes to Demo?"]);
+    await page.reload();
+    await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Mine.");
+    expect(questions).toEqual(["Restore unsaved changes to Mine?"]);
+    await expect(page.locator(".cm-content")).toHaveText("function _draw() cls() spr(2, 1, 0) end");
+    await page.locator("#show-art").click();
+    await showTile(page, "Background", 5);
+    expect(await editRowColors(page, 0)).toEqual(backgroundRow);
+    await showTile(page, "Sprites", 2);
+    expect((await editRowColors(page, 0))[0]).toBe(drawnColor);
+    await page.getByRole("button", { name: "Run" }).click();
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById("screen").getContext("2d").getImageData(1, 0, 1, 1).data.join()))
+      .toBe(drawnColor);
 
     await page.getByRole("button", { name: "Code" }).click();
-    await typeCode(page, "-- edited");
-    await typeCode(page, "function _draw() cls() spr(2, 0, 0) end");
-    expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
     await page.reload();
     await expect(page.locator("#cart-list button")).not.toHaveCount(0);
-    expect(questions).toEqual(["Discard unsaved changes to Demo?"]);
+    expect(questions).toHaveLength(1);
   });
+});
+
+test("a stroke writes the recovery copy only when it ends, and a cancel back to the saved art leaves no copy", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await showTile(page, "Background", 2);
+  const readCopy = () => page.evaluate(() => fesStorage.readRecoveryCopy());
+  const blankRow = await editRowColors(page, 2);
+
+  await pressMouseOnPixel(page, 0, 2);
+  const end = await editPixelPoint(page, 7, 2);
+  await page.mouse.move(end.x, end.y, { steps: 4 });
+  await expect.poll(() => editRowColors(page, 2)).not.toEqual(blankRow);
+  expect(await readCopy()).toBeNull();
+  await cancelMouseStroke(page);
+  await page.mouse.up();
+  expect(await readCopy()).toBeNull();
+
+  await drag(page, [0, 2], [7, 2]);
+  expect(await readCopy()).not.toBeNull();
+});
+
+test("Run during a held stroke writes the recovery copy before the cart starts", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await showTile(page, "Background", 2);
+  const blankRow = await editRowColors(page, 2);
+  await pressMouseOnPixel(page, 0, 2);
+  await expect.poll(() => editRowColors(page, 2)).not.toEqual(blankRow);
+  await page.evaluate(() => {
+    window.viewsAtWrite = [];
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      viewsAtWrite.push(document.body.dataset.view);
+      setItem.call(this, key, value);
+    };
+  });
+
+  await page.locator("#run").dispatchEvent("click");
+  await page.mouse.up();
+
+  expect(await page.evaluate(() => viewsAtWrite)).toEqual(["art"]);
 });
 
 test("a stroke cancelled after another cart loads leaves that cart's art alone", async ({ page }) => {
