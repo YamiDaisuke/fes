@@ -261,6 +261,29 @@ ephemeralTest("the picker selects the color under the pointer and hands back to 
   await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
 });
 
+ephemeralTest("a picker drag from an edge pixel to past the edit area keeps that pixel's color", async ({ page }) => {
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "Color 5" }).click();
+  await drag(page, [7, 3], [7, 3]);
+  await page.getByRole("button", { name: "Color 2" }).click();
+  await page.getByRole("button", { name: "Picker" }).click();
+
+  const start = await editPixelPoint(page, 7, 3);
+  const box = await page.locator("#art-edit").boundingBox();
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width + 40, start.y, { steps: 1 });
+  await page.mouse.up();
+
+  await expect(page.getByRole("button", { name: "Color 5" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Pencil" })).toHaveAttribute("aria-pressed", "true");
+  await showTile(page, "Background", 3);
+  expect(pageErrors).toEqual([]);
+});
+
 test.describe("with a cart that draws sprite tile 2", () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
