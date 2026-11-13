@@ -2,7 +2,7 @@ import Console
 import Storage
 
 extension Bank {
-    fileprivate var displayName: String {
+    var displayName: String {
         switch self {
         case .background: "Background"
         case .sprite: "Sprite"
