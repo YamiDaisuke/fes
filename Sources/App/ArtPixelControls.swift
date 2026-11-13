@@ -1,0 +1,81 @@
+import Console
+import Editors
+import JavaScriptKit
+
+nonisolated(unsafe) private let document = JSObject.global.document
+nonisolated(unsafe) private let pixelGroup = document.getElementById("art-pixel")
+nonisolated(unsafe) private let columnSlider = document.getElementById("art-pixel-column")
+nonisolated(unsafe) private let rowSlider = document.getElementById("art-pixel-row")
+nonisolated(unsafe) private let applyButton = document.getElementById("art-pixel-apply")
+
+nonisolated(unsafe) var isPixelCursorShown = false
+
+nonisolated(unsafe) private let cursorMoved = JSClosure { _ in
+    if let x = pixelNumber(in: columnSlider), let y = pixelNumber(in: rowSlider) {
+        artSelection.cursor = ArtPoint(x: x, y: y)
+        redrawArtView()
+    }
+    return .undefined
+}
+
+nonisolated(unsafe) private let applyClicked = JSClosure { _ in
+    dropArtStroke()
+    let cursor = artSelection.cursor
+    var tiles = cart.tiles(in: artSelection.bank)
+    applyArtTool(artSelection.tool, tile: artSelection.tile, from: cursor, to: cursor, tiles: &tiles)
+    cart.setTiles(tiles, in: artSelection.bank)
+    if artSelection.tool == .picker {
+        artSelection.tool = .pencil
+    }
+    redrawArtView()
+    return .undefined
+}
+
+nonisolated(unsafe) private let pixelFocusIn = JSClosure { _ in
+    isPixelCursorShown = true
+    redrawArtView()
+    return .undefined
+}
+
+nonisolated(unsafe) private let pixelFocusOut = JSClosure { arguments in
+    if pixelGroup.contains(arguments[0].relatedTarget).boolean != true {
+        isPixelCursorShown = false
+        redrawArtView()
+    }
+    return .undefined
+}
+
+func startPixelControls() {
+    _ = columnSlider.addEventListener("input", cursorMoved)
+    _ = rowSlider.addEventListener("input", cursorMoved)
+    _ = applyButton.addEventListener("click", applyClicked)
+    _ = pixelGroup.addEventListener("focusin", pixelFocusIn)
+    _ = pixelGroup.addEventListener("focusout", pixelFocusOut)
+}
+
+func leavePixelControls() {
+    if isPixelCursorShown {
+        _ = document.activeElement.blur()
+    }
+}
+
+func redrawPixelControls(tiles: TileBank) {
+    let cursor = artSelection.cursor
+    let color = tiles.colorIndex(tile: artSelection.tile, x: cursor.x, y: cursor.y)
+    columnSlider.value = .string(String(cursor.x))
+    rowSlider.value = .string(String(cursor.y))
+    _ = columnSlider.setAttribute("aria-valuetext", "\(cursor.x), color \(color)")
+    _ = rowSlider.setAttribute("aria-valuetext", "\(cursor.y), color \(color)")
+    let applyLabel = artSelection.tool == .pencil ? "Paint pixel" : "Pick color"
+    // WebKit sends no click if the pressed text is replaced before mouseup, and the focusin redraw runs in between.
+    if string(from: applyButton.textContent) != applyLabel {
+        applyButton.textContent = .string(applyLabel)
+    }
+}
+
+private func pixelNumber(in slider: JSValue) -> Int? {
+    guard let number = string(from: slider.value).flatMap({ Int($0) }), (0..<TileBank.tileSize).contains(number) else {
+        return nil
+    }
+    return number
+}

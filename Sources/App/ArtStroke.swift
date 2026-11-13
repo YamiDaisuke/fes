@@ -17,6 +17,7 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
     switch string(from: arguments[0]) {
     case "start":
         if shownView == .art, let pixel = editAreaPixels(arguments[1])?.first {
+            leavePixelControls()
             stroke = Stroke(
                 tool: artSelection.tool, bank: artSelection.bank, tile: artSelection.tile,
                 tilesBefore: cart.tiles(in: artSelection.bank), lastPixel: pixel)
@@ -65,18 +66,22 @@ private func continueStroke(to pixels: [ArtPoint]) {
     var tiles = cart.tiles(in: current.bank)
     let tilesBefore = tiles
     for pixel in pixels {
-        switch current.tool {
-        case .pencil:
-            tiles.paintLine(tile: current.tile, from: current.lastPixel, to: pixel, color: artSelection.color)
-        case .picker:
-            artSelection.color = colorIndex(at: pixel, tiles: tiles, tile: current.tile) ?? artSelection.color
-        }
+        applyArtTool(current.tool, tile: current.tile, from: current.lastPixel, to: pixel, tiles: &tiles)
         current.lastPixel = pixel
     }
     stroke = current
     cart.setTiles(tiles, in: current.bank)
     if tiles != tilesBefore || artSelection != selectionBefore {
         scheduleArtRedraw()
+    }
+}
+
+func applyArtTool(_ tool: ArtTool, tile: Int, from start: ArtPoint, to end: ArtPoint, tiles: inout TileBank) {
+    switch tool {
+    case .pencil:
+        tiles.paintLine(tile: tile, from: start, to: end, color: artSelection.color)
+    case .picker:
+        artSelection.color = colorIndex(at: end, tiles: tiles, tile: tile) ?? artSelection.color
     }
 }
 

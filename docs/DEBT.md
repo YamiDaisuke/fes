@@ -26,3 +26,4 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - Files inside an exported .fes are dated 1980-01-01: no calendar without Foundation; revisit if anyone unzips carts and cares.
 - The Art view's look (grid, selection and checker colors in Editors/ArtPixel.swift, the tool buttons) is a plain placeholder: the owner styles it; revisit when the owner restyles the editor.
 - In a window under about 420 CSS px wide (Slide Over) the Art view cuts off the tile sheet: zoom has a minimum of 1 and the sheet doesn't scroll; revisit if the editor is used in narrow windows.
+- In portrait and on iPads with short landscape windows (such as iPad gen 11) the Pixel group sits below the Art tools column's visible area, which scrolls (T18b QA-4): fitting it needs a new tools layout, not a small CSS change; revisit when the owner restyles the editor.

@@ -97,6 +97,7 @@ func startArtView() {
     _ = tileSlider.addEventListener("input", tileChanged)
     _ = artView.onTap(sheetCanvas, sheetTapped)
     _ = artView.onStroke(editCanvas, artStroked)
+    startPixelControls()
     let resizeObserver = JSObject.global.ResizeObserver.function!.new(artResized)
     _ = resizeObserver.observe!(sheetArea)
     _ = resizeObserver.observe!(editArea)
@@ -112,7 +113,8 @@ func redrawArtView() {
     let colors = cart.previewColors(bank: artSelection.bank, palette: artSelection.previewPalette)
     let tile = artSelection.tile
     blit(tileSheetImage(tiles: tiles, colors: colors, selectedTile: tile, layout: sheetLayout), into: sheetCanvas)
-    blit(editAreaImage(tiles: tiles, tile: tile, colors: colors, layout: editLayout), into: editCanvas)
+    let cursor = isPixelCursorShown ? artSelection.cursor : nil
+    blit(editAreaImage(tiles: tiles, tile: tile, colors: colors, layout: editLayout, cursor: cursor), into: editCanvas)
     shownSheetLayout = sheetLayout
     shownEditLayout = editLayout
 
@@ -135,6 +137,7 @@ func redrawArtView() {
     tileSlider.value = .string(String(tile))
     _ = tileSlider.setAttribute("aria-valuetext", "\(tile), column \(tile % sheetColumns), row \(tile / sheetColumns)")
     tileNumber.textContent = .string(String(tile))
+    redrawPixelControls(tiles: tiles)
 }
 
 private func flooredSize(of element: JSValue) -> (width: Int, height: Int) {

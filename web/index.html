@@ -100,7 +100,8 @@
     #art-colors button { border: 2px solid #808080; }
     #art-colors button[aria-pressed="true"] { outline: 3px solid #fff; outline-offset: -1px; }
     #art-colors button.transparent { background: repeating-conic-gradient(#b0b0b0 0 25%, #808080 0 50%) 0 0 / 16px 16px; }
-    #art-tile { display: block; width: 100%; min-height: 44px; }
+    #art-tools input[type="range"] { display: block; width: 100%; min-height: 44px; }
+    #art-pixel { flex-direction: column; align-items: start; margin-top: 16px; }
   </style>
 </head>
 <body data-view="game">
@@ -167,6 +168,13 @@
       </div>
       <label for="art-tile">Tile <span id="art-tile-number" aria-hidden="true">0</span></label>
       <input type="range" id="art-tile" min="0" max="255" value="0">
+      <div id="art-pixel" role="group" aria-label="Pixel">
+        <label for="art-pixel-column">Pixel column</label>
+        <input type="range" id="art-pixel-column" min="0" max="7" value="0">
+        <label for="art-pixel-row">Pixel row</label>
+        <input type="range" id="art-pixel-row" min="0" max="7" value="0">
+        <button type="button" id="art-pixel-apply">Paint pixel</button>
+      </div>
     </section>
   </div>
   <div id="game-view">
