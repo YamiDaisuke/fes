@@ -29,8 +29,8 @@ nonisolated(unsafe) private let colorPickerOpened = JSClosure { _ in
 nonisolated(unsafe) private let resetClicked = JSClosure { _ in
     let artBefore = cart.art
     cart.mainPalette = MainPalette()
-    recordArtEdit("main palette reset", before: artBefore)
     showStatus("Reset the main palette.")
+    recordArtEdit("main palette reset", before: artBefore)
     redrawArtView()
     return .undefined
 }

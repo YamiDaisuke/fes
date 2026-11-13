@@ -731,3 +731,25 @@ test("undoing back to the saved art removes the recovery copy", async ({ page })
 
   expect(await readCopy()).toBeNull();
 });
+
+ephemeralTest("Undo and Redo still say when the recovery copy can't be kept", async ({ page }) => {
+  await page.addInitScript(() => {
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (window.storageIsFull && key === "fes-unsaved-code") throw new DOMException("full", "QuotaExceededError");
+      return setItem.call(this, key, value);
+    };
+  });
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const status = page.locator("#cart-status");
+  await drag(page, [0, 2], [7, 2]);
+  await drag(page, [0, 5], [7, 5]);
+  await page.evaluate(() => (window.storageIsFull = true));
+
+  await page.getByRole("button", { name: "Undo stroke" }).click();
+  await expect(status).toContainText("Can't keep a recovery copy");
+  await status.evaluate((element) => (element.textContent = ""));
+  await page.getByRole("button", { name: "Redo stroke" }).click();
+  await expect(status).toContainText("Can't keep a recovery copy");
+});

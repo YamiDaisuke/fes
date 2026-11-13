@@ -28,8 +28,8 @@ private func undoArtEdit() {
         return
     }
     cart.art = step.art
-    keepRecoveryCopy()
     showStatus("Undid \(step.edit).")
+    keepRecoveryCopy()
     redrawArtView()
 }
 
@@ -40,8 +40,8 @@ private func redoArtEdit() {
         return
     }
     cart.art = step.art
-    keepRecoveryCopy()
     showStatus("Redid \(step.edit).")
+    keepRecoveryCopy()
     redrawArtView()
 }
 
