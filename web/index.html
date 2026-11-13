@@ -98,7 +98,13 @@
     #art-tools button { min-width: 44px; min-height: 44px; font: inherit; touch-action: manipulation; }
     #art-tools button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
     #art-tools button[aria-disabled="true"] { opacity: 0.4; }
-    #art-palettes-toggle { margin-bottom: 16px; }
+    #art-palettes-toggle, #art-import { margin-bottom: 16px; }
+    #art-import-report { max-height: 90vh; overflow: hidden; flex-direction: column; font: 16px system-ui, sans-serif; }
+    #art-import-report[open] { display: flex; }
+    #art-import-report h2 { margin: 0 0 8px; font-size: 18px; }
+    #art-import-report-body { display: flex; flex-wrap: wrap; gap: 16px; min-height: 0; overflow: auto; }
+    #art-import-report-problems { flex: 1 1 240px; margin: 0; }
+    #art-import-report button { min-width: 88px; min-height: 44px; margin-top: 16px; font: inherit; touch-action: manipulation; }
     #art-palettes {
       grid-area: edit; overflow: auto; display: flex; flex-wrap: wrap; gap: 16px; align-content: start;
       color: #fff; font: 16px system-ui, sans-serif;
@@ -163,6 +169,8 @@
         <button type="button" data-bank="background">Background</button>
         <button type="button" data-bank="sprite">Sprites</button>
       </div>
+      <button type="button" id="art-import">Import sheet</button>
+      <input type="file" id="art-import-file" accept="image/png,image/jpeg" hidden>
       <div id="art-palette" role="group" aria-label="Preview palette">
         <button type="button" data-palette="0" aria-label="Palette 0">0</button>
         <button type="button" data-palette="1" aria-label="Palette 1">1</button>
@@ -225,6 +233,15 @@
         <button type="button" id="art-main-palette-reset">Reset main palette</button>
       </div>
     </section>
+    <dialog id="art-import-report" aria-labelledby="art-import-report-heading">
+      <h2 id="art-import-report-heading"></h2>
+      <p id="art-import-report-hint" hidden>JPEG changes colors slightly when it saves. Export the sheet from your art app as PNG and import that.</p>
+      <div id="art-import-report-body">
+        <canvas id="art-import-report-image" aria-hidden="true"></canvas>
+        <ul id="art-import-report-problems"></ul>
+      </div>
+      <form method="dialog"><button autofocus>Close</button></form>
+    </dialog>
   </div>
   <div id="game-view">
     <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
