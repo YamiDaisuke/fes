@@ -53,12 +53,11 @@ test("an edited main color recolors every entry using it, shows in Run, and is s
   await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
 });
 
-test("a reload 100 ms after a picker value restores that color", async ({ page }) => {
+test("a reload straight after a picker value restores that color", async ({ page }) => {
   await openPalettes(page);
   await page.getByRole("button", { name: /^Background palette 0, color 3:/ }).click();
   await picker(page).fill("#123456");
   await picker(page).fill("#ff0000");
-  await page.waitForTimeout(100);
 
   const prompts = [];
   page.on("dialog", (dialog) => {
