@@ -105,6 +105,14 @@ private func patternSheet(for bank: Bank) -> TestSheet {
             ]))
 }
 
+@Test func aHugeSizeIsRefusedWithoutComputingItsByteCount() {
+    let cart = Cart(name: "Import", mainLua: "")
+    let huge = Int.max - 7
+
+    #expect(cart.sheetImport(width: huge, height: huge, rgba: [], bank: .sprite, preferredPalette: 0)
+        == imageProblem(.tooLarge(width: huge, height: huge)))
+}
+
 @Test func pixelDataOfTheWrongLengthIsRefused() {
     let cart = Cart(name: "Import", mainLua: "")
     let short = [UInt8](repeating: 0, count: 8 * 8 * 4 - 1)
