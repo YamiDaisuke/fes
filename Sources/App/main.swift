@@ -12,3 +12,4 @@ lastSavedCart = cart
 startSavedCarts()
 startExportAndImport()
 startCodeAndGameViews()
+startArtView()
