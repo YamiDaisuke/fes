@@ -185,9 +185,9 @@ Accept: tests for undo and redo order, redo dropped after a new edit, and the li
 
 ### T24 Sheet import core
 Depends: T16
-- In `Editors`, natively tested: turn a decoded RGBA image into a bank's 256 tiles. Tiles are read left to right, top to bottom, and replace the whole bank; tiles the image doesn't reach are cleared.
+- In `Editors`, natively tested: turn a decoded RGBA image into a bank's 256 tiles. Each 8×8 tile keeps its position: image tile (column c, row r) becomes bank tile r × 16 + c, like PICO-8. The import replaces the whole bank; tiles the image doesn't reach are cleared.
 - Each pixel must be exactly a color of the cart's main palette, or, in the sprite bank, fully transparent (color 0). Each tile must fit one of the bank's current sub-palettes: its pixel indices are the colors' positions there.
-- Otherwise a report lists every broken rule with its tile column and row. The rules: a size that isn't a multiple of 8, more than 256 tiles, half-transparent pixels, transparency in the background bank, colors missing from the main palette, more than 8 colors in a tile (7 plus transparent for sprites), and colors that fit no sub-palette. Dimensions are checked before any pixel is read.
+- Otherwise a report lists every broken rule with its tile column and row. The rules: a size that isn't a multiple of 8, a width or height over 128 pixels, half-transparent pixels, transparency in the background bank, colors missing from the main palette, more than 8 colors in a tile (7 plus transparent for sprites), and colors that fit no sub-palette. Dimensions are checked before any pixel is read.
 
 Accept: a test per rule, a sheet that imports exactly, and a report with the right tile positions.
 
