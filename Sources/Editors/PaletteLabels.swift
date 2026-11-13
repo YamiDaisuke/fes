@@ -7,13 +7,29 @@ extension Color {
     }
 }
 
-extension Cart {
-    public func paletteEntryLabel(bank: Bank, palette: Int, index: Int) -> String {
-        let bankName = switch bank {
+extension Bank {
+    fileprivate var displayName: String {
+        switch self {
         case .background: "Background"
         case .sprite: "Sprite"
         }
-        let entry = "\(bankName) palette \(palette), color \(index)"
+    }
+
+    public var paletteHeading: String {
+        "\(displayName) palettes"
+    }
+
+    public func mainColorHint(palette: Int, color: Int) -> String {
+        if isTransparent(colorIndex: color) {
+            return "Sprite color 0 is always transparent."
+        }
+        return "Choose a main color for \(displayName.lowercased()) palette \(palette), color \(color)."
+    }
+}
+
+extension Cart {
+    public func paletteEntryLabel(bank: Bank, palette: Int, index: Int) -> String {
+        let entry = "\(bank.displayName) palette \(palette), color \(index)"
         if bank.isTransparent(colorIndex: index) {
             return "\(entry): transparent"
         }

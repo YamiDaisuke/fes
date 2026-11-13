@@ -82,10 +82,8 @@ func redrawPaletteEditor() {
     let palettes = cart.palettes(in: bank)
     let isSelectionTransparent = bank.isTransparent(colorIndex: selectedColor)
 
-    entriesHeading.textContent = .string(bank == .background ? "Background palettes" : "Sprite palettes")
-    mainColorHint.textContent = .string(isSelectionTransparent
-        ? "Sprite color 0 is always transparent."
-        : "Choose a main color for \(bank == .background ? "background" : "sprite") palette \(selectedPalette), color \(selectedColor).")
+    entriesHeading.textContent = .string(bank.paletteHeading)
+    mainColorHint.textContent = .string(bank.mainColorHint(palette: selectedPalette, color: selectedColor))
 
     for palette in 0..<PaletteBank.paletteCount {
         for color in 0..<PaletteBank.colorsPerPalette {

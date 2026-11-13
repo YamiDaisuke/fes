@@ -31,3 +31,9 @@ import Testing
     #expect(cart.paletteEntryLabel(bank: .background, palette: 5, index: 3) == "Background palette 5, color 3: main color 43, #72cf97")
     #expect(cart.mainColorLabel(42) == "Main color 42, #49b893")
 }
+
+@Test func mainColorHintNamesTheEntryUnlessItIsSpriteColorZero() {
+    #expect(Bank.sprite.mainColorHint(palette: 1, color: 0) == "Sprite color 0 is always transparent.")
+    #expect(Bank.background.mainColorHint(palette: 1, color: 0) == "Choose a main color for background palette 1, color 0.")
+    #expect(Bank.sprite.mainColorHint(palette: 6, color: 2) == "Choose a main color for sprite palette 6, color 2.")
+}
