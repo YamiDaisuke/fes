@@ -6,7 +6,14 @@ public enum Bank: String, CaseIterable {
 }
 
 public enum ArtTool: String, CaseIterable {
-    case pencil, picker
+    case pencil, picker, fill
+
+    public var changesTiles: Bool {
+        switch self {
+        case .pencil, .fill: true
+        case .picker: false
+        }
+    }
 }
 
 public struct ArtSelection: Equatable {

@@ -78,7 +78,11 @@ func redrawPixelControls(tiles: TileBank) {
     rowSlider.value = .string(String(cursor.y))
     _ = columnSlider.setAttribute("aria-valuetext", "\(cursor.x), color \(color)")
     _ = rowSlider.setAttribute("aria-valuetext", "\(cursor.y), color \(color)")
-    let applyLabel = artSelection.tool == .pencil ? "Paint pixel" : "Pick color"
+    let applyLabel = switch artSelection.tool {
+    case .pencil: "Paint pixel"
+    case .picker: "Pick color"
+    case .fill: "Fill region"
+    }
     // WebKit sends no click if the pressed text is replaced before mouseup, and the focusin redraw runs in between.
     if string(from: applyButton.textContent) != applyLabel {
         applyButton.textContent = .string(applyLabel)
