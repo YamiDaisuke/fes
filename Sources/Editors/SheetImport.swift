@@ -37,11 +37,11 @@ extension Cart {
                     problems += pixelRules.map { SheetProblem(rule: $0, tile: tile) }
                     continue
                 }
-                guard let colorIndices = firstFit(colors, in: candidatePalettes) else {
+                guard let positions = firstFit(colors, in: candidatePalettes) else {
                     problems.append(SheetProblem(rule: .fitsNoSubPalette(bank: bank), tile: tile))
                     continue
                 }
-                write(pixels, colors: colors, colorIndices: colorIndices, to: row * sheetColumns + column, in: &tiles)
+                write(pixels, positions: positions, to: row * sheetColumns + column, in: &tiles)
             }
         }
         return problems.isEmpty ? .imported(tiles) : .refused(problems)
@@ -107,19 +107,27 @@ private func pixelProblems(_ pixels: [ImagePixel], colors: [Color], bank: Bank, 
     return rules
 }
 
-private func firstFit(_ colors: [Color], in candidatePalettes: [[Color?]]) -> [Int]? {
+private func firstFit(_ colors: [Color], in candidatePalettes: [[Color?]]) -> [Color: Int]? {
     for palette in candidatePalettes {
-        let indices = colors.compactMap { palette.firstIndex(of: $0) }
-        if indices.count == colors.count {
-            return indices
+        if let positions = positions(of: colors, in: palette) {
+            return positions
         }
     }
     return nil
 }
 
-private func write(_ pixels: [ImagePixel], colors: [Color], colorIndices: [Int], to tile: Int, in tiles: inout TileBank) {
+private func positions(of colors: [Color], in palette: [Color?]) -> [Color: Int]? {
+    var positions: [Color: Int] = [:]
+    for color in colors {
+        guard let position = palette.firstIndex(of: color) else { return nil }
+        positions[color] = position
+    }
+    return positions
+}
+
+private func write(_ pixels: [ImagePixel], positions: [Color: Int], to tile: Int, in tiles: inout TileBank) {
     for (i, pixel) in pixels.enumerated() {
-        guard case .opaque(let color) = pixel, let position = colors.firstIndex(of: color) else { continue }
-        tiles.setPixel(tile: tile, x: i % TileBank.tileSize, y: i / TileBank.tileSize, color: colorIndices[position])
+        guard case .opaque(let color) = pixel, let position = positions[color] else { continue }
+        tiles.setPixel(tile: tile, x: i % TileBank.tileSize, y: i / TileBank.tileSize, color: position)
     }
 }
