@@ -519,6 +519,27 @@ ephemeralTest("at 2 by 2 one drag across the tile border paints both tiles", asy
   expect(await sheetTilePixels(page, 4)).toBe(blank4);
 });
 
+ephemeralTest("changing the block size ends a held stroke, so later moves paint nothing", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "2 by 2" }).click();
+  const start = await editPixelPoint(page, 12, 12, 16);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await nextFrame(page);
+  const blockTiles = [2, 3, 18, 19];
+  const afterPress = await Promise.all(blockTiles.map((tile) => sheetTilePixels(page, tile)));
+
+  await page.getByRole("button", { name: "1 by 1" }).focus();
+  await page.keyboard.press("Space");
+  const end = await editPixelPoint(page, 1, 1);
+  await page.mouse.move(end.x, end.y, { steps: 1 });
+  await page.mouse.up();
+  await nextFrame(page);
+
+  expect(await Promise.all(blockTiles.map((tile) => sheetTilePixels(page, tile)))).toEqual(afterPress);
+});
+
 ephemeralTest("at 4 by 4 the pixel sliders reach 31, and 1 by 1 brings the cursor back inside the tile", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "4 by 4" }).click();

@@ -58,6 +58,7 @@ nonisolated(unsafe) private let toolClicked = JSClosure { arguments in
 nonisolated(unsafe) private let blockSizeClicked = JSClosure { arguments in
     if let button = arguments[0].target.closest("[data-block-size]").object,
        let size = string(from: button.dataset.blockSize).flatMap({ Int($0) }).flatMap(BlockSize.init(rawValue:)) {
+        dropArtStroke()
         artSelection.blockSize = size
         pullPixelCursorInsideBlock()
         redrawArtView()
