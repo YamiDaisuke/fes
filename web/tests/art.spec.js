@@ -512,7 +512,7 @@ ephemeralTest("at 2 by 2 one drag across the tile border paints both tiles", asy
   await expect(page.getByRole("button", { name: "2 by 2" })).toHaveAttribute("aria-pressed", "true");
   const [blank2, blank3, blank4] = await Promise.all([2, 3, 4].map((tile) => sheetTilePixels(page, tile)));
 
-  await drag(page, [4, 3], [12, 3], 16);
+  await drag(page, [4, 3], [20, 3], 16);
 
   await expect.poll(() => sheetTilePixels(page, 3)).not.toBe(blank3);
   expect(await sheetTilePixels(page, 2)).not.toBe(blank2);
