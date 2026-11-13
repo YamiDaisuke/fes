@@ -11,8 +11,9 @@ nonisolated(unsafe) private let colorPicked = JSClosure { _ in
     guard let mainIndex = selectedMainIndex() else { return .undefined }
     let value = string(from: colorPicker.value) ?? ""
     if let color = Color(hexCode: value) {
+        let artBefore = cart.art
         cart.mainPalette[mainIndex] = color
-        keepRecoveryCopy()
+        recordArtEdit("main color \(mainIndex)", before: artBefore, merging: true)
     } else {
         showStatus("Can't use the color \(value): expected #rrggbb")
     }
@@ -20,17 +21,23 @@ nonisolated(unsafe) private let colorPicked = JSClosure { _ in
     return .undefined
 }
 
+nonisolated(unsafe) private let colorPickerOpened = JSClosure { _ in
+    stopArtHistoryMerging()
+    return .undefined
+}
+
 nonisolated(unsafe) private let resetClicked = JSClosure { _ in
-    if JSObject.global.confirm!("Reset all 64 main colors to the default palette, Z64?") == .boolean(true) {
-        cart.mainPalette = MainPalette()
-        keepRecoveryCopy()
-        redrawArtView()
-    }
+    let artBefore = cart.art
+    cart.mainPalette = MainPalette()
+    recordArtEdit("main palette reset", before: artBefore)
+    showStatus("Reset the main palette.")
+    redrawArtView()
     return .undefined
 }
 
 func startMainColorEditor() {
     _ = colorPicker.addEventListener("input", colorPicked)
+    _ = colorPicker.addEventListener("click", colorPickerOpened)
     _ = resetButton.addEventListener("click", resetClicked)
 }
 

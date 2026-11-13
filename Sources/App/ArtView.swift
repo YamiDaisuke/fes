@@ -113,6 +113,7 @@ func startArtView() {
     startPixelControls()
     startBlockActions()
     startPaletteEditor()
+    startArtUndo()
     let resizeObserver = JSObject.global.ResizeObserver.function!.new(artResized)
     _ = resizeObserver.observe!(sheetArea)
     _ = resizeObserver.observe!(editArea)
@@ -157,6 +158,7 @@ func redrawArtView() {
     let blockStart = block.firstTile == tile ? "" : ", block from tile \(block.firstTile)"
     _ = tileSlider.setAttribute("aria-valuetext", "\(tile), column \(tile % sheetColumns), row \(tile / sheetColumns)\(blockStart)")
     tileNumber.textContent = .string(String(tile))
+    redrawUndoButtons()
     redrawPixelControls(tiles: tiles)
     redrawBlockActions()
     redrawPaletteEditor()

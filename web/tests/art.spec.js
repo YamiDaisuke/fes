@@ -666,3 +666,68 @@ test("a copied block pastes into another cart, at the sheet's edge", async ({ pa
 
   expect(await sheetTilePixels(page, 255)).toBe(copied);
 });
+
+ephemeralTest("Undo and Redo take back a stroke and bring it back, from the buttons and with ⌘Z and ⌘⇧Z", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const status = page.locator("#cart-status");
+  const blankTile = await editTileColors(page);
+  await drag(page, [0, 2], [7, 2]);
+  await expect.poll(() => editTileColors(page)).not.toEqual(blankTile);
+  const firstStroke = await editTileColors(page);
+  await drag(page, [0, 5], [7, 5]);
+  await expect.poll(() => editTileColors(page)).not.toEqual(firstStroke);
+
+  await page.getByRole("button", { name: "Undo stroke" }).click();
+  await expect(status).toHaveText("Undid stroke.");
+  expect(await editTileColors(page)).toEqual(firstStroke);
+  await page.getByRole("button", { name: "Undo stroke" }).click();
+  expect(await editTileColors(page)).toEqual(blankTile);
+  await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveAttribute("aria-disabled", "true");
+
+  await page.getByRole("button", { name: "Redo stroke" }).click();
+  await expect(status).toHaveText("Redid stroke.");
+  expect(await editTileColors(page)).toEqual(firstStroke);
+  await page.keyboard.press("Meta+z");
+  expect(await editTileColors(page)).toEqual(blankTile);
+  await page.keyboard.press("Meta+Shift+z");
+  expect(await editTileColors(page)).toEqual(firstStroke);
+
+  await drag(page, [0, 5], [7, 5]);
+  await page.getByRole("button", { name: "Redo", exact: true }).click({ force: true });
+  await expect(status).toHaveText("Nothing to redo.");
+});
+
+ephemeralTest("⌘Z in the code view undoes code and leaves the art alone", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const blankTile = await editTileColors(page);
+  await drag(page, [0, 2], [7, 2]);
+  await expect.poll(() => editTileColors(page)).not.toEqual(blankTile);
+  const painted = await editTileColors(page);
+
+  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator(".cm-content").click();
+  await page.keyboard.type("-- typed");
+  await expect(page.locator(".cm-content")).toContainText("-- typed");
+  await page.keyboard.press("Meta+z");
+  await expect(page.locator(".cm-content")).not.toContainText("-- typed");
+
+  await page.locator("#show-art").click();
+  expect(await editTileColors(page)).toEqual(painted);
+  await expect(page.getByRole("button", { name: "Undo stroke" })).toBeVisible();
+});
+
+test("undoing back to the saved art removes the recovery copy", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await showTile(page, "Background", 2);
+  const readCopy = () => page.evaluate(() => fesStorage.readRecoveryCopy());
+  await drag(page, [0, 2], [7, 2]);
+  expect(await readCopy()).not.toBeNull();
+
+  await page.getByRole("button", { name: "Undo stroke" }).click();
+
+  expect(await readCopy()).toBeNull();
+});
