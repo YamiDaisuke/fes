@@ -60,7 +60,7 @@ test("declining the prompt drops the copy", async ({ page }) => {
   await expect.poll(() => questions).toEqual(["Restore unsaved changes to Mine?"]);
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator(".cm-content")).toHaveText("-- original");
-  expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
 
   await reloadUntilCartsListed(page);
   expect(questions).toHaveLength(1);
@@ -88,7 +88,7 @@ test("code whose saved cart can't be read is restored as a new cart", async ({ p
 
   await page.reload();
   await expect(page.locator("#cart-status")).toHaveText(
-    "Restored unsaved code of Mine as a new cart: its saved cart couldn't be read or was renamed.",
+    "Restored unsaved changes to Mine as a new cart: its saved cart couldn't be read or was renamed.",
   );
   await expect(page.locator(".cm-content")).toHaveText("-- edited");
   await saveAs(page, "Mine");
@@ -98,12 +98,12 @@ test("code whose saved cart can't be read is restored as a new cart", async ({ p
 test("a malformed copy is removed without asking", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");
-  await page.evaluate(() => fesStorage.writeUnsavedCode("{"));
+  await page.evaluate(() => fesStorage.writeRecoveryCopy("{"));
   const questions = recordDialogs(page, "accept");
 
   await reloadUntilCartsListed(page);
   expect(questions).toEqual([]);
-  expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
 });
 
 test("a copy whose folder now holds another cart is restored as a new cart", async ({ page }) => {
@@ -111,13 +111,13 @@ test("a copy whose folder now holds another cart is restored as a new cart", asy
   await saveAs(page, "Mine");
   const [mineFolder] = await page.evaluate(() => fesStorage.listCartFolders());
   await page.evaluate((folder) => {
-    fesStorage.writeUnsavedCode(JSON.stringify({ folder, name: "Other", mainLua: "-- other's edit" }));
+    fesStorage.writeRecoveryCopy(JSON.stringify({ folder, name: "Other", mainLua: "-- other's edit" }));
   }, mineFolder);
   recordDialogs(page, "accept");
 
   await page.reload();
   await expect(page.locator("#cart-status")).toHaveText(
-    "Restored unsaved code of Other as a new cart: its saved cart couldn't be read or was renamed.",
+    "Restored unsaved changes to Other as a new cart: its saved cart couldn't be read or was renamed.",
   );
   await expect(page.locator("#cart-name")).toHaveValue("Other");
   await saveAs(page, "Other");
@@ -144,11 +144,47 @@ test("undoing back to the saved code removes the copy", async ({ page }) => {
   const editor = page.locator(".cm-content");
   await editor.press("End");
   await editor.pressSequentially("x");
-  expect(await page.evaluate(() => fesStorage.readUnsavedCode())).not.toBeNull();
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).not.toBeNull();
 
   await editor.press("Control+z");
   await expect(editor).toHaveText("-- original");
-  expect(await page.evaluate(() => fesStorage.readUnsavedCode())).toBeNull();
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
+});
+
+test("a copy from an older FES restores its code over the saved cart's art", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Mine");
+  const savedSprites = "1".repeat(128) + "\n" + ("0".repeat(128) + "\n").repeat(127);
+  await page.evaluate(async (savedSprites) => {
+    const [folder] = await fesStorage.listCartFolders();
+    await fesStorage.writeCartFile(folder, "sprites.tiles", savedSprites);
+    fesStorage.writeRecoveryCopy(JSON.stringify({ folder, name: "Mine", mainLua: "-- old" }));
+  }, savedSprites);
+  recordDialogs(page, "accept");
+
+  await page.reload();
+  await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Mine.");
+  await expect(page.locator(".cm-content")).toHaveText("-- old");
+  const rewritten = JSON.parse(await page.evaluate(() => fesStorage.readRecoveryCopy()));
+  expect(rewritten.files["sprites.tiles"]).toBe(savedSprites);
+});
+
+test("a failed write removes the older copy and says so", async ({ page }) => {
+  await page.addInitScript(() => {
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (window.storageIsFull && key === "fes-unsaved-code") throw new DOMException("full", "QuotaExceededError");
+      return setItem.call(this, key, value);
+    };
+  });
+  await openBooted(page);
+  await typeCode(page, "-- first");
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).not.toBeNull();
+
+  await page.evaluate(() => (window.storageIsFull = true));
+  await typeCode(page, "-- second");
+  await expect(page.locator("#cart-status")).toContainText("Can't keep a recovery copy");
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
 });
 
 ephemeralTest("a restore without saving still says why Save is unavailable", async ({ page }) => {

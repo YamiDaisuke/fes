@@ -40,7 +40,7 @@ ephemeralTest("Code after a runtime error puts the cursor on its line", async ({
 
 test("restored code with a syntax error shows it without typing", async ({ page }) => {
   await openCodeView(page);
-  await page.evaluate(() => fesStorage.writeUnsavedCode(JSON.stringify({ name: "Demo", mainLua: "x = 1\ny = 2\nz = = 3" })));
+  await page.evaluate(() => fesStorage.writeRecoveryCopy(JSON.stringify({ name: "Demo", mainLua: "x = 1\ny = 2\nz = = 3" })));
   page.on("dialog", (dialog) => dialog.accept());
 
   await page.reload();
