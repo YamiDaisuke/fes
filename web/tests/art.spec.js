@@ -577,3 +577,92 @@ ephemeralTest("at 4 by 4 the pixel sliders reach 31, and 1 by 1 brings the curso
   await expect(page.locator("#art-pixel-column")).toHaveAttribute("aria-valuetext", /^7, /);
   await expect(page.locator("#art-tile")).toHaveAttribute("aria-valuetext", "255, column 15, row 15");
 });
+
+ephemeralTest("a pointer fill fills the block's region across tile borders, and a cancel takes it back", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "2 by 2" }).click();
+  await page.getByRole("button", { name: "Fill", exact: true }).click();
+  const blockTiles = [2, 3, 18, 19];
+  const blank = await Promise.all(blockTiles.map((tile) => sheetTilePixels(page, tile)));
+  const outside = await sheetTilePixels(page, 4);
+
+  const start = await editPixelPoint(page, 1, 1, 16);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  for (const [i, tile] of blockTiles.entries()) {
+    await expect.poll(() => sheetTilePixels(page, tile)).not.toBe(blank[i]);
+  }
+  expect(await sheetTilePixels(page, 4)).toBe(outside);
+  await cancelMouseStroke(page);
+  await page.mouse.up();
+
+  await expect.poll(() => Promise.all(blockTiles.map((tile) => sheetTilePixels(page, tile)))).toEqual(blank);
+  await expect(page.getByRole("button", { name: "Fill", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+ephemeralTest("Fill region fills the region under the keyboard cursor", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  const blankTile = await editTileColors(page);
+  await page.getByRole("button", { name: "Color 3" }).click();
+  await page.getByRole("button", { name: "Fill", exact: true }).click();
+
+  await page.locator("#art-pixel-apply").focus();
+  await expect(page.locator("#art-pixel-apply")).toHaveText("Fill region");
+  await page.keyboard.press("Space");
+
+  const filled = await editTileColors(page);
+  expect(new Set(filled.flat()).size).toBe(1);
+  expect(filled[0][0]).not.toBe(blankTile[0][0]);
+  await expect(page.getByRole("button", { name: "Fill", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+ephemeralTest("Flip H and Flip V move a block's tiles along with their pixels", async ({ page }) => {
+  await openArtView(page);
+  await showTile(page, "Background", 2);
+  await page.getByRole("button", { name: "2 by 2" }).click();
+  const blank = await sheetTilePixels(page, 2);
+  await drag(page, [0, 0], [0, 0], 16);
+  await expect.poll(() => sheetTilePixels(page, 2)).not.toBe(blank);
+
+  await page.getByRole("button", { name: "Flip horizontally" }).click();
+  expect(await sheetTilePixels(page, 2)).toBe(blank);
+  expect(await sheetTilePixels(page, 3)).not.toBe(blank);
+
+  await page.getByRole("button", { name: "Flip vertically" }).click();
+  expect(await sheetTilePixels(page, 3)).toBe(blank);
+  expect(await sheetTilePixels(page, 19)).not.toBe(blank);
+});
+
+test("a flip on a saved cart writes the recovery copy", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await showTile(page, "Sprites", 0);
+  const unflipped = await sheetTilePixels(page, 0);
+
+  await page.getByRole("button", { name: "Flip horizontally" }).click();
+
+  expect(await sheetTilePixels(page, 0)).not.toBe(unflipped);
+  expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).not.toBeNull();
+});
+
+test("a copied block pastes into another cart, at the sheet's edge", async ({ page }) => {
+  await openArtView(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await expect(page.getByRole("button", { name: "Paste" })).toBeDisabled();
+  await showTile(page, "Background", 1);
+  const copied = await sheetTilePixels(page, 1);
+  await page.getByRole("button", { name: "Copy" }).click();
+  page.on("dialog", (dialog) => dialog.accept());
+
+  await page.locator("#cart-list").getByRole("button", { name: "Demo", includeHidden: true }).dispatchEvent("click");
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
+  await showTile(page, "Background", 255);
+  expect(await sheetTilePixels(page, 255)).not.toBe(copied);
+  await page.getByRole("button", { name: "Paste" }).click();
+
+  expect(await sheetTilePixels(page, 255)).toBe(copied);
+});
