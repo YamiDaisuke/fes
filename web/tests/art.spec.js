@@ -332,7 +332,7 @@ test.describe("with a cart that draws sprite tile 2", () => {
   });
 });
 
-test("a stroke writes the recovery copy only when it ends, and cancelling back to the saved art removes it", async ({ page }) => {
+test("a stroke writes the recovery copy only when it ends, and a cancel back to the saved art leaves no copy", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
