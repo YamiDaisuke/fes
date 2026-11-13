@@ -62,15 +62,6 @@ private func paintedPoints(in tiles: TileBank, tile: Int, color: Int) -> [ArtPoi
     #expect(editAreaPixel(atX: 7, y: 8, in: layout) == point(0, 1))
 }
 
-@Test func pickingOutsideTheTileGivesNoColor() {
-    var tiles = TileBank()
-    tiles.setPixel(tile: 9, x: 0, y: 0, color: 6)
-    let block = TileBlock(selectedTile: 9, size: .one)
-    #expect(colorIndex(at: point(0, 0), tiles: tiles, block: block) == 6)
-    #expect(colorIndex(at: point(8, 0), tiles: tiles, block: block) == nil)
-    #expect(colorIndex(at: point(0, -1), tiles: tiles, block: block) == nil)
-}
-
 @Test func lineCrossingATileBorderInABlockPaintsBothTilesAndNothingOutsideTheBlock() {
     var tiles = TileBank()
     tiles.paintLine(in: TileBlock(selectedTile: 0, size: .two), from: point(4, 3), to: point(20, 3), color: 5)
@@ -82,5 +73,5 @@ private func paintedPoints(in tiles: TileBank, tile: Int, color: Int) -> [ArtPoi
 @Test func pickingReadsTheTileUnderTheBlockPixel() {
     var tiles = TileBank()
     tiles.setPixel(tile: 17, x: 0, y: 0, color: 6)
-    #expect(colorIndex(at: point(8, 8), tiles: tiles, block: TileBlock(selectedTile: 0, size: .two)) == 6)
+    #expect(tiles.colorIndex(at: point(8, 8), in: TileBlock(selectedTile: 0, size: .two)) == 6)
 }

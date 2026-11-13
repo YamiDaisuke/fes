@@ -37,13 +37,9 @@ public func linePoints(from start: ArtPoint, to end: ArtPoint) -> [ArtPoint] {
     return points
 }
 
-public func colorIndex(at point: ArtPoint, tiles: TileBank, block: TileBlock) -> Int? {
-    guard block.contains(point) else { return nil }
-    return tiles.colorIndex(at: point, in: block)
-}
-
 extension TileBank {
     public func colorIndex(at point: ArtPoint, in block: TileBlock) -> Int {
+        precondition(block.contains(point))
         let pixel = block.tileAndPixel(at: point)
         return colorIndex(tile: pixel.tile, x: pixel.x, y: pixel.y)
     }

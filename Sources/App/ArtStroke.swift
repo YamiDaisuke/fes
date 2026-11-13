@@ -84,7 +84,9 @@ func applyArtTool(_ tool: ArtTool, block: TileBlock, from start: ArtPoint, to en
     case .pencil:
         tiles.paintLine(in: block, from: start, to: end, color: artSelection.color)
     case .picker:
-        artSelection.color = colorIndex(at: end, tiles: tiles, block: block) ?? artSelection.color
+        if block.contains(end) {
+            artSelection.color = tiles.colorIndex(at: end, in: block)
+        }
     }
 }
 
