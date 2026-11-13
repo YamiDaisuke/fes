@@ -3,6 +3,7 @@ import Console
 let gridLineColor = Color(rgb: 0x303030)
 let tileBorderColor = Color(rgb: 0x909090)
 let selectionColor = Color(rgb: 0xffffff)
+let problemColor = Color(rgb: 0xff3030)
 let checkerLightColor = Color(rgb: 0xb0b0b0)
 let checkerDarkColor = Color(rgb: 0x808080)
 
@@ -15,14 +16,14 @@ extension RGBAImage {
         fill(x: x, y: y, width: zoom, height: zoom, color: color)
     }
 
-    mutating func ringSquares(column: Int, row: Int, count: Int, in layout: GridLayout) {
+    mutating func ringSquares(column: Int, row: Int, count: Int, color: Color, in layout: GridLayout) {
         let left = layout.origin(ofSquare: column) - 1
         let top = layout.origin(ofSquare: row) - 1
         let side = count * (layout.squareSide + 1) + 1
-        fill(x: left, y: top, width: side, height: 1, color: selectionColor)
-        fill(x: left, y: top + side - 1, width: side, height: 1, color: selectionColor)
-        fill(x: left, y: top, width: 1, height: side, color: selectionColor)
-        fill(x: left + side - 1, y: top, width: 1, height: side, color: selectionColor)
+        fill(x: left, y: top, width: side, height: 1, color: color)
+        fill(x: left, y: top + side - 1, width: side, height: 1, color: color)
+        fill(x: left, y: top, width: 1, height: side, color: color)
+        fill(x: left + side - 1, y: top, width: 1, height: side, color: color)
     }
 
     private mutating func fillChecker(x: Int, y: Int, zoom: Int) {
