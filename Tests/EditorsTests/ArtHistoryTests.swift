@@ -112,6 +112,20 @@ private func art(_ step: Int) -> CartArt {
     #expect(history.undo(current: art(1))?.art == art(0))
 }
 
+@Test func aPickerSessionEndingOnItsStartingColorLeavesNoStep() {
+    var history = ArtHistory()
+    history.record("main color 3", before: art(0), after: art(1), merging: true)
+    history.stopMerging()
+    history.record("main color 3", before: art(1), after: art(2), merging: true)
+    history.record("main color 3", before: art(2), after: art(1), merging: true)
+    #expect(history.nextUndo == "main color 3")
+    history.record("main color 3", before: art(1), after: art(3), merging: true)
+
+    #expect(history.undo(current: art(3))?.art == art(1))
+    #expect(history.undo(current: art(1))?.art == art(0))
+    #expect(history.nextUndo == nil)
+}
+
 @Test func undoAndRedoOnAnEmptyHistoryReturnNothing() {
     var history = ArtHistory()
     #expect(history.undo(current: art(0)) == nil)

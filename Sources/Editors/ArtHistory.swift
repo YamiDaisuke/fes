@@ -18,6 +18,10 @@ public struct ArtHistory {
     public mutating func record(_ edit: String, before: CartArt, after: CartArt, merging: Bool = false) {
         guard before != after else { return }
         if merging && isMerging && undoSteps.last?.edit == edit {
+            if undoSteps.last?.art == after {
+                undoSteps.removeLast()
+                isMerging = false
+            }
             return
         }
         undoSteps.append(Step(edit: edit, art: before))
