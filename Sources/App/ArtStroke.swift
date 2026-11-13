@@ -6,7 +6,7 @@ private struct Stroke {
     let tool: ArtTool
     let bank: Bank
     let block: TileBlock
-    let tilesBefore: TileBank
+    let artBefore: CartArt
     var lastPixel: ArtPoint
 }
 
@@ -20,7 +20,7 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
             leavePixelControls()
             stroke = Stroke(
                 tool: artSelection.tool, bank: artSelection.bank, block: artSelection.block,
-                tilesBefore: cart.tiles(in: artSelection.bank), lastPixel: pixel)
+                artBefore: cart.art, lastPixel: pixel)
             continueStroke(to: [pixel])
         }
     case "move":
@@ -31,7 +31,7 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
         finishStroke()
     case "cancel":
         if let stroke, stroke.tool.changesTiles {
-            cart.setTiles(stroke.tilesBefore, in: stroke.bank)
+            cart.art = stroke.artBefore
             scheduleArtRedraw()
         }
         finishStroke()
@@ -42,8 +42,8 @@ nonisolated(unsafe) let artStroked = JSClosure { arguments in
 }
 
 func dropArtStroke() {
-    if stroke?.tool.changesTiles == true {
-        keepRecoveryCopy()
+    if let stroke, stroke.tool.changesTiles {
+        recordArtEdit(stroke.tool == .fill ? "fill" : "stroke", before: stroke.artBefore)
     }
     stroke = nil
 }
@@ -93,16 +93,11 @@ func applyArtTool(_ tool: ArtTool, block: TileBlock, from start: ArtPoint, to en
 }
 
 private func finishStroke() {
-    switch stroke?.tool {
-    case .pencil, .fill:
-        keepRecoveryCopy()
-    case .picker:
+    if stroke?.tool == .picker {
         artSelection.tool = .pencil
         scheduleArtRedraw()
-    case nil:
-        break
     }
-    stroke = nil
+    dropArtStroke()
 }
 
 func scheduleArtRedraw() {

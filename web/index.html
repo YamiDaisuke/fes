@@ -97,6 +97,7 @@
     #art-tools [role="group"] { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
     #art-tools button { min-width: 44px; min-height: 44px; font: inherit; touch-action: manipulation; }
     #art-tools button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
+    #art-tools button[aria-disabled="true"] { opacity: 0.4; }
     #art-palettes-toggle { margin-bottom: 16px; }
     #art-palettes {
       grid-area: edit; overflow: auto; display: flex; flex-wrap: wrap; gap: 16px; align-content: start;
@@ -153,6 +154,10 @@
     <div id="art-sheet-area"><canvas id="art-sheet" aria-hidden="true"></canvas></div>
     <div id="art-edit-area"><canvas id="art-edit" aria-hidden="true"></canvas></div>
     <section id="art-tools" aria-label="Art tools">
+      <div id="art-history" role="group" aria-label="History">
+        <button type="button" id="art-undo" aria-disabled="true">Undo</button>
+        <button type="button" id="art-redo" aria-disabled="true">Redo</button>
+      </div>
       <button type="button" id="art-palettes-toggle" aria-pressed="false">Palettes</button>
       <div id="art-bank" role="group" aria-label="Bank">
         <button type="button" data-bank="background">Background</button>

@@ -20,11 +20,12 @@ nonisolated(unsafe) private let cursorMoved = JSClosure { _ in
 
 nonisolated(unsafe) private let applyClicked = JSClosure { _ in
     dropArtStroke()
+    let artBefore = cart.art
     let cursor = artSelection.cursor
     var tiles = cart.tiles(in: artSelection.bank)
     applyArtTool(artSelection.tool, block: artSelection.block, from: cursor, to: cursor, tiles: &tiles)
     cart.setTiles(tiles, in: artSelection.bank)
-    keepRecoveryCopy()
+    recordArtEdit(artSelection.tool == .fill ? "fill" : "pixel", before: artBefore)
     if artSelection.tool == .picker {
         artSelection.tool = .pencil
     }

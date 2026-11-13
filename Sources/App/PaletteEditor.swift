@@ -42,10 +42,11 @@ nonisolated(unsafe) private let mainColorClicked = JSClosure { arguments in
        let mainIndex = string(from: button.dataset.mainColor).flatMap({ Int($0) }),
        (0..<MainPalette.colorCount).contains(mainIndex),
        !bank.isTransparent(colorIndex: artSelection.color) {
+        let artBefore = cart.art
         var palettes = cart.palettes(in: bank)
         palettes.setMainPaletteIndex(mainIndex, palette: artSelection.previewPalette, index: artSelection.color)
         cart.setPalettes(palettes, in: bank)
-        keepRecoveryCopy()
+        recordArtEdit("palette color", before: artBefore)
         redrawArtView()
     }
     return .undefined

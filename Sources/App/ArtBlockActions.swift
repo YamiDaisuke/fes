@@ -8,7 +8,7 @@ nonisolated(unsafe) private let pasteButton = document.getElementById("art-paste
 nonisolated(unsafe) private var copiedBlock: BlockPixels?
 
 nonisolated(unsafe) private let flipHorizontalClicked = JSClosure { _ in
-    editBlockTiles { tiles in
+    editBlockTiles("horizontal flip") { tiles in
         let block = artSelection.block
         tiles.paste(tiles.pixels(of: block).flippedHorizontally(), atSelectedTile: block.firstTile)
     }
@@ -16,7 +16,7 @@ nonisolated(unsafe) private let flipHorizontalClicked = JSClosure { _ in
 }
 
 nonisolated(unsafe) private let flipVerticalClicked = JSClosure { _ in
-    editBlockTiles { tiles in
+    editBlockTiles("vertical flip") { tiles in
         let block = artSelection.block
         tiles.paste(tiles.pixels(of: block).flippedVertically(), atSelectedTile: block.firstTile)
     }
@@ -31,7 +31,7 @@ nonisolated(unsafe) private let copyClicked = JSClosure { _ in
 
 nonisolated(unsafe) private let pasteClicked = JSClosure { _ in
     if let copiedBlock {
-        editBlockTiles { tiles in
+        editBlockTiles("paste") { tiles in
             tiles.paste(copiedBlock, atSelectedTile: artSelection.tile)
         }
     }
@@ -49,11 +49,12 @@ func redrawBlockActions() {
     pasteButton.disabled = .boolean(copiedBlock == nil)
 }
 
-private func editBlockTiles(_ edit: (inout TileBank) -> Void) {
+private func editBlockTiles(_ editName: String, _ edit: (inout TileBank) -> Void) {
     dropArtStroke()
+    let artBefore = cart.art
     var tiles = cart.tiles(in: artSelection.bank)
     edit(&tiles)
     cart.setTiles(tiles, in: artSelection.bank)
-    keepRecoveryCopy()
+    recordArtEdit(editName, before: artBefore)
     redrawArtView()
 }

@@ -52,6 +52,7 @@ func offerRecoveryCopy(_ text: String?) async {
         cart.name = name
         cart.mainLua = mainLua
     }
+    clearArtHistory()
     showCodeView()
     showCodeInEditor(cart.mainLua)
     showCartName()
