@@ -26,8 +26,8 @@ func startSavedCarts() {
     showCartName()
     _ = saveButton.addEventListener("click", saveClicked)
     _ = cartList.addEventListener("click", cartListClicked)
-    // Read before the first await, so code typed while the carts are listed can't replace the copy before it is offered.
-    let unsavedCodeText = readUnsavedCodeText()
+    // Read before the first await, so edits made while the carts are listed can't replace the copy before it is offered.
+    let recoveryCopyText = readRecoveryCopyText()
     Task {
         _ = try? await awaitStorage(storage.requestPersistentStorage())
         var savingIsUnavailable = false
@@ -38,7 +38,7 @@ func startSavedCarts() {
             document.getElementById("cart-import").disabled = .boolean(true)
             savingIsUnavailable = true
         }
-        await offerUnsavedCode(unsavedCodeText)
+        await offerRecoveryCopy(recoveryCopyText)
         if savingIsUnavailable {
             showStatus("Saving is unavailable (Private Browsing?)")
         }
@@ -63,7 +63,7 @@ private func saveCart() async {
         return
     }
     lastSavedCart = saving
-    keepUnsavedCodeCopy()
+    keepRecoveryCopy()
     showStatus("Saved \(name).")
     try? await refreshCartList()
 }
@@ -132,7 +132,7 @@ func openCart(_ opened: Cart, folder: String) {
     cartFolder = folder
     showCodeInEditor(opened.mainLua)
     showCartName()
-    keepUnsavedCodeCopy()
+    keepRecoveryCopy()
     redrawArtView()
 }
 

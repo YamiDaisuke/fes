@@ -39,14 +39,17 @@ export async function requestPersistentStorage() {
   return navigator.storage.persist();
 }
 
-export function readUnsavedCode() {
-  return localStorage.getItem("fes-unsaved-code");
+// Named when the copy held only main.lua; renaming it would orphan older copies (decision 025).
+const recoveryCopyKey = "fes-unsaved-code";
+
+export function readRecoveryCopy() {
+  return localStorage.getItem(recoveryCopyKey);
 }
 
-export function writeUnsavedCode(text) {
-  localStorage.setItem("fes-unsaved-code", text);
+export function writeRecoveryCopy(text) {
+  localStorage.setItem(recoveryCopyKey, text);
 }
 
-export function removeUnsavedCode() {
-  localStorage.removeItem("fes-unsaved-code");
+export function removeRecoveryCopy() {
+  localStorage.removeItem(recoveryCopyKey);
 }

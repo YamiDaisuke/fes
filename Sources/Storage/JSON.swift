@@ -1,6 +1,7 @@
 enum JSONValue {
     case string(String)
     case number(String)
+    case object([String: JSONValue])
     case otherValue
 }
 
@@ -101,8 +102,7 @@ private struct JSONReader {
         }
         skipWhitespace()
         if consume("{") {
-            _ = try objectFields(depth: depth)
-            return .otherValue
+            return .object(try objectFields(depth: depth))
         }
         if consume("[") {
             try arrayElements(depth: depth)
