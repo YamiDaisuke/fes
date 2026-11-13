@@ -30,8 +30,8 @@ public struct TileBlock: Equatable {
     }
 
     public func tileAndPixel(at point: ArtPoint) -> (tile: Int, x: Int, y: Int) {
-        let size = TileBank.tileSize
-        let tile = firstTile + (point.y / size) * sheetColumns + point.x / size
-        return (tile, point.x % size, point.y % size)
+        let tileSide = TileBank.tileSize
+        let tile = firstTile + (point.y / tileSide) * sheetColumns + point.x / tileSide
+        return (tile, point.x % tileSide, point.y % tileSide)
     }
 }
