@@ -11,6 +11,8 @@ nonisolated(unsafe) private let mainColorHint = document.getElementById("art-mai
 nonisolated(unsafe) private let mainColorGroup = document.getElementById("art-main-colors")
 
 nonisolated(unsafe) private var isPaletteEditorShown = false
+nonisolated(unsafe) private var entryButtons: [[JSValue]] = []
+nonisolated(unsafe) private var mainColorButtons: [JSValue] = []
 
 nonisolated(unsafe) private let toggleClicked = JSClosure { _ in
     dropArtStroke()
@@ -51,17 +53,21 @@ nonisolated(unsafe) private let mainColorClicked = JSClosure { arguments in
 
 func startPaletteEditor() {
     for palette in 0..<PaletteBank.paletteCount {
+        var paletteButtons: [JSValue] = []
         for color in 0..<PaletteBank.colorsPerPalette {
             let button = newButton()
             button.dataset.palette = .string(String(palette))
             button.dataset.color = .string(String(color))
             _ = entryGroup.append(button)
+            paletteButtons.append(button)
         }
+        entryButtons.append(paletteButtons)
     }
     for mainIndex in 0..<MainPalette.colorCount {
         let button = newButton()
         button.dataset.mainColor = .string(String(mainIndex))
         _ = mainColorGroup.append(button)
+        mainColorButtons.append(button)
     }
     _ = toggleButton.addEventListener("click", toggleClicked)
     _ = entryGroup.addEventListener("click", entryClicked)
@@ -83,7 +89,7 @@ func redrawPaletteEditor() {
 
     for palette in 0..<PaletteBank.paletteCount {
         for color in 0..<PaletteBank.colorsPerPalette {
-            let button = entryGroup.querySelector("[data-palette='\(palette)'][data-color='\(color)']")
+            let button = entryButtons[palette][color]
             let isTransparent = bank.isTransparent(colorIndex: color)
             _ = button.setAttribute("aria-label", cart.paletteEntryLabel(bank: bank, palette: palette, index: color))
             _ = button.setAttribute("aria-pressed", palette == selectedPalette && color == selectedColor ? "true" : "false")
@@ -93,7 +99,7 @@ func redrawPaletteEditor() {
     }
     let assignedMainIndex = palettes.mainPaletteIndex(palette: selectedPalette, index: selectedColor)
     for mainIndex in 0..<MainPalette.colorCount {
-        let button = mainColorGroup.querySelector("[data-main-color='\(mainIndex)']")
+        let button = mainColorButtons[mainIndex]
         _ = button.setAttribute("aria-label", cart.mainColorLabel(mainIndex))
         _ = button.setAttribute("aria-pressed", !isSelectionTransparent && mainIndex == assignedMainIndex ? "true" : "false")
         button.style.background = .string(cart.mainPalette[mainIndex].hexCode)
