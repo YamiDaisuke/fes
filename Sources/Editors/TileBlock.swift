@@ -19,12 +19,6 @@ public struct TileBlock: Equatable {
 
     public var pixelsPerSide: Int { TileBank.tileSize * size.rawValue }
 
-    public var tiles: [Int] {
-        (0..<size.rawValue).flatMap { row in
-            (0..<size.rawValue).map { column in firstTile + row * sheetColumns + column }
-        }
-    }
-
     public func contains(_ point: ArtPoint) -> Bool {
         (0..<pixelsPerSide).contains(point.x) && (0..<pixelsPerSide).contains(point.y)
     }

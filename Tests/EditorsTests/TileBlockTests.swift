@@ -9,13 +9,12 @@ import Testing
 }
 
 @Test func blockAtTheSheetEdgeShiftsInsideAndKeepsTheSelectedTile() {
-    #expect(TileBlock(selectedTile: 15, size: .two).tiles == [14, 15, 30, 31])
+    #expect(TileBlock(selectedTile: 15, size: .two).firstTile == 14)
     #expect(TileBlock(selectedTile: 255, size: .four).firstTile == 204)
-    #expect(TileBlock(selectedTile: 255, size: .four).tiles.last == 255)
     #expect(TileBlock(selectedTile: 240, size: .two).firstTile == 224)
 }
 
 @Test func oneByOneBlockIsTheSelectedTile() {
-    #expect(TileBlock(selectedTile: 255, size: .one).tiles == [255])
-    #expect(TileBlock(selectedTile: 15, size: .one).tiles == [15])
+    #expect(TileBlock(selectedTile: 255, size: .one).firstTile == 255)
+    #expect(TileBlock(selectedTile: 15, size: .one).firstTile == 15)
 }
