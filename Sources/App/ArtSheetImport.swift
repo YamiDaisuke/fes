@@ -80,6 +80,11 @@ private func importSheet(from file: JSValue) async {
         showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: sizeProblems, image: nil, openedBy: pressedButton)
         return
     }
+    // WebKit decodes a cut-off PNG without an error and leaves the missing pixels transparent (issue #84).
+    guard isJPEG || pngEndsWithEndChunk(bytes) else {
+        showStatus("Can't import \(fileName): it isn't a complete PNG.")
+        return
+    }
 
     let imageData: JSValue
     do {

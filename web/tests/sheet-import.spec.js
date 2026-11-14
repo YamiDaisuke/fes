@@ -268,6 +268,25 @@ ephemeralTest("the report's sheet stays in view while a long problem list scroll
   expect(canvasBox.y + canvasBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height);
 });
 
+for (const buttonName of ["Import sheet", "Import sheet and colors"]) {
+  ephemeralTest(`${buttonName} refuses a PNG cut off partway without asking to replace the tiles`, async ({ page }) => {
+    await openArtView(page);
+    await page.getByRole("button", { name: "Sprites" }).click();
+    const colors = await previewColors(page);
+    const png = encodePNG(128, 128, imagePixels(128, 128, (x, y) => colors[1 + ((x * 3 + y * 5) % 7)]));
+    let asked = false;
+    page.on("dialog", (dialog) => {
+      asked = true;
+      dialog.dismiss();
+    });
+
+    await chooseSheet(page, buttonName, { name: "half.png", mimeType: "image/png", buffer: png.subarray(0, png.length / 2) });
+
+    await expect(page.locator("#cart-status")).toHaveText("Can't import half.png: it isn't a complete PNG.");
+    expect(asked).toBe(false);
+  });
+}
+
 ephemeralTest("a JPEG's report says to export PNG, and Escape closes it", async ({ page }) => {
   await openArtView(page);
   const jpeg = await page.evaluate(async () => {

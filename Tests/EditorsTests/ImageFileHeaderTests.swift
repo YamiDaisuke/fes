@@ -34,6 +34,15 @@ private let jpegEndOfImage: [UInt8] = [0xFF, 0xD9]
     #expect(ImageFileHeader(fileBytes: pngStart(width: [0, 0, 0, 8], height: [0x80, 0, 0, 0])) == nil)
 }
 
+@Test func aPNGCutOffBeforeOrInsideItsEndChunkDoesNotEndWithOne() {
+    let endChunk: [UInt8] = [0, 0, 0, 0, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]
+    let start = pngStart(width: [0, 0, 0, 8], height: [0, 0, 0, 8])
+    #expect(pngEndsWithEndChunk(start + endChunk))
+    #expect(!pngEndsWithEndChunk(start))
+    #expect(!pngEndsWithEndChunk(Array((start + endChunk).dropLast())))
+    #expect(!pngEndsWithEndChunk([]))
+}
+
 @Test func aJPEGSizeComesFromItsFirstStartOfFrameAfterSkippingOtherSegments() {
     let bytes = jpegStartOfImage + jpegApp0 + [0xFF, 0xFF] + jpegHuffmanTable + jpegArithmeticTable + jpegRestart
         + jpegProgressiveFrameHeight16Width24 + jpegStartOfScan
