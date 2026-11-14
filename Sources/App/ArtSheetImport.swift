@@ -19,6 +19,7 @@ private let largestSheetFileBytes = 1 << 20
 private let reportSheetSide = 401
 
 nonisolated(unsafe) private var importUsesImageColors = false
+nonisolated(unsafe) private var buttonThatOpenedReport = importButton
 
 nonisolated(unsafe) private let importClicked = JSClosure { _ in
     importUsesImageColors = false
@@ -43,7 +44,7 @@ nonisolated(unsafe) private let importFileChosen = JSClosure { _ in
 }
 
 nonisolated(unsafe) private let reportClosed = JSClosure { _ in
-    _ = (importUsesImageColors ? importColorsButton : importButton).focus()
+    _ = buttonThatOpenedReport.focus()
     return .undefined
 }
 
@@ -56,6 +57,7 @@ func startArtSheetImport() {
 
 private func importSheet(from file: JSValue) async {
     let usesImageColors = importUsesImageColors
+    let pressedButton = usesImageColors ? importColorsButton : importButton
     let fileName = string(from: file.name) ?? ""
     guard let size = file.size.number, size <= Double(largestSheetFileBytes) else {
         showStatus("Can't import \(fileName): larger than 1 MiB.")
@@ -75,7 +77,7 @@ private func importSheet(from file: JSValue) async {
     let isJPEG = header.type == .jpeg
     let sizeProblems = sheetSizeProblems(width: header.width, height: header.height)
     guard sizeProblems.isEmpty else {
-        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: sizeProblems, image: nil)
+        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: sizeProblems, image: nil, openedBy: pressedButton)
         return
     }
 
@@ -105,7 +107,7 @@ private func importSheet(from file: JSValue) async {
         let namesATile = problems.contains { $0.tile != nil }
         let layout = tileSheetLayout(fittingWidth: reportSheetSide, height: reportSheetSide)
         let image = namesATile ? sheetReportImage(width: width, height: height, rgba: rgba, problems: problems, layout: layout) : nil
-        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: problems, image: image)
+        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: problems, image: image, openedBy: pressedButton)
     case .imported(let art):
         let otherBankName = (bank == .sprite ? Bank.background : Bank.sprite).displayName.lowercased()
         let question = usesImageColors
@@ -119,11 +121,15 @@ private func importSheet(from file: JSValue) async {
             ? "Imported \(fileName) and its colors into the \(bankName) tiles."
             : "Imported \(fileName) into the \(bankName) tiles.")
         recordArtEdit("sheet import", before: artBefore)
+        if usesImageColors {
+            artSelection.previewPalette = 0
+        }
         redrawArtView()
     }
 }
 
-private func showSheetReport(fileName: String, isJPEG: Bool, problems: [SheetProblem], image: RGBAImage?) {
+private func showSheetReport(fileName: String, isJPEG: Bool, problems: [SheetProblem], image: RGBAImage?, openedBy button: JSValue) {
+    buttonThatOpenedReport = button
     reportHeading.textContent = .string("Can't import \(fileName)")
     reportHint.hidden = .boolean(!isJPEG)
     reportImage.hidden = .boolean(image == nil)

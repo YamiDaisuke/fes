@@ -195,11 +195,20 @@ ephemeralTest("Import sheet and colors shows the image's own colors in the runni
   });
   await openArtView(page);
   await page.getByRole("button", { name: "Sprites" }).click();
-  const imageColorsInReadingOrder = [1, 2, 3, 4, 6, 0, 5].map((shade) => [10 + 30 * shade, 200 - 20 * shade, 77]);
+  const sheetBeforeInPalette0 = await sheetImage(page);
+  await page.getByRole("button", { name: "Palette 2" }).click();
   const colorAt = (x, y) => (isTransparentPixel(x, y) ? null : [10 + 30 * ((x + y) % 7), 200 - 20 * ((x + y) % 7), 77]);
+  const imageColorsInReadingOrder = [];
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 24; x++) {
+      const color = colorAt(x, y);
+      if (color && !imageColorsInReadingOrder.some((seen) => seen.join() === color.join())) {
+        imageColorsInReadingOrder.push(color);
+      }
+    }
+  }
   const sheet = { name: "sheet.png", mimeType: "image/png", buffer: encodePNG(24, 16, imagePixels(24, 16, colorAt)) };
   const mainColorsBefore = await mainColors(page);
-  const sheetBefore = await sheetImage(page);
   const questions = [];
   page.on("dialog", (dialog) => {
     questions.push(dialog.message());
@@ -221,7 +230,8 @@ ephemeralTest("Import sheet and colors shows the image's own colors in the runni
   await page.locator("#show-art").click();
   await page.getByRole("button", { name: "Undo sheet import" }).click();
   expect(await mainColors(page)).toEqual(mainColorsBefore);
-  expect(await sheetImage(page)).toBe(sheetBefore);
+  await expect(page.getByRole("button", { name: "Palette 0" })).toHaveAttribute("aria-pressed", "true");
+  expect(await sheetImage(page)).toBe(sheetBeforeInPalette0);
 
   await chooseSheet(page, "Import sheet", sheet);
   await expect(page.getByRole("dialog", { name: "Can't import sheet.png" })).toContainText("not in the main palette");
