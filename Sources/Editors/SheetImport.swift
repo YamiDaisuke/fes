@@ -105,7 +105,7 @@ func distinctOpaqueColors(_ pixels: [ImagePixel]) -> [Color] {
     return colors
 }
 
-private func pixelProblems(_ pixels: [ImagePixel], colors: [Color], bank: Bank, mainColors: Set<Color>) -> [SheetRule] {
+func transparencyProblems(_ pixels: [ImagePixel], bank: Bank) -> [SheetRule] {
     var rules: [SheetRule] = []
     if pixels.contains(.halfTransparent) {
         rules.append(.halfTransparent)
@@ -113,6 +113,11 @@ private func pixelProblems(_ pixels: [ImagePixel], colors: [Color], bank: Bank, 
     if bank == .background && pixels.contains(.transparent) {
         rules.append(.transparentInBackground)
     }
+    return rules
+}
+
+private func pixelProblems(_ pixels: [ImagePixel], colors: [Color], bank: Bank, mainColors: Set<Color>) -> [SheetRule] {
+    var rules = transparencyProblems(pixels, bank: bank)
     let missing = colors.filter { !mainColors.contains($0) }
     if !missing.isEmpty {
         rules.append(.colorsNotInMainPalette(missing))
