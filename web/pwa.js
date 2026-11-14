@@ -32,14 +32,29 @@ async function registerServiceWorker() {
 
 function showInstallHint() {
   if (matchMedia("(display-mode: standalone)").matches) return;
-  const dismissedAt = Number(localStorage.getItem(installHintDismissedKey));
+  const dismissedAt = installHintDismissedAt();
   const dismissedRecently = dismissedAt <= Date.now() && Date.now() - dismissedAt < installHintPause;
   if (dismissedRecently) return;
   const hint = document.getElementById("install-hint");
   hint.hidden = false;
   document.getElementById("install-hint-dismiss").addEventListener("click", () => {
-    localStorage.setItem(installHintDismissedKey, String(Date.now()));
+    rememberInstallHintDismissed();
     document.getElementById("run").focus();
     hint.hidden = true;
   });
+}
+
+// Safari throws on every localStorage call when all site data is blocked.
+function installHintDismissedAt() {
+  try {
+    return Number(localStorage.getItem(installHintDismissedKey));
+  } catch {
+    return NaN;
+  }
+}
+
+function rememberInstallHintDismissed() {
+  try {
+    localStorage.setItem(installHintDismissedKey, String(Date.now()));
+  } catch {}
 }

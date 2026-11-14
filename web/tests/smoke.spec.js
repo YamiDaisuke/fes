@@ -1,14 +1,15 @@
 import { test, expect } from "@playwright/test";
 
-test("boots the wasm and draws to the canvas without console errors", async ({ page }) => {
+function collectErrors(page) {
   const errors = [];
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
+  return errors;
+}
 
-  await page.goto("/");
-
+async function expectDemoDrawn(page) {
   await expect(page.locator("#screen")).toHaveJSProperty("width", 192);
   await expect
     .poll(() =>
@@ -19,5 +20,33 @@ test("boots the wasm and draws to the canvas without console errors", async ({ p
       }),
     )
     .toBe(255);
+}
+
+test("boots the wasm and draws to the canvas without console errors", async ({ page }) => {
+  const errors = collectErrors(page);
+
+  await page.goto("/");
+
+  await expectDemoDrawn(page);
+  expect(errors).toEqual([]);
+});
+
+test("boots and lets the install hint be dismissed when every localStorage call throws", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.addInitScript(() => {
+    const refuse = () => {
+      throw new DOMException("The operation is insecure.", "SecurityError");
+    };
+    Storage.prototype.getItem = refuse;
+    Storage.prototype.setItem = refuse;
+    Storage.prototype.removeItem = refuse;
+  });
+
+  await page.goto("/");
+
+  await expectDemoDrawn(page);
+  await expect(page.locator("#install-hint")).toBeVisible();
+  await page.getByRole("button", { name: "Not now" }).click();
+  await expect(page.locator("#install-hint")).toBeHidden();
   expect(errors).toEqual([]);
 });
