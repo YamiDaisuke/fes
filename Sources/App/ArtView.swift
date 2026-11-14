@@ -114,6 +114,7 @@ func startArtView() {
     startBlockActions()
     startPaletteEditor()
     startArtUndo()
+    startArtSheetImport()
     let resizeObserver = JSObject.global.ResizeObserver.function!.new(artResized)
     _ = resizeObserver.observe!(sheetArea)
     _ = resizeObserver.observe!(editArea)
@@ -173,7 +174,7 @@ private func setPressed(_ button: JSValue, _ isPressed: Bool) {
     _ = button.setAttribute("aria-pressed", isPressed ? "true" : "false")
 }
 
-private func blit(_ image: RGBAImage, into canvas: JSValue) {
+func blit(_ image: RGBAImage, into canvas: JSValue) {
     canvas.width = .number(Double(image.width))
     canvas.height = .number(Double(image.height))
     // The address is valid only during this call, so fesArtView.blit copies the pixels before returning.
