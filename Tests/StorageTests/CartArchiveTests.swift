@@ -72,6 +72,13 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(refusal(archive(of: Cart(name: "Demo", mainLua: ""), changing: ["map.map": map])) == "map.map: not valid UTF-8")
 }
 
+@Test func byteOrderMarkAtTheStartOfEachCartFileInAFesArchiveIsIgnored() throws {
+    let cart = sampleCart()
+    let filesWithByteOrderMarks = cart.files.mapValues { [0xEF, 0xBB, 0xBF] + Array($0.utf8) as [UInt8]? }
+
+    #expect(try Cart(fesArchive: archive(of: cart, changing: filesWithByteOrderMarks)) == cart)
+}
+
 @Test func fileLargerThan8MiBIsRefusedBeforeItIsRead() {
     #expect(refusal([UInt8](repeating: 0, count: Cart.largestArchiveBytes + 1)) == "larger than 8 MiB")
 }

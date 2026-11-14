@@ -98,10 +98,23 @@ private func refusal(cartJSON: String) -> String? {
     #expect(refusal(files) == "sprites.tiles line 128: expected 128 lines, found 127")
 }
 
-@Test func sheetSeparatedByLoneCarriageReturnsIsRefused() {
+@Test func loneCarriageReturnInASheetIsRefusedNamingTheLineHoldingIt() {
     var files = sampleCart().files
-    files["background.tiles"] = files["background.tiles"]!.replacing("\n", with: "\r")
-    #expect(refusal(files) == "background.tiles line 2: expected 128 lines, found 1")
+    var sheetLines = lines(files["background.tiles"])
+    sheetLines[4] += "\r" + sheetLines.remove(at: 5)
+    files["background.tiles"] = sheetLines.joined(separator: "\n") + "\n"
+    #expect(refusal(files) == "background.tiles line 5: found \\r alone; lines end with \\n or \\r\\n")
+}
+
+@Test func byteOrderMarkAtTheStartOfEachCartFileIsIgnored() throws {
+    let cart = sampleCart()
+    #expect(try Cart(files: cart.files.mapValues { "\u{FEFF}" + $0 }) == cart)
+}
+
+@Test func secondByteOrderMarkIsNotIgnored() {
+    var files = sampleCart().files
+    files["map.map"] = "\u{FEFF}\u{FEFF}" + files["map.map"]!
+    #expect(refusal(files)?.hasPrefix("map.map line 1: cell 1:") == true)
 }
 
 @Test func missingFileIsRefused() {

@@ -1,7 +1,15 @@
+public func withoutByteOrderMark(_ text: String) -> String {
+    text.unicodeScalars.first == "\u{FEFF}" ? String(text.unicodeScalars.dropFirst()) : text
+}
+
 func textLines(_ text: String, count: Int, file: String) throws(CartFileError) -> [Substring] {
     var lines = text.split(omittingEmptySubsequences: false, whereSeparator: { $0 == "\n" || $0 == "\r\n" })
     if lines.last == "" {
         lines.removeLast()
+    }
+    if let lineWithCarriageReturn = lines.firstIndex(where: { $0.contains("\r") }) {
+        throw CartFileError(
+            file: file, line: lineWithCarriageReturn + 1, reason: "found \\r alone; lines end with \\n or \\r\\n")
     }
     guard lines.count == count else {
         throw CartFileError(
