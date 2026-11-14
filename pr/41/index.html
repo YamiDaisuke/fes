@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FES</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; }
+    body { display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); overflow: hidden; }
+    body[data-view="code"] #game-view,
+    body[data-view="code"] #show-code,
+    body[data-view="game"] #code-view { display: none; }
+    #toolbar {
+      display: flex; gap: 8px;
+      padding: calc(4px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left));
+    }
+    #toolbar button { min-height: 44px; min-width: 88px; font: 16px system-ui, sans-serif; touch-action: manipulation; }
+    #code-view { display: grid; grid-template-columns: minmax(0, 1fr) 240px; }
+    #code-editor { min-height: 0; background: #fff; }
+    .cm-editor { height: 100%; font-size: 16px; }
+    #game-view { position: relative; display: grid; place-items: center; }
+    canvas { image-rendering: pixelated; }
+    #pad {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      display: flex; justify-content: space-between; align-items: end;
+      padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+      pointer-events: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #pad > div { pointer-events: auto; }
+    #pad button {
+      border: 0; padding: 0; color: #fff; font: 600 16px system-ui, sans-serif;
+      background: rgb(255 255 255 / 0.25);
+    }
+    #dpad { display: grid; grid-template: repeat(3, 56px) / repeat(3, 56px); }
+    #dpad button { border-radius: 8px; }
+    #system { display: flex; gap: 16px; }
+    #system button { width: 88px; height: 32px; border-radius: 16px; }
+    #face { display: flex; gap: 16px; }
+    #face button { width: 72px; height: 72px; border-radius: 50%; }
+    #cart-error {
+      position: absolute; top: 0; left: 0; right: 0; margin: 0;
+      padding: 8px calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
+      color: #fff; background: rgb(0 0 0 / 0.75); font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+      max-height: 40vh; overflow: auto;
+    }
+    #cart-error:empty { display: none; }
+    #carts {
+      overflow: auto; padding: 8px calc(8px + env(safe-area-inset-right)) 8px 8px;
+      color: #fff; font: 16px system-ui, sans-serif;
+    }
+    #carts input { width: 100%; box-sizing: border-box; font: inherit; }
+    #cart-list { margin: 8px 0; padding: 0; list-style: none; }
+    #cart-list button { width: 100%; text-align: left; font: inherit; }
+    #cart-status { margin: 0; }
+  </style>
+</head>
+<body data-view="game">
+  <div id="toolbar">
+    <button type="button" id="run">Run</button>
+    <button type="button" id="show-code">Code</button>
+  </div>
+  <div id="code-view">
+    <div id="code-editor"></div>
+    <section id="carts" aria-label="Carts">
+      <label for="cart-name">Cart name</label>
+      <input id="cart-name" autocomplete="off">
+      <button type="button" id="cart-save">Save</button>
+      <ul id="cart-list" role="list"></ul>
+      <p id="cart-status" role="status"></p>
+    </section>
+  </div>
+  <div id="game-view">
+    <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
+    <pre id="cart-error" role="alert"></pre>
+    <div id="pad" role="group" aria-label="Controller">
+      <div id="dpad">
+        <div data-buttons="up left" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="up" aria-label="Up">↑</button>
+        <div data-buttons="up right" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="left" aria-label="Left">←</button>
+        <div></div>
+        <button type="button" tabindex="-1" data-buttons="right" aria-label="Right">→</button>
+        <div data-buttons="down left" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="down" aria-label="Down">↓</button>
+        <div data-buttons="down right" aria-hidden="true"></div>
+      </div>
+      <div id="system">
+        <button type="button" tabindex="-1" data-buttons="select">Select</button>
+        <button type="button" tabindex="-1" data-buttons="start">Start</button>
+      </div>
+      <div id="face">
+        <button type="button" tabindex="-1" data-buttons="b">B</button>
+        <button type="button" tabindex="-1" data-buttons="a">A</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="boot.js"></script>
+</body>
+</html>
