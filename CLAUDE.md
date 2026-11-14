@@ -4,6 +4,7 @@ FES is a fantasy console that runs in the browser on iPad as an installable PWA.
 
 - What we are building: `docs/SPEC.md`
 - What to build, in order: `docs/PLAN.md`
+- Phase 2 (M9–M14) task text and design: `docs/PHASE2.md`
 - How agents work, hand off and resume: `docs/WORKFLOW.md`
 - Why things are the way they are: `docs/decisions/`
 - Owner's one-time setup: `docs/SETUP.md`
