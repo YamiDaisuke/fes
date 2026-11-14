@@ -65,14 +65,24 @@ function imagePixels(width, height, colorAt) {
   return rgba;
 }
 
-async function nineMainColors(page) {
+async function mainColors(page) {
   await page.getByRole("button", { name: "Palettes" }).click();
-  const mainColors = [];
+  const colors = [];
   for (const swatch of await page.locator("#art-main-colors button").all()) {
-    mainColors.push(await rgbOf(swatch));
+    colors.push(await rgbOf(swatch));
   }
   await page.getByRole("button", { name: "Palettes" }).click();
-  const nineColors = [...new Map(mainColors.map((color) => [color.join(), color])).values()].slice(0, 9);
+  return colors;
+}
+
+async function chooseSheet(page, buttonName, file) {
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: buttonName, exact: true }).click();
+  await (await chooser).setFiles(file);
+}
+
+async function nineMainColors(page) {
+  const nineColors = [...new Map((await mainColors(page)).map((color) => [color.join(), color])).values()].slice(0, 9);
   expect(nineColors).toHaveLength(9);
   return nineColors;
 }
@@ -176,7 +186,69 @@ ephemeralTest("a 9-color tile is refused with a report naming it, and Close retu
 
   await report.getByRole("button", { name: "Close" }).click();
   await expect(report).toBeHidden();
-  await expect(page.getByRole("button", { name: "Import sheet" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Import sheet", exact: true })).toBeFocused();
+});
+
+ephemeralTest("Import sheet and colors shows the image's own colors in the running cart, and one undo restores the main palette", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "function _draw() cls() spr(17, 0, 0, 0) end";
+  });
+  await openArtView(page);
+  await page.getByRole("button", { name: "Sprites" }).click();
+  const sheetBeforeInPalette0 = await sheetImage(page);
+  await page.getByRole("button", { name: "Palette 2" }).click();
+  const colorAt = (x, y) => (isTransparentPixel(x, y) ? null : [10 + 30 * ((x + y) % 7), 200 - 20 * ((x + y) % 7), 77]);
+  const imageColorsInReadingOrder = [];
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 24; x++) {
+      const color = colorAt(x, y);
+      if (color && !imageColorsInReadingOrder.some((seen) => seen.join() === color.join())) {
+        imageColorsInReadingOrder.push(color);
+      }
+    }
+  }
+  const sheet = { name: "sheet.png", mimeType: "image/png", buffer: encodePNG(24, 16, imagePixels(24, 16, colorAt)) };
+  const mainColorsBefore = await mainColors(page);
+  const questions = [];
+  page.on("dialog", (dialog) => {
+    questions.push(dialog.message());
+    dialog.accept();
+  });
+
+  await chooseSheet(page, "Import sheet and colors", sheet);
+
+  await expect(page.locator("#cart-status")).toHaveText("Imported sheet.png and its colors into the sprite tiles.");
+  expect(questions).toEqual([
+    "Replace all 256 sprite tiles, the sprite palettes and the main palette with sheet.png and its colors? The background tiles may change color too. Undo puts them back.",
+  ]);
+  expect((await mainColors(page)).slice(0, 7)).toEqual(imageColorsInReadingOrder);
+  const tile17Color = (x, y) => colorAt(8 + x, 8 + y);
+  expect(opaquePixelsMatch(await sheetTileRGB(page, 17), tile17Color)).toBe(true);
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect.poll(async () => opaquePixelsMatch(await screenTopLeftTile(page), tile17Color)).toBe(true);
+
+  await page.locator("#show-art").click();
+  await page.getByRole("button", { name: "Undo sheet import" }).click();
+  expect(await mainColors(page)).toEqual(mainColorsBefore);
+  await expect(page.getByRole("button", { name: "Palette 0" })).toHaveAttribute("aria-pressed", "true");
+  expect(await sheetImage(page)).toBe(sheetBeforeInPalette0);
+
+  await chooseSheet(page, "Import sheet", sheet);
+  await expect(page.getByRole("dialog", { name: "Can't import sheet.png" })).toContainText("not in the main palette");
+});
+
+ephemeralTest("a 65-color image is refused by Import sheet and colors with the count, and Close returns focus to that button", async ({ page }) => {
+  await openArtView(page);
+  const colorAt = (x, y) => [Math.min(x + y * 16, 64), 1, 2];
+  const png = encodePNG(16, 8, imagePixels(16, 8, colorAt));
+
+  await chooseSheet(page, "Import sheet and colors", { name: "rainbow.png", mimeType: "image/png", buffer: png });
+
+  const report = page.getByRole("dialog", { name: "Can't import rainbow.png" });
+  await expect(report.getByRole("listitem")).toHaveText(["The image has 65 colors. The main palette holds 64."]);
+  await expect(report.locator("canvas")).toBeHidden();
+  await report.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("button", { name: "Import sheet and colors" })).toBeFocused();
 });
 
 ephemeralTest("the report's sheet stays in view while a long problem list scrolls", async ({ page }) => {
@@ -217,7 +289,7 @@ ephemeralTest("a JPEG's report says to export PNG, and Escape closes it", async 
   await expect(report).toContainText("Export the sheet from your art app as PNG and import that.");
   await page.keyboard.press("Escape");
   await expect(report).toBeHidden();
-  await expect(page.getByRole("button", { name: "Import sheet" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Import sheet", exact: true })).toBeFocused();
 });
 
 ephemeralTest("a PNG claiming 20000 × 20000 pixels is refused from its header without decoding", async ({ page }) => {

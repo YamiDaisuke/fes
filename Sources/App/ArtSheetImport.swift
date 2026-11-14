@@ -6,6 +6,7 @@ import JavaScriptKit
 nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) private let artView = JSObject.global.fesArtView
 nonisolated(unsafe) private let importButton = document.getElementById("art-import")
+nonisolated(unsafe) private let importColorsButton = document.getElementById("art-import-colors")
 nonisolated(unsafe) private let importInput = document.getElementById("art-import-file")
 nonisolated(unsafe) private let report = document.getElementById("art-import-report")
 nonisolated(unsafe) private let reportHeading = document.getElementById("art-import-report-heading")
@@ -17,7 +18,17 @@ private let largestSheetFileBytes = 1 << 20
 // 401 px is the sheet at zoom 3 (16 × 25 + 1), which still fits beside the problem list on an iPad mini in portrait.
 private let reportSheetSide = 401
 
+nonisolated(unsafe) private var importUsesImageColors = false
+nonisolated(unsafe) private var buttonThatOpenedReport = importButton
+
 nonisolated(unsafe) private let importClicked = JSClosure { _ in
+    importUsesImageColors = false
+    _ = importInput.click()
+    return .undefined
+}
+
+nonisolated(unsafe) private let importColorsClicked = JSClosure { _ in
+    importUsesImageColors = true
     _ = importInput.click()
     return .undefined
 }
@@ -33,17 +44,20 @@ nonisolated(unsafe) private let importFileChosen = JSClosure { _ in
 }
 
 nonisolated(unsafe) private let reportClosed = JSClosure { _ in
-    _ = importButton.focus()
+    _ = buttonThatOpenedReport.focus()
     return .undefined
 }
 
 func startArtSheetImport() {
     _ = importButton.addEventListener("click", importClicked)
+    _ = importColorsButton.addEventListener("click", importColorsClicked)
     _ = importInput.addEventListener("change", importFileChosen)
     _ = report.addEventListener("close", reportClosed)
 }
 
 private func importSheet(from file: JSValue) async {
+    let usesImageColors = importUsesImageColors
+    let pressedButton = usesImageColors ? importColorsButton : importButton
     let fileName = string(from: file.name) ?? ""
     guard let size = file.size.number, size <= Double(largestSheetFileBytes) else {
         showStatus("Can't import \(fileName): larger than 1 MiB.")
@@ -63,7 +77,7 @@ private func importSheet(from file: JSValue) async {
     let isJPEG = header.type == .jpeg
     let sizeProblems = sheetSizeProblems(width: header.width, height: header.height)
     guard sizeProblems.isEmpty else {
-        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: sizeProblems, image: nil)
+        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: sizeProblems, image: nil, openedBy: pressedButton)
         return
     }
 
@@ -85,25 +99,37 @@ private func importSheet(from file: JSValue) async {
 
     let bank = artSelection.bank
     let bankName = bank.displayName.lowercased()
-    switch cart.sheetImport(width: width, height: height, rgba: rgba, bank: bank, preferredPalette: artSelection.previewPalette) {
+    let outcome = usesImageColors
+        ? cart.sheetImportAdoptingColors(width: width, height: height, rgba: rgba, bank: bank)
+        : cart.sheetImport(width: width, height: height, rgba: rgba, bank: bank, preferredPalette: artSelection.previewPalette)
+    switch outcome {
     case .refused(let problems):
         let namesATile = problems.contains { $0.tile != nil }
         let layout = tileSheetLayout(fittingWidth: reportSheetSide, height: reportSheetSide)
         let image = namesATile ? sheetReportImage(width: width, height: height, rgba: rgba, problems: problems, layout: layout) : nil
-        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: problems, image: image)
+        showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: problems, image: image, openedBy: pressedButton)
     case .imported(let art):
-        let question = "Replace all \(TileBank.tileCount) \(bankName) tiles with \(fileName)? Undo puts them back."
+        let otherBankName = (bank == .sprite ? Bank.background : Bank.sprite).displayName.lowercased()
+        let question = usesImageColors
+            ? "Replace all \(TileBank.tileCount) \(bankName) tiles, the \(bankName) palettes and the main palette with \(fileName) and its colors? The \(otherBankName) tiles may change color too. Undo puts them back."
+            : "Replace all \(TileBank.tileCount) \(bankName) tiles with \(fileName)? Undo puts them back."
         guard JSObject.global.confirm!(question) == .boolean(true) else { return }
         dropArtStroke()
         let artBefore = cart.art
         cart.art = art
-        showStatus("Imported \(fileName) into the \(bankName) tiles.")
+        showStatus(usesImageColors
+            ? "Imported \(fileName) and its colors into the \(bankName) tiles."
+            : "Imported \(fileName) into the \(bankName) tiles.")
         recordArtEdit("sheet import", before: artBefore)
+        if usesImageColors {
+            artSelection.previewPalette = 0
+        }
         redrawArtView()
     }
 }
 
-private func showSheetReport(fileName: String, isJPEG: Bool, problems: [SheetProblem], image: RGBAImage?) {
+private func showSheetReport(fileName: String, isJPEG: Bool, problems: [SheetProblem], image: RGBAImage?, openedBy button: JSValue) {
+    buttonThatOpenedReport = button
     reportHeading.textContent = .string("Can't import \(fileName)")
     reportHint.hidden = .boolean(!isJPEG)
     reportImage.hidden = .boolean(image == nil)
