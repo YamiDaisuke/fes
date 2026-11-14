@@ -4,6 +4,15 @@ export function createArtView(wasmBuffer) {
       const pixels = new Uint8ClampedArray(wasmBuffer(), address, canvas.width * canvas.height * 4);
       canvas.getContext("2d").putImageData(new ImageData(pixels, canvas.width, canvas.height), 0, 0);
     },
+    async decodeImage(bytes) {
+      // WebKit ignores colorSpaceConversion; both options state the intent (docs/decisions/032-importing-a-sheet.md).
+      const bitmap = await createImageBitmap(new Blob([bytes]), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+      const { width, height } = bitmap;
+      const context = new OffscreenCanvas(width, height).getContext("2d");
+      context.drawImage(bitmap, 0, 0);
+      bitmap.close();
+      return context.getImageData(0, 0, width, height);
+    },
     onTap(canvas, listener) {
       canvas.addEventListener("pointerdown", (event) => {
         // Without this, WebKit's touch adjustment sends a tap near the canvas edge's click and focus to the nearest control (decision 024).
