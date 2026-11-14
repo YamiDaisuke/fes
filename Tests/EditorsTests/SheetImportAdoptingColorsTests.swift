@@ -116,6 +116,18 @@ private func refusal(_ rule: SheetRule, column: Int) -> SheetImport {
         == refusal(.tooManyColors(count: 9, bank: .background), column: 0))
 }
 
+@Test func aTileRefusedForTransparencyIsReportedAloneAndTakesNoPalette() {
+    let refusedTile = colors(0..<5)
+    let fittingTiles = (0..<8).map { colors(10 + $0 * 5..<10 + ($0 + 1) * 5) }
+    var halfTransparent = sheet(tiles: [refusedTile] + fittingTiles)
+    halfTransparent.set(x: 0, y: 0, color: refusedTile[0], alpha: 128)
+    var transparent = sheet(tiles: [refusedTile] + fittingTiles)
+    transparent.set(x: 0, y: 0, color: refusedTile[0], alpha: 0)
+
+    #expect(adopting(halfTransparent, into: .background) == refusal(.halfTransparent, column: 0))
+    #expect(adopting(transparent, into: .background) == refusal(.transparentInBackground, column: 0))
+}
+
 @Test func adoptingIntoSpritesLeavesTheBackgroundBankAlone() {
     var cart = cartWithPatternTiles()
     cart.backgroundPalettes.setMainPaletteIndex(40, palette: 2, index: 3)

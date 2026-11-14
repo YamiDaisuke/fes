@@ -16,7 +16,7 @@ extension Cart {
         for (index, color) in colors.enumerated() {
             adopted.mainPalette[index] = color
         }
-        let packed = packSubPalettes(tileColorSets(width: width, height: height, rgba: rgba), capacity: bank.opaqueColorsPerTile)
+        let packed = packSubPalettes(tileColorSets(width: width, height: height, rgba: rgba, bank: bank), capacity: bank.opaqueColorsPerTile)
         adopted.setPalettes(adoptedPalettes(packed, imageColors: colors, bank: bank), in: bank)
 
         let outcome = adopted.sheetImport(width: width, height: height, rgba: rgba, bank: bank, preferredPalette: 0)
@@ -40,12 +40,13 @@ private func imageColors(rgba: [UInt8]) -> [Color] {
     return colors
 }
 
-private func tileColorSets(width: Int, height: Int, rgba: [UInt8]) -> [[Color]] {
+private func tileColorSets(width: Int, height: Int, rgba: [UInt8], bank: Bank) -> [[Color]] {
     var colorSets: [[Color]] = []
     for row in 0..<(height / TileBank.tileSize) {
         for column in 0..<(width / TileBank.tileSize) {
             let pixels = imagePixels(of: SheetTile(column: column, row: row), width: width, rgba: rgba)
-            colorSets.append(distinctOpaqueColors(pixels))
+            let refusedForTransparency = !transparencyProblems(pixels, bank: bank).isEmpty
+            colorSets.append(refusedForTransparency ? [] : distinctOpaqueColors(pixels))
         }
     }
     return colorSets
