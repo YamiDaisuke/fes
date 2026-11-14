@@ -18,7 +18,7 @@ public func editAreaImage(tiles: TileBank, block: TileBlock, colors: [Color?], l
         }
     }
     if let cursor {
-        image.ringSquares(column: cursor.x, row: cursor.y, count: 1, in: layout)
+        image.ringSquares(column: cursor.x, row: cursor.y, count: 1, color: selectionColor, in: layout)
     }
     return image
 }
