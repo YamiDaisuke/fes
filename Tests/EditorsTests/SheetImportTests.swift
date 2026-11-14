@@ -3,38 +3,20 @@ import Console
 import Storage
 import Testing
 
-private struct TestSheet {
-    let width: Int
-    let height: Int
-    var rgba: [UInt8]
-
-    init(width: Int, height: Int) {
-        self.width = width
-        self.height = height
-        rgba = [UInt8](repeating: 0, count: width * height * 4)
-    }
-
-    init(width: Int, height: Int, color: Color) {
-        self.init(width: width, height: height)
-        for y in 0..<height {
-            for x in 0..<width {
-                set(x: x, y: y, color: color)
-            }
-        }
-    }
-
-    mutating func set(x: Int, y: Int, color: Color, alpha: UInt8 = 255) {
-        let offset = (y * width + x) * 4
-        rgba[offset..<(offset + 4)] = [color.red, color.green, color.blue, alpha]
-    }
-}
-
 private func defaultColor(palette: Int, index: Int) -> Color {
     MainPalette()[palette * 8 + index]
 }
 
 private func importing(_ sheet: TestSheet, into bank: Bank, cart: Cart = Cart(name: "Import", mainLua: ""), preferredPalette: Int = 0) -> SheetImport {
     cart.sheetImport(width: sheet.width, height: sheet.height, rgba: sheet.rgba, bank: bank, preferredPalette: preferredPalette)
+}
+
+private func importedTiles(_ outcome: SheetImport, bank: Bank) -> TileBank? {
+    guard case .imported(let art) = outcome else { return nil }
+    switch bank {
+    case .background: return art.backgroundTiles
+    case .sprite: return art.spriteTiles
+    }
 }
 
 private func problem(_ rule: SheetRule, column: Int, row: Int) -> SheetProblem {
@@ -47,7 +29,7 @@ private func imageProblem(_ rule: SheetRule) -> SheetImport {
 
 @Test func aFullSheetImportsEveryPixelExactlyInBothBanks() {
     for bank in Bank.allCases {
-        #expect(importing(patternSheet(for: bank), into: bank) == .imported(cartWithPatternTiles().tiles(in: bank)))
+        #expect(importedTiles(importing(patternSheet(for: bank), into: bank), bank: bank) == cartWithPatternTiles().tiles(in: bank))
     }
 }
 
@@ -70,7 +52,7 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     var sheet = TestSheet(width: 64, height: 16, color: defaultColor(palette: 0, index: 1))
     sheet.set(x: 7 * 8 + 2, y: 8 + 3, color: defaultColor(palette: 0, index: 5))
 
-    guard case .imported(let tiles) = importing(sheet, into: .background, cart: cartWithPatternTiles()) else {
+    guard let tiles = importedTiles(importing(sheet, into: .background, cart: cartWithPatternTiles()), bank: .background) else {
         Issue.record("refused")
         return
     }
@@ -80,6 +62,21 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     for tile in [8, 255] {
         #expect((0..<8).allSatisfy { y in tiles.colorIndices(tile: tile, y: y) == Array(repeating: 0, count: 8) })
     }
+}
+
+@Test func aPlainImportChangesOnlyThatBanksTiles() {
+    var cart = cartWithPatternTiles()
+    cart.mainPalette[63] = Color(rgb: 0x123456)
+    cart.spritePalettes.setMainPaletteIndex(63, palette: 7, index: 7)
+    let sheet = TestSheet(width: 8, height: 8, color: defaultColor(palette: 0, index: 1))
+
+    guard case .imported(var art) = importing(sheet, into: .sprite, cart: cart) else {
+        Issue.record("refused")
+        return
+    }
+    #expect(art.spriteTiles != cart.spriteTiles)
+    art.spriteTiles = cart.spriteTiles
+    #expect(art == cart.art)
 }
 
 @Test func anImageWithoutPixelsIsRefused() {
@@ -136,7 +133,7 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     sheet.set(x: 3, y: 12, color: Color(rgb: 0xffffff), alpha: 0)
 
     #expect(importing(sheet, into: .background) == .refused([problem(.transparentInBackground, column: 0, row: 1)]))
-    guard case .imported(let tiles) = importing(sheet, into: .sprite) else {
+    guard let tiles = importedTiles(importing(sheet, into: .sprite), bank: .sprite) else {
         Issue.record("refused")
         return
     }
@@ -172,7 +169,7 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     #expect(importing(eight, into: .sprite) == .refused([problem(.tooManyColors(count: 8, bank: .sprite), column: 0, row: 0)]))
 
     eight.set(x: 0, y: 0, color: MainPalette()[0], alpha: 0)
-    guard case .imported(let tiles) = importing(eight, into: .sprite) else {
+    guard let tiles = importedTiles(importing(eight, into: .sprite), bank: .sprite) else {
         Issue.record("refused")
         return
     }
@@ -190,7 +187,7 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     let sheet = TestSheet(width: 8, height: 8, color: defaultColor(palette: 2, index: 0))
 
     #expect(importing(sheet, into: .sprite) == .refused([problem(.fitsNoSubPalette(bank: .sprite), column: 0, row: 0)]))
-    #expect(importing(sheet, into: .background) == .imported(TileBank()))
+    #expect(importedTiles(importing(sheet, into: .background), bank: .background) == TileBank())
 }
 
 @Test func thePreferredPaletteWinsATieElseTheLowestThatFits() {
@@ -199,7 +196,7 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     let sheet = TestSheet(width: 8, height: 8, color: defaultColor(palette: 0, index: 2))
 
     func importedIndex(preferredPalette: Int) -> Int? {
-        guard case .imported(let tiles) = importing(sheet, into: .background, cart: cart, preferredPalette: preferredPalette) else { return nil }
+        guard let tiles = importedTiles(importing(sheet, into: .background, cart: cart, preferredPalette: preferredPalette), bank: .background) else { return nil }
         return tiles.colorIndex(tile: 0, x: 0, y: 0)
     }
     #expect(importedIndex(preferredPalette: 3) == 6)
@@ -211,7 +208,7 @@ private func patternSheet(for bank: Bank) -> TestSheet {
     cart.spritePalettes.setMainPaletteIndex(4 * 8 + 6, palette: 4, index: 2)
     let sheet = TestSheet(width: 8, height: 8, color: defaultColor(palette: 4, index: 6))
 
-    guard case .imported(let tiles) = importing(sheet, into: .sprite, cart: cart, preferredPalette: 4) else {
+    guard let tiles = importedTiles(importing(sheet, into: .sprite, cart: cart, preferredPalette: 4), bank: .sprite) else {
         Issue.record("refused")
         return
     }
