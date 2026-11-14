@@ -206,6 +206,43 @@ Depends: T25
 
 Accept: tests for building sub-palettes (tiles sharing a palette, sprite color 0 kept transparent, too many colors, too many palettes); Playwright imports with the option and the running cart shows the image's colors.
 
+## Phase 2 — M9 to M14
+
+Planned on 2026-11-14. The task text, the design behind each milestone and the review that produced the fixes are in `docs/PHASE2.md`; each task's issue copies its section from there. Phase 2 starts when T26 is `stage:ready` and runs **before** M4–M8 (the owner confirms the order, `docs/PHASE2.md` → Owner decisions).
+
+| Milestone | Task | Depends |
+|---|---|---|
+| M9 — Groundwork and fixes | T27 Boot when localStorage throws | none |
+| | T28 The same text rules for every way a cart arrives | none |
+| | T29 Sixty console frames per second on any display | none |
+| | T30 A stylesheet file and a generated offline file list | none |
+| | T31 One storage operation at a time | none |
+| M10 — Many Lua files | T32 Code files in the cart | T28 |
+| | T33 Save, load and import carts with many files | T32, T31 |
+| | T34 require | T32 |
+| | T35 File tabs in the code editor | T33, T34 |
+| | T36 Add, rename and delete code files | T35 |
+| M11 — The cart shelf | T37 Shelf view | T36, T31 |
+| | T38 New, duplicate and delete carts | T37 |
+| | T39 Cart label | T32 |
+| | T40 Labels on the shelf and D-pad selection | T38, T39 |
+| | T41 Boot into the shelf | T40 |
+| M12 — The device look | T42 Look foundation: tokens, type, the pixel grid | T41, T30 |
+| | T43 The control deck | T42 |
+| | T44 Screen bezel and controller | T43 |
+| | T45 Own dialogs instead of confirm and prompt | T43 |
+| | T46 The code view as an old computer | T43 |
+| | T47 Art view layout | T45, T26 |
+| | T48 Art view colors and tool icons | T47 |
+| | T49 Cartridges on the shelf | T45, T40 |
+| | T50 App icon, boot animation and theme color | T44 |
+| M13 — CRT filter | T51 Optional CRT filter | T44 |
+| M14 — The manual | T52 Manual page and Help view | T50, T30 |
+| | T53 The API reference moves to the manual | T52 |
+| | T54 Example carts, tested | T53 |
+| | T55 Guides: editors, carts and files | T53 |
+| | T56 Open an example in FES | T54 |
+
 ## M4 — Map and scene editor (outline)
 
 Second background layer and window layer in the PPU; map editor for both layers; scene objects (named entities with type and position, readable from Lua); `map` API; map sizes decided with the owner.
