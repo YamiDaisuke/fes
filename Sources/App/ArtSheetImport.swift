@@ -91,12 +91,12 @@ private func importSheet(from file: JSValue) async {
         let layout = tileSheetLayout(fittingWidth: reportSheetSide, height: reportSheetSide)
         let image = namesATile ? sheetReportImage(width: width, height: height, rgba: rgba, problems: problems, layout: layout) : nil
         showSheetReport(fileName: fileName, isJPEG: isJPEG, problems: problems, image: image)
-    case .imported(let tiles):
+    case .imported(let art):
         let question = "Replace all \(TileBank.tileCount) \(bankName) tiles with \(fileName)? Undo puts them back."
         guard JSObject.global.confirm!(question) == .boolean(true) else { return }
         dropArtStroke()
         let artBefore = cart.art
-        cart.setTiles(tiles, in: bank)
+        cart.art = art
         showStatus("Imported \(fileName) into the \(bankName) tiles.")
         recordArtEdit("sheet import", before: artBefore)
         redrawArtView()

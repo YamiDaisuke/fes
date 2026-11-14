@@ -2,13 +2,13 @@ import Console
 import Storage
 
 public enum SheetImport: Equatable {
-    case imported(TileBank)
+    case imported(CartArt)
     case refused([SheetProblem])
 }
 
 private let maxSheetSide = sheetColumns * TileBank.tileSize
 
-private enum ImagePixel: Equatable {
+enum ImagePixel: Equatable {
     case transparent
     case halfTransparent
     case opaque(Color)
@@ -16,12 +16,9 @@ private enum ImagePixel: Equatable {
 
 extension Cart {
     public func sheetImport(width: Int, height: Int, rgba: [UInt8], bank: Bank, preferredPalette: Int) -> SheetImport {
-        let sizeProblems = sheetSizeProblems(width: width, height: height)
-        if !sizeProblems.isEmpty {
-            return .refused(sizeProblems)
-        }
-        if rgba.count != width * height * 4 {
-            return .refused([SheetProblem(rule: .wrongByteCount(width: width, height: height, actual: rgba.count), tile: nil)])
+        let imageProblems = wholeImageProblems(width: width, height: height, rgba: rgba)
+        if !imageProblems.isEmpty {
+            return .refused(imageProblems)
         }
 
         let mainColors = Set((0..<MainPalette.colorCount).map { mainPalette[$0] })
@@ -47,7 +44,27 @@ extension Cart {
                 write(pixels, positions: positions, to: row * sheetColumns + column, in: &tiles)
             }
         }
-        return problems.isEmpty ? .imported(tiles) : .refused(problems)
+        guard problems.isEmpty else { return .refused(problems) }
+        var imported = self
+        imported.setTiles(tiles, in: bank)
+        return .imported(imported.art)
+    }
+}
+
+func wholeImageProblems(width: Int, height: Int, rgba: [UInt8]) -> [SheetProblem] {
+    let sizeProblems = sheetSizeProblems(width: width, height: height)
+    if !sizeProblems.isEmpty {
+        return sizeProblems
+    }
+    if rgba.count != width * height * 4 {
+        return [SheetProblem(rule: .wrongByteCount(width: width, height: height, actual: rgba.count), tile: nil)]
+    }
+    return []
+}
+
+extension Bank {
+    var opaqueColorsPerTile: Int {
+        self == .sprite ? PaletteBank.colorsPerPalette - 1 : PaletteBank.colorsPerPalette
     }
 }
 
@@ -65,7 +82,7 @@ public func sheetSizeProblems(width: Int, height: Int) -> [SheetProblem] {
     return problems
 }
 
-private func imagePixels(of tile: SheetTile, width: Int, rgba: [UInt8]) -> [ImagePixel] {
+func imagePixels(of tile: SheetTile, width: Int, rgba: [UInt8]) -> [ImagePixel] {
     var pixels: [ImagePixel] = []
     for y in 0..<TileBank.tileSize {
         for x in 0..<TileBank.tileSize {
@@ -80,7 +97,7 @@ private func imagePixels(of tile: SheetTile, width: Int, rgba: [UInt8]) -> [Imag
     return pixels
 }
 
-private func distinctOpaqueColors(_ pixels: [ImagePixel]) -> [Color] {
+func distinctOpaqueColors(_ pixels: [ImagePixel]) -> [Color] {
     var colors: [Color] = []
     for case .opaque(let color) in pixels where !colors.contains(color) {
         colors.append(color)
@@ -100,8 +117,7 @@ private func pixelProblems(_ pixels: [ImagePixel], colors: [Color], bank: Bank, 
     if !missing.isEmpty {
         rules.append(.colorsNotInMainPalette(missing))
     }
-    let colorLimit = bank == .sprite ? PaletteBank.colorsPerPalette - 1 : PaletteBank.colorsPerPalette
-    if colors.count > colorLimit {
+    if colors.count > bank.opaqueColorsPerTile {
         rules.append(.tooManyColors(count: colors.count, bank: bank))
     }
     return rules
