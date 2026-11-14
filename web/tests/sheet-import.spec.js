@@ -65,6 +65,18 @@ function imagePixels(width, height, colorAt) {
   return rgba;
 }
 
+async function nineMainColors(page) {
+  await page.getByRole("button", { name: "Palettes" }).click();
+  const mainColors = [];
+  for (const swatch of await page.locator("#art-main-colors button").all()) {
+    mainColors.push(await rgbOf(swatch));
+  }
+  await page.getByRole("button", { name: "Palettes" }).click();
+  const nineColors = [...new Map(mainColors.map((color) => [color.join(), color])).values()].slice(0, 9);
+  expect(nineColors).toHaveLength(9);
+  return nineColors;
+}
+
 const isTransparentPixel = (x, y) => (x + 2 * y) % 5 === 0;
 
 test.describe("with a cart that draws sprite tile 17", () => {
@@ -139,14 +151,7 @@ ephemeralTest("a 9-color tile is refused with a report naming it, and Close retu
   await openArtView(page);
   await page.getByRole("button", { name: "Background" }).click();
   const [backgroundColor] = await previewColors(page);
-  await page.getByRole("button", { name: "Palettes" }).click();
-  const mainColors = [];
-  for (const swatch of await page.locator("#art-main-colors button").all()) {
-    mainColors.push(await rgbOf(swatch));
-  }
-  await page.getByRole("button", { name: "Palettes" }).click();
-  const nineColors = [...new Map(mainColors.map((color) => [color.join(), color])).values()].slice(0, 9);
-  expect(nineColors).toHaveLength(9);
+  const nineColors = await nineMainColors(page);
   const colorAt = (x, y) => (x < 8 ? backgroundColor : nineColors[(x + y * 8) % 9]);
   const png = encodePNG(16, 8, imagePixels(16, 8, colorAt));
   const sheetBefore = await sheetImage(page);
@@ -172,6 +177,23 @@ ephemeralTest("a 9-color tile is refused with a report naming it, and Close retu
   await report.getByRole("button", { name: "Close" }).click();
   await expect(report).toBeHidden();
   await expect(page.getByRole("button", { name: "Import sheet" })).toBeFocused();
+});
+
+ephemeralTest("the report's sheet stays in view while a long problem list scrolls", async ({ page }) => {
+  await openArtView(page);
+  const nineColors = await nineMainColors(page);
+  const png = encodePNG(128, 128, imagePixels(128, 128, (x, y) => nineColors[(x + y * 8) % 9]));
+
+  await page.locator("#art-import-file").setInputFiles({ name: "busy.png", mimeType: "image/png", buffer: png });
+
+  const report = page.getByRole("dialog", { name: "Can't import busy.png" });
+  await expect(report.getByRole("listitem")).toHaveCount(256);
+  const body = page.locator("#art-import-report-body");
+  await body.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+  const bodyBox = await body.boundingBox();
+  const canvasBox = await report.locator("canvas").boundingBox();
+  expect(canvasBox.y).toBeGreaterThanOrEqual(bodyBox.y);
+  expect(canvasBox.y + canvasBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height);
 });
 
 ephemeralTest("a JPEG's report says to export PNG, and Escape closes it", async ({ page }) => {
