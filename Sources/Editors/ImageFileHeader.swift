@@ -34,6 +34,12 @@ private func pngSize(_ bytes: [UInt8]) -> (width: Int, height: Int)? {
     return (Int(width), Int(height))
 }
 
+private let pngEndChunk: [UInt8] = [0, 0, 0, 0] + Array("IEND".utf8) + [0xAE, 0x42, 0x60, 0x82]
+
+public func pngEndsWithEndChunk(_ fileBytes: [UInt8]) -> Bool {
+    fileBytes.suffix(pngEndChunk.count).elementsEqual(pngEndChunk)
+}
+
 private let jpegStartOfImage: [UInt8] = [0xFF, 0xD8]
 
 private func jpegSize(_ bytes: [UInt8]) -> (width: Int, height: Int)? {
