@@ -16,9 +16,12 @@ private enum ImagePixel: Equatable {
 
 extension Cart {
     public func sheetImport(width: Int, height: Int, rgba: [UInt8], bank: Bank, preferredPalette: Int) -> SheetImport {
-        let imageProblems = sheetImageProblems(width: width, height: height, byteCount: rgba.count)
-        if !imageProblems.isEmpty {
-            return .refused(imageProblems)
+        let sizeProblems = sheetSizeProblems(width: width, height: height)
+        if !sizeProblems.isEmpty {
+            return .refused(sizeProblems)
+        }
+        if rgba.count != width * height * 4 {
+            return .refused([SheetProblem(rule: .wrongByteCount(width: width, height: height, actual: rgba.count), tile: nil)])
         }
 
         let mainColors = Set((0..<MainPalette.colorCount).map { mainPalette[$0] })
@@ -48,7 +51,7 @@ extension Cart {
     }
 }
 
-private func sheetImageProblems(width: Int, height: Int, byteCount: Int) -> [SheetProblem] {
+public func sheetSizeProblems(width: Int, height: Int) -> [SheetProblem] {
     if width < 1 || height < 1 {
         return [SheetProblem(rule: .noPixels, tile: nil)]
     }
@@ -58,9 +61,6 @@ private func sheetImageProblems(width: Int, height: Int, byteCount: Int) -> [She
     }
     if width > maxSheetSide || height > maxSheetSide {
         problems.append(SheetProblem(rule: .tooLarge(width: width, height: height), tile: nil))
-    }
-    if problems.isEmpty && byteCount != width * height * 4 {
-        problems.append(SheetProblem(rule: .wrongByteCount(width: width, height: height, actual: byteCount), tile: nil))
     }
     return problems
 }

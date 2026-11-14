@@ -20,7 +20,7 @@ public func tileSheetImage(tiles: TileBank, colors: [Color?], block: TileBlock, 
     }
 
     let first = block.firstTile
-    image.ringSquares(column: first % sheetColumns, row: first / sheetColumns, count: block.size.rawValue, in: layout)
+    image.ringSquares(column: first % sheetColumns, row: first / sheetColumns, count: block.size.rawValue, color: selectionColor, in: layout)
     return image
 }
 
