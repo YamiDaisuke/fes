@@ -72,23 +72,31 @@ test("a reload straight after a picker value restores that color", async ({ page
   await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
 });
 
-ephemeralTest("Reset asks first, then puts back Z64 and is disabled until a color changes again", async ({ page }) => {
+ephemeralTest("Reset puts back Z64 without asking, and Undo brings the colors back", async ({ page }) => {
   await openPalettes(page);
   const reset = button(page, "Reset main palette");
   await expect(reset).toBeDisabled();
   await page.getByRole("button", { name: /^Background palette 0, color 3:/ }).click();
+  await picker(page).fill("#123456");
   await picker(page).fill("#ff0000");
   await expect(reset).toBeEnabled();
+  const dialogs = [];
+  page.on("dialog", (dialog) => {
+    dialogs.push(dialog.message());
+    dialog.dismiss();
+  });
 
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await reset.click();
-  await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
-
-  page.once("dialog", (dialog) => dialog.accept());
   await reset.click();
   await expect(button(page, "Main color 3, #c058cc")).toBeVisible();
   await expect(picker(page)).toHaveValue("#c058cc");
   await expect(reset).toBeDisabled();
+  await expect(page.locator("#cart-status")).toHaveText("Reset the main palette.");
+  expect(dialogs).toEqual([]);
+
+  await page.getByRole("button", { name: "Undo main palette reset" }).click();
+  await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
+  await page.getByRole("button", { name: "Undo main color 3" }).click();
+  await expect(button(page, "Main color 3, #c058cc")).toBeVisible();
 });
 
 ephemeralTest("sprite color 0 disables the main color picker", async ({ page }) => {
