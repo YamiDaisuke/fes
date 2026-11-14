@@ -98,7 +98,7 @@
     #art-tools button { min-width: 44px; min-height: 44px; font: inherit; touch-action: manipulation; }
     #art-tools button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
     #art-tools button[aria-disabled="true"] { opacity: 0.4; }
-    #art-palettes-toggle, #art-import { margin-bottom: 16px; }
+    #art-palettes-toggle, #art-import-colors { margin-bottom: 16px; }
     #art-import-report { max-height: 90vh; overflow: hidden; flex-direction: column; font: 16px system-ui, sans-serif; }
     #art-import-report[open] { display: flex; }
     #art-import-report h2 { margin: 0 0 8px; font-size: 18px; }
@@ -171,6 +171,7 @@
         <button type="button" data-bank="sprite">Sprites</button>
       </div>
       <button type="button" id="art-import">Import sheet</button>
+      <button type="button" id="art-import-colors">Import sheet and colors</button>
       <input type="file" id="art-import-file" accept="image/png,image/jpeg" hidden>
       <div id="art-palette" role="group" aria-label="Preview palette">
         <button type="button" data-palette="0" aria-label="Palette 0">0</button>
