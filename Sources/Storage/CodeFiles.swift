@@ -27,7 +27,7 @@ public func codeFileNameProblem(_ name: String) -> String? {
     return nil
 }
 
-func endsInLua(_ name: String) -> Bool {
+public func endsInLua(_ name: String) -> Bool {
     name.lowercased().hasSuffix(".lua")
 }
 

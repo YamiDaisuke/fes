@@ -74,7 +74,18 @@ private func saveCart() async {
     lastSavedCart = saving
     keepRecoveryCopy()
     showStatus("Saved \(name).")
+    await removeCodeFilesNotIn(saving, folder: folder)
     try? await refreshCartList()
+}
+
+private func removeCodeFilesNotIn(_ saved: Cart, folder: String) async {
+    do throws(JSException) {
+        for file in try await names(fromStorage: storage.listCartFiles(folder)) where endsInLua(file) && !saved.fileNames.contains(file) {
+            _ = try await awaitStorage(storage.removeCartFile(folder, file))
+        }
+    } catch {
+        showStatus("Saved \(saved.name), but can't remove deleted code files: \(error.thrownValue)")
+    }
 }
 
 func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
@@ -87,7 +98,7 @@ func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
 }
 
 func refreshCartList() async throws(JSException) {
-    let folders = JSArray(try await awaitStorage(storage.listCartFolders()).object!)!.map { string(from: $0)! }
+    let folders = try await names(fromStorage: storage.listCartFolders())
     var entries: [(folder: String, name: String)] = []
     for folder in folders {
         entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
@@ -117,8 +128,15 @@ private func loadCart(folder: String) async {
 }
 
 func readSavedCart(folder: String) async -> Cart? {
+    let listed: [String]
+    do {
+        listed = try await names(fromStorage: storage.listCartFiles(folder))
+    } catch {
+        showStatus("Can't read the cart's folder: \(error.thrownValue)")
+        return nil
+    }
     var files: [String: String] = [:]
-    for file in Cart.fixedFileNames {
+    for file in listed where Cart.fixedFileNames.contains(file) || endsInLua(file) {
         do {
             files[file] = string(from: try await awaitStorage(storage.readCartFile(folder, file)))
         } catch {
@@ -159,6 +177,10 @@ private func savedCartName(folder: String) async -> String? {
 
 private func awaitStorage(_ promise: JSValue) async throws(JSException) -> JSValue {
     try await JSPromise(promise.object!)!.value
+}
+
+private func names(fromStorage promise: JSValue) async throws(JSException) -> [String] {
+    JSArray(try await awaitStorage(promise).object!)!.map { string(from: $0)! }
 }
 
 func newFolderName() -> String {

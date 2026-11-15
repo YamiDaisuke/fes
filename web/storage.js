@@ -35,6 +35,24 @@ export async function writeCartFile(folder, name, text) {
   await writable.close();
 }
 
+export async function listCartFiles(folder) {
+  const folderHandle = await (await cartsDirectory()).getDirectoryHandle(folder);
+  const names = [];
+  for await (const [name, handle] of folderHandle.entries()) {
+    if (handle.kind === "file") names.push(name);
+  }
+  return names;
+}
+
+export async function removeCartFile(folder, name) {
+  const folderHandle = await (await cartsDirectory()).getDirectoryHandle(folder);
+  try {
+    await folderHandle.removeEntry(name);
+  } catch (error) {
+    if (error.name !== "NotFoundError") throw error;
+  }
+}
+
 export async function requestPersistentStorage() {
   return navigator.storage.persist();
 }
