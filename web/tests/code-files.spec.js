@@ -72,6 +72,12 @@ test("an error's mark follows its file across tab switches", async ({ page }) =>
 
   await tab(page, "player.lua").click();
   await expect(page.locator(".cm-lintRange-error")).toHaveCount(1);
+
+  await tab(page, "main.lua").click();
+  await typeCode(page, "y = = 2");
+  await expect(page.locator("#code-error")).toHaveText("main.lua:1: unexpected symbol near '='");
+  await tab(page, "player.lua").click();
+  await expect(page.locator(".cm-lintRange-error")).toHaveCount(0);
 });
 
 test("arrow keys on the tabs switch files and wrap at the ends", async ({ page }) => {
