@@ -36,7 +36,8 @@ func showCodeInEditor(_ code: String) {
 func runCart() {
     dropArtStroke()
     checkSyntaxNow()
-    runningCart = RunningCart(mainLua: cart.mainLua, ppu: cart.ppu)
+    let modules = Dictionary(uniqueKeysWithValues: cart.codeFiles.dropFirst().map { ($0.name, $0.text) })
+    runningCart = RunningCart(mainLua: cart.mainLua, modules: modules, ppu: cart.ppu)
     isErrorShown = false
     document.getElementById("cart-error").textContent = ""
     show(.game)

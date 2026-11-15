@@ -10,20 +10,23 @@ public final class RunningCart {
     var nextSpriteSlot = 0
     private(set) var input = Input()
     private let meter = UnsafeMutablePointer<BudgetMeter>.allocate(capacity: 1)
+    let modules: [String: String]
     private let state: OpaquePointer
 
-    public init(mainLua: String, ppu: PPU = PPU()) {
+    public init(mainLua: String, modules: [String: String] = [:], ppu: PPU = PPU()) {
         self.ppu = ppu
+        self.modules = modules
         meter.initialize(to: BudgetMeter())
         state = newStateWithinBudget(meter: meter)
         openSandbox(state)
         registerConsoleAPI(state, cart: self)
+        registerRequire(state, cart: self)
         lua_pushcclosure(state, appendTraceback, 0)
         lua_getglobal(state, "_G")
 
         meter.pointee.startPeriod()
         startEnforcingCPUBudget(state)
-        let loadStatus = loadMainLua(state, mainLua, meter: meter)
+        let loadStatus = loadCode(state, mainLua, fileName: "main.lua", meter: meter)
         guard loadStatus == LUA_OK else {
             stop(status: loadStatus)
             return

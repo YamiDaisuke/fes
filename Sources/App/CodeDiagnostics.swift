@@ -5,12 +5,12 @@ nonisolated(unsafe) private var pendingSyntaxCheck: JSTimer?
 nonisolated(unsafe) private var shownCodeError = ""
 
 func checkSyntaxSoon() {
-    pendingSyntaxCheck = JSTimer(millisecondsDelay: 500) { showErrorInCode(syntaxError(inMainLua: cart.mainLua)) }
+    pendingSyntaxCheck = JSTimer(millisecondsDelay: 500) { showErrorInCode(syntaxError(inLua: cart.mainLua, named: "main.lua")) }
 }
 
 func checkSyntaxNow() {
     pendingSyntaxCheck = nil
-    showErrorInCode(syntaxError(inMainLua: cart.mainLua))
+    showErrorInCode(syntaxError(inLua: cart.mainLua, named: "main.lua"))
 }
 
 func showRuntimeErrorInCode(_ error: String) {
@@ -31,4 +31,11 @@ func showErrorInCode(_ error: String?) {
     } else {
         _ = codeEditor.clearError()
     }
+}
+
+private func mainLuaLine(inError error: String) -> Int? {
+    guard let position = codePosition(inError: error, files: cart.codeFiles.map(\.name)), position.file == "main.lua" else {
+        return nil
+    }
+    return position.line
 }

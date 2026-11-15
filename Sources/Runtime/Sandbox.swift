@@ -4,6 +4,7 @@ private let removeUnsafeGlobals = "dofile, loadfile, print, warn, string.dump = 
 // LUA_REGISTRYINDEX and lua_upvalueindex(1) spelled out: Swift doesn't import those C macros, and sees luaconf.h's LUAI_MAXSTACK, not fes_lua_user.h's (decision 012).
 let luaRegistryIndex = -FES_LUA_STACK_SLOTS - 1000
 let firstUpvalueIndex = luaRegistryIndex - 1
+let secondUpvalueIndex = luaRegistryIndex - 2
 
 func openSandbox(_ state: OpaquePointer) {
     luaL_requiref(state, "_G", luaopen_base, 1)
