@@ -1,5 +1,5 @@
 const version = "BUILD_VERSION";
-const files = ["./", "boot.js", "App.wasm", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-512.png"];
+const files = PRECACHE_FILES;
 const cachePrefix = `fes ${self.registration.scope} `;
 const cacheName = cachePrefix + version;
 const precachedURLs = new Set(files.map((file) => new URL(file, self.registration.scope).href));
