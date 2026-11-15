@@ -309,7 +309,7 @@ test("a code file that can't be removed leaves the cart saved and says so", asyn
   await writeIntoSavedCart(page, { "old.lua": "return 1\n" });
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator("#cart-status")).toHaveText(/^Saved Demo, but can't remove deleted code files: /);
+  await expect(page.locator("#cart-status")).toHaveText(/^Saved Demo, but can't remove old\.lua, which the cart no longer has: /);
   const questions = [];
   page.on("dialog", (dialog) => {
     questions.push(dialog.message());

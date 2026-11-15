@@ -79,12 +79,19 @@ private func saveCart() async {
 }
 
 private func removeCodeFilesNotIn(_ saved: Cart, folder: String) async {
+    let files: [String]
     do throws(JSException) {
-        for file in try await names(fromStorage: storage.listCartFiles(folder)) where endsInLua(file) && !saved.fileNames.contains(file) {
-            _ = try await awaitStorage(storage.removeCartFile(folder, file))
-        }
+        files = try await names(fromStorage: storage.listCartFiles(folder))
     } catch {
-        showStatus("Saved \(saved.name), but can't remove deleted code files: \(error.thrownValue)")
+        showStatus("Saved \(saved.name), but can't look for code files the cart no longer has: \(error.thrownValue)")
+        return
+    }
+    for file in files where endsInLua(file) && !saved.fileNames.contains(file) {
+        do throws(JSException) {
+            _ = try await awaitStorage(storage.removeCartFile(folder, file))
+        } catch {
+            showStatus("Saved \(saved.name), but can't remove \(file), which the cart no longer has: \(error.thrownValue)")
+        }
     }
 }
 
