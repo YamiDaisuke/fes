@@ -100,7 +100,7 @@ test("Save works from the art view", async ({ page }) => {
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
 });
 
-test("loading a cart while the art view is shown redraws the sheet in its colors", async ({ page }) => {
+test("the art view shows a loaded cart in its own colors", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
   await page.getByRole("button", { name: "Code" }).click();
@@ -411,7 +411,7 @@ test("Run during a held stroke writes the recovery copy before the cart starts",
   expect(await page.evaluate(() => viewsAtWrite)).toEqual(["art"]);
 });
 
-test("a stroke cancelled after another cart loads leaves that cart's art alone", async ({ page }) => {
+test("a stroke cut short by opening the shelf, cancelled after a cart loads from there, leaves that cart's art alone", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
