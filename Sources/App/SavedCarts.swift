@@ -28,7 +28,6 @@ func startSavedCarts() {
         } catch {
             saveButton.disabled = .boolean(true)
             document.getElementById("shelf-import").disabled = .boolean(true)
-            showShelfEntries([])
             savingIsUnavailable = true
         }
         await offerRecoveryCopy(recoveryCopyText)

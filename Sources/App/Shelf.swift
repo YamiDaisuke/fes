@@ -49,6 +49,7 @@ func startShelf() {
     _ = shelfList.addEventListener("click", shelfListClicked)
     _ = playButton.addEventListener("click", playClicked)
     _ = editButton.addEventListener("click", editClicked)
+    showShelfEntries([])
 }
 
 func showShelf() {
@@ -67,7 +68,7 @@ func refreshShelf() async throws(JSException) {
     showShelfEntries(entries)
 }
 
-func showShelfEntries(_ savedCarts: [(folder: String, name: String)]) {
+private func showShelfEntries(_ savedCarts: [(folder: String, name: String)]) {
     let entries = [(folder: demoFolder, name: "Built-in demo")] + savedCarts
     if !entries.contains(where: { $0.folder == selectedShelfFolder }) {
         selectedShelfFolder = nil

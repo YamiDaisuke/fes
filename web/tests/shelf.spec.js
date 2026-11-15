@@ -116,3 +116,18 @@ test("cancelling the unsaved-changes question on Play keeps the edit and stays o
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator(".cm-content")).toHaveText("-- edited");
 });
+
+test("Carts tapped while saved carts are still being listed shows the built-in demo", async ({ page }) => {
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.addInitScript(() => {
+    const getDirectory = navigator.storage.getDirectory.bind(navigator.storage);
+    navigator.storage.getDirectory = () => new Promise((resolve) => setTimeout(() => resolve(getDirectory()), 3000));
+  });
+  await page.goto("/");
+  await expect(page.locator("#cart-name")).toHaveValue("Demo");
+
+  await page.getByRole("button", { name: "Carts" }).click();
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeFocused();
+  expect(pageErrors).toEqual([]);
+});
