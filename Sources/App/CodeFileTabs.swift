@@ -69,8 +69,9 @@ func buildCodeFileTabs() {
 private func markShownCodeFileTab() {
     for file in cart.codeFiles {
         let isShown = file.name == shownCodeFile
-        _ = tab(showing: file.name).setAttribute("aria-selected", isShown ? "true" : "false")
-        tab(showing: file.name).tabIndex = .number(isShown ? 0 : -1)
+        let button = tab(showing: file.name)
+        _ = button.setAttribute("aria-selected", isShown ? "true" : "false")
+        button.tabIndex = .number(isShown ? 0 : -1)
     }
     _ = tab(showing: shownCodeFile).scrollIntoView(["block": "nearest", "inline": "nearest"])
 }
