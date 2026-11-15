@@ -23,7 +23,7 @@ nonisolated(unsafe) private let importFileChosen = JSClosure { _ in
         return .undefined
     }
     importInput.value = ""
-    Task { await importCart(from: file) }
+    afterEarlierStorageWork { await importCart(from: file) }
     return .undefined
 }
 
