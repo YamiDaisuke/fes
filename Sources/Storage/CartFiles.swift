@@ -107,3 +107,7 @@ public func nameProblem(_ name: String) -> String? {
     }
     return nil
 }
+
+public func copyName(of name: String) -> String {
+    String(name.prefix(longestName - " copy".count)) + " copy"
+}

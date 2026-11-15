@@ -145,6 +145,28 @@ private func refusal(cartJSON: String) -> String? {
     #expect(refusal(cart.files) == "cart.json: the name is longer than 64 characters")
 }
 
+@Test func copyNameAppendsCopyToAShortName() {
+    #expect(copyName(of: "Space Cats") == "Space Cats copy")
+}
+
+@Test func copyNameCutsALongNameToSixtyFourCharacters() {
+    for length in [60, 64] {
+        let copy = copyName(of: String(repeating: "a", count: length))
+        #expect(copy == String(repeating: "a", count: 59) + " copy")
+        #expect(nameProblem(copy) == nil)
+    }
+}
+
+@Test func copyNameCountsCharactersNotScalars() {
+    let accentedE = "e\u{301}"
+    let waveWithSkinTone = "\u{1F44B}\u{1F3FD}"
+    for character in [accentedE, waveWithSkinTone] {
+        let copy = copyName(of: String(repeating: character, count: 64))
+        #expect(copy == String(repeating: character, count: 59) + " copy")
+        #expect(nameProblem(copy) == nil)
+    }
+}
+
 @Test func nameWithALineBreakIsRefused() {
     #expect(
         refusal(cartJSON: "{\"format\": 1, \"name\": \"a\\nb\"}")
