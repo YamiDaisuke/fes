@@ -7,7 +7,6 @@ nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) private let storage = JSObject.global.fesStorage
 nonisolated(unsafe) let nameInput = document.getElementById("cart-name")
 nonisolated(unsafe) private let saveButton = document.getElementById("cart-save")
-nonisolated(unsafe) private let cartList = document.getElementById("cart-list")
 nonisolated(unsafe) private let cartStatus = document.getElementById("cart-status")
 nonisolated(unsafe) private var lastStorageTask: Task<Void, Never>?
 
@@ -16,27 +15,20 @@ nonisolated(unsafe) private let saveClicked = JSClosure { _ in
     return .undefined
 }
 
-nonisolated(unsafe) private let cartListClicked = JSClosure { arguments in
-    if let button = arguments[0].target.closest("[data-folder]").object, let folder = string(from: button.dataset.folder) {
-        afterEarlierStorageWork { await loadCart(folder: folder) }
-    }
-    return .undefined
-}
-
 func startSavedCarts() {
     showCartName()
     _ = saveButton.addEventListener("click", saveClicked)
-    _ = cartList.addEventListener("click", cartListClicked)
     // Read before the first await, so edits made while the carts are listed can't replace the copy before it is offered.
     let recoveryCopyText = readRecoveryCopyText()
     Task { _ = try? await awaitStorage(storage.requestPersistentStorage()) }
     afterEarlierStorageWork {
         var savingIsUnavailable = false
         do {
-            try await refreshCartList()
+            try await refreshShelf()
         } catch {
             saveButton.disabled = .boolean(true)
-            document.getElementById("cart-import").disabled = .boolean(true)
+            document.getElementById("shelf-import").disabled = .boolean(true)
+            showShelfEntries([])
             savingIsUnavailable = true
         }
         await offerRecoveryCopy(recoveryCopyText)
@@ -78,7 +70,7 @@ private func saveCart() async {
     lastSavedCart = saving
     keepRecoveryCopy()
     showStatus("Saved \(name).")
-    try? await refreshCartList()
+    try? await refreshShelf()
 }
 
 private func removeCodeFiles(notIn saving: Cart, folder: String) async -> String? {
@@ -107,34 +99,21 @@ func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
     _ = try await awaitStorage(storage.writeCartFile(folder, "cart.json", cartJSON))
 }
 
-func refreshCartList() async throws(JSException) {
-    let folders = try await names(fromStorage: storage.listCartFolders())
-    var entries: [(folder: String, name: String)] = []
-    for folder in folders {
-        entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
-    }
-    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
-    cartList.textContent = ""
-    for entry in entries {
-        let button = document.createElement("button")
-        button.type = "button"
-        button.dataset.folder = .string(entry.folder)
-        button.textContent = .string(entry.name)
-        let item = document.createElement("li")
-        _ = item.append(button)
-        _ = cartList.append(item)
-    }
-}
-
-private func loadCart(folder: String) async {
+func loadCart(folder: String) async -> Bool {
     if cart != lastSavedCart && JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") != .boolean(true) {
-        return
+        return false
+    }
+    if folder == demoFolder {
+        openCart(demoCart(), folder: nil)
+        showStatus("Opened the built-in demo.")
+        return true
     }
     guard let loaded = await readSavedCart(folder: folder) else {
-        return
+        return false
     }
     openCart(loaded, folder: folder)
     showStatus("Loaded \(loaded.name).")
+    return true
 }
 
 func readSavedCart(folder: String) async -> Cart? {
@@ -162,7 +141,7 @@ func readSavedCart(folder: String) async -> Cart? {
     }
 }
 
-func openCart(_ opened: Cart, folder: String) {
+func openCart(_ opened: Cart, folder: String?) {
     dropArtStroke()
     cart = opened
     clearArtHistory()
@@ -178,7 +157,7 @@ func showCartName() {
     nameInput.value = .string(cart.name)
 }
 
-private func savedCartName(folder: String) async -> String? {
+func savedCartName(folder: String) async -> String? {
     guard let value = try? await awaitStorage(storage.readCartFile(folder, "cart.json")), let text = string(from: value) else {
         return nil
     }
@@ -189,7 +168,7 @@ private func awaitStorage(_ promise: JSValue) async throws(JSException) -> JSVal
     try await JSPromise(promise.object!)!.value
 }
 
-private func names(fromStorage promise: JSValue) async throws(JSException) -> [String] {
+func names(fromStorage promise: JSValue) async throws(JSException) -> [String] {
     JSArray(try await awaitStorage(promise).object!)!.map { string(from: $0)! }
 }
 

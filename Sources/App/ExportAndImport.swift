@@ -7,8 +7,14 @@ nonisolated(unsafe) private let files = JSObject.global.fesFiles
 nonisolated(unsafe) private let importInput = document.getElementById("cart-import-file")
 
 nonisolated(unsafe) private let exportClicked = JSClosure { _ in
-    // Not in a Task: navigator.share must be called while the click's user activation lasts.
-    exportCart()
+    // navigator.share needs the click's user activation; reading one cart takes milliseconds, well inside WebKit's few seconds.
+    if let folder = selectedShelfFolder, folder != demoFolder {
+        afterEarlierStorageWork {
+            if let saved = await readSavedCart(folder: folder) {
+                export(saved)
+            }
+        }
+    }
     return .undefined
 }
 
@@ -28,25 +34,18 @@ nonisolated(unsafe) private let importFileChosen = JSClosure { _ in
 }
 
 func startExportAndImport() {
-    _ = document.getElementById("cart-export").addEventListener("click", exportClicked)
-    _ = document.getElementById("cart-import").addEventListener("click", importClicked)
+    _ = document.getElementById("shelf-export").addEventListener("click", exportClicked)
+    _ = document.getElementById("shelf-import").addEventListener("click", importClicked)
     _ = importInput.addEventListener("change", importFileChosen)
 }
 
-private func exportCart() {
-    let name = string(from: nameInput.value) ?? ""
-    if let problem = nameProblem(name) {
-        showStatus("Can't export: \(problem)")
-        return
-    }
-    var exporting = cart
-    exporting.name = name
+private func export(_ exporting: Cart) {
     let archive = exporting.fesArchive
     guard archive.count <= Cart.largestArchiveBytes else {
         showStatus("Can't export: the cart is larger than 8 MiB, so it couldn't be imported")
         return
     }
-    let fileName = fesFileName(forCartName: name)
+    let fileName = fesFileName(forCartName: exporting.name)
     let saving = JSPromise(files.saveFileToDevice(fileName, JSTypedArray<UInt8>(archive)).object!)!
     Task {
         do throws(JSException) {
@@ -86,5 +85,5 @@ private func importCart(from file: JSValue) async {
         return
     }
     showStatus("Imported \(imported.name) as a new cart.")
-    try? await refreshCartList()
+    try? await refreshShelf()
 }

@@ -11,5 +11,6 @@ canvas.height = .number(Double(Screen.height))
 lastSavedCart = cart
 startSavedCarts()
 startExportAndImport()
+startShelf()
 startCodeAndGameViews()
 startArtView()
