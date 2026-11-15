@@ -1,5 +1,6 @@
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
+import { storedZip } from "./stored-zip.js";
 
 const cartFileNames = ["cart.json", "main.lua", "palettes.pal", "background.tiles", "sprites.tiles", "main-palette.hex", "map.map"];
 
@@ -47,6 +48,24 @@ test("an exported cart imports as a new cart with identical files, leaving the o
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Unsaved.");
   expect(await savedFolders(page)).toHaveLength(2);
+});
+
+test("a cart with code files other than main.lua is refused at import, naming the first, until Load can read them", async ({ page }) => {
+  await openBooted(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  const files = await page.evaluate(async (fileNames) => {
+    const [folder] = await fesStorage.listCartFolders();
+    return Object.fromEntries(await Promise.all(fileNames.map(async (name) => [name, await fesStorage.readCartFile(folder, name)])));
+  }, cartFileNames);
+
+  await page.locator("#cart-import-file").setInputFiles({
+    name: "two.fes",
+    mimeType: "application/zip",
+    buffer: storedZip({ ...files, "zed.lua": "return 2\n", "player.lua": "return 1\n" }),
+  });
+  await expect(page.locator("#cart-status")).toHaveText("Can't import two.fes: player.lua: this FES can't open carts with more than main.lua yet");
+  expect(await savedFolders(page)).toHaveLength(1);
 });
 
 test("importing a file that isn't a .fes reports why and saves nothing", async ({ page }) => {

@@ -79,6 +79,10 @@ private func importCart(from file: JSValue) async {
         showStatus("Can't import \(fileName): \(error)")
         return
     }
+    guard imported.codeFiles.count == 1 else {
+        showStatus("Can't import \(fileName): \(imported.codeFiles[1].name): this FES can't open carts with more than main.lua yet")
+        return
+    }
     do {
         try await writeCart(imported, folder: newFolderName())
     } catch {
