@@ -117,17 +117,58 @@ test("cancelling the unsaved-changes question on Play keeps the edit and stays o
   await expect(page.locator(".cm-content")).toHaveText("-- edited");
 });
 
+function delayStorage(page, milliseconds) {
+  return page.addInitScript((milliseconds) => {
+    // In WebKit a patch on navigator.storage itself is lost on some later navigations; one on the prototype isn't.
+    const getDirectory = StorageManager.prototype.getDirectory;
+    StorageManager.prototype.getDirectory = function () {
+      return new Promise((resolve) => setTimeout(() => resolve(getDirectory.call(this)), milliseconds));
+    };
+  }, milliseconds);
+}
+
 test("Carts tapped while saved carts are still being listed shows the built-in demo", async ({ page }) => {
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.addInitScript(() => {
-    const getDirectory = navigator.storage.getDirectory.bind(navigator.storage);
-    navigator.storage.getDirectory = () => new Promise((resolve) => setTimeout(() => resolve(getDirectory()), 3000));
-  });
+  await delayStorage(page, 3000);
   await page.goto("/");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
 
   await page.getByRole("button", { name: "Carts" }).click();
   await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeFocused();
   expect(pageErrors).toEqual([]);
+});
+
+test("the shelf entry with focus keeps it when the boot listing finishes", async ({ page }) => {
+  await saveCodeAs(page, "Mine", "-- mine");
+  await delayStorage(page, 3000);
+  await page.reload();
+  await expect(page.locator("#cart-name")).toHaveValue("Demo");
+
+  await page.getByRole("button", { name: "Carts" }).click();
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeFocused();
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Mine" })).toBeAttached({ timeout: 15000 });
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeFocused();
+});
+
+test("the shelf entry with focus keeps it when a save finishes", async ({ page }) => {
+  await saveCodeAs(page, "Mine", "-- mine");
+  await page.locator("#cart-name").fill("Renamed");
+  await openShelf(page);
+  await page.locator("#shelf-list").getByRole("button", { name: "Mine" }).focus();
+
+  await page.locator("#cart-save").dispatchEvent("click");
+  await expect(page.locator("#cart-status")).toHaveText("Saved Renamed.");
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Renamed" })).toBeFocused();
+});
+
+test("a save finishing while focus is outside the shelf list leaves focus where it is", async ({ page }) => {
+  await saveCodeAs(page, "Mine", "-- mine");
+  await page.locator("#cart-name").fill("Renamed");
+  await openShelf(page);
+  await page.getByRole("button", { name: "Import" }).focus();
+
+  await page.locator("#cart-save").dispatchEvent("click");
+  await expect(page.locator("#cart-status")).toHaveText("Saved Renamed.");
+  await expect(page.getByRole("button", { name: "Import" })).toBeFocused();
 });

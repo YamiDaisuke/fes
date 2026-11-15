@@ -53,6 +53,10 @@ func startShelf() {
 
 func showShelf() {
     show(.shelf)
+    focusShelfSelection()
+}
+
+private func focusShelfSelection() {
     let selected = shelfList.querySelector("[aria-pressed=\"true\"]")
     _ = (selected.isNull ? shelfList.querySelector("button") : selected).focus()
 }
@@ -66,17 +70,28 @@ private func showShelfEntries(_ savedCarts: [(folder: String, name: String)]) {
     if !entries.contains(where: { $0.folder == selectedShelfFolder }) {
         selectedShelfFolder = nil
     }
+    let listHadFocus = shelfList.contains(document.activeElement).boolean == true
+    let focusedFolder = listHadFocus ? string(from: document.activeElement.dataset.folder) : nil
+    var buttonToFocus: JSValue?
     shelfList.textContent = ""
     for entry in entries {
         let button = document.createElement("button")
         button.type = "button"
         button.dataset.folder = .string(entry.folder)
         button.textContent = .string(entry.name)
+        if entry.folder == focusedFolder {
+            buttonToFocus = button
+        }
         let item = document.createElement("li")
         _ = item.append(button)
         _ = shelfList.append(item)
     }
     showShelfSelection()
+    if let buttonToFocus {
+        _ = buttonToFocus.focus()
+    } else if listHadFocus {
+        focusShelfSelection()
+    }
 }
 
 private func selectShelfEntry(folder: String) {
