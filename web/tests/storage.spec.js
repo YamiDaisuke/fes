@@ -300,24 +300,25 @@ test("Save removes a code file the cart no longer has from its folder and leaves
   await expect.poll(listFolder).toEqual(["background.tiles", "cart.json", "main-palette.hex", "main.lua", "map.map", "notes.txt", "palettes.pal", "sprites.tiles"]);
 });
 
-test("a code file that can't be removed leaves the cart saved and says so", async ({ page }) => {
+test("a code file that can't be removed stops the save before anything is written", async ({ page }) => {
   await page.addInitScript(() => {
     FileSystemDirectoryHandle.prototype.removeEntry = () => Promise.reject(new Error("removal refused"));
   });
   await openBooted(page);
   await saveAs(page, "Demo");
   await writeIntoSavedCart(page, { "old.lua": "return 1\n" });
+  const readSaved = () =>
+    page.evaluate(async () => {
+      const [folder] = await fesStorage.listCartFolders();
+      return Promise.all(["cart.json", "main.lua"].map((name) => fesStorage.readCartFile(folder, name)));
+    });
+  const earlierSave = await readSaved();
 
+  await typeCode(page, "x = 1");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator("#cart-status")).toHaveText(/^Saved Demo, but can't remove old\.lua, which the cart no longer has: /);
-  const questions = [];
-  page.on("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.dismiss();
-  });
-  await page.locator("#cart-list").getByRole("button", { name: "Demo" }).click();
-  await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
-  expect(questions).toEqual([]);
+  await expect(page.locator("#cart-status")).toHaveText(/^Can't save: can't remove old\.lua, which the cart no longer has: /);
+  expect(await readSaved()).toEqual(earlierSave);
+  await cancelLoadAfterQuestion(page, "Demo", "Discard unsaved changes to Demo?");
 });
 
 ephemeralTest("without OPFS saving is unavailable and the console still boots cleanly", async ({ page }) => {

@@ -65,6 +65,10 @@ private func saveCart() async {
     cart.name = name
     let folder = cartFolder ?? newFolderName()
     cartFolder = folder
+    if let problem = await removeCodeFiles(notIn: saving, folder: folder) {
+        showStatus("Can't save: \(problem)")
+        return
+    }
     do {
         try await writeCart(saving, folder: folder)
     } catch {
@@ -74,25 +78,24 @@ private func saveCart() async {
     lastSavedCart = saving
     keepRecoveryCopy()
     showStatus("Saved \(name).")
-    await removeCodeFilesNotIn(saving, folder: folder)
     try? await refreshCartList()
 }
 
-private func removeCodeFilesNotIn(_ saved: Cart, folder: String) async {
+private func removeCodeFiles(notIn saving: Cart, folder: String) async -> String? {
     let files: [String]
     do throws(JSException) {
         files = try await names(fromStorage: storage.listCartFiles(folder))
     } catch {
-        showStatus("Saved \(saved.name), but can't look for code files the cart no longer has: \(error.thrownValue)")
-        return
+        return "can't look for code files the cart no longer has: \(error.thrownValue)"
     }
-    for file in files where endsInLua(file) && !saved.fileNames.contains(file) {
+    for file in files where endsInLua(file) && !saving.fileNames.contains(file) {
         do throws(JSException) {
             _ = try await awaitStorage(storage.removeCartFile(folder, file))
         } catch {
-            showStatus("Saved \(saved.name), but can't remove \(file), which the cart no longer has: \(error.thrownValue)")
+            return "can't remove \(file), which the cart no longer has: \(error.thrownValue)"
         }
     }
+    return nil
 }
 
 func writeCart(_ writing: Cart, folder: String) async throws(JSException) {

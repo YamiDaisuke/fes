@@ -36,7 +36,13 @@ export async function writeCartFile(folder, name, text) {
 }
 
 export async function listCartFiles(folder) {
-  const folderHandle = await (await cartsDirectory()).getDirectoryHandle(folder);
+  let folderHandle;
+  try {
+    folderHandle = await (await cartsDirectory()).getDirectoryHandle(folder);
+  } catch (error) {
+    if (error.name === "NotFoundError") return [];
+    throw error;
+  }
   const names = [];
   for await (const [name, handle] of folderHandle.entries()) {
     if (handle.kind === "file") names.push(name);
