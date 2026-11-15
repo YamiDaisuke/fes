@@ -47,7 +47,7 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
 
 @Test func unknownEntriesAreIgnored() throws {
     let cart = Cart(name: "Demo", mainLua: "print(1)")
-    let withExtras = archive(of: cart, changing: ["__MACOSX/._main.lua": [0, 0xFF], "notes.txt": Array("hi".utf8)])
+    let withExtras = archive(of: cart, changing: ["__MACOSX/._cart.json": [0, 0xFF], "notes.txt": Array("hi".utf8)])
 
     #expect(try Cart(fesArchive: withExtras) == cart)
 }
@@ -59,6 +59,22 @@ private func archive(of cart: Cart, changing changes: [String: [UInt8]?] = [:]) 
     #expect(refusal(archive(of: cart, changing: ["main.lua/": []])) == "main.lua/ could be unzipped as main.lua")
     #expect(refusal(archive(of: cart, changing: ["./main.lua": Array("print(2)".utf8)])) == "./main.lua could be unzipped as main.lua")
     #expect(refusal(archive(of: cart, changing: ["/Map.map": []])) == "/Map.map could be unzipped as map.map")
+}
+
+@Test func otherCodeFilesLoadSortedAfterMainLuaWhateverTheArchiveOrder() throws {
+    let files = threeFileCart().files
+    let reversed = storedZip(files.keys.sorted(by: >).map { (name: $0, bytes: Array(files[$0]!.utf8)) })
+    #expect(try Cart(fesArchive: reversed).codeFiles.map(\.name) == ["main.lua", "enemy_2.lua", "player.lua"])
+}
+
+@Test func codeFileEntryInAFolderOrAnotherCaseIsRefusedNamingIt() {
+    let cart = Cart(name: "Demo", mainLua: "print(1)")
+
+    #expect(
+        refusal(archive(of: cart, changing: ["src/player.lua": []]))
+            == "src/player.lua: code file names use a–z, 0–9 and _, such as player.lua")
+    #expect(refusal(archive(of: cart, changing: ["Player.lua": []])) == "Player.lua could be unzipped as player.lua")
+    #expect(refusal(archive(of: cart, changing: ["./enemy.lua": []])) == "./enemy.lua could be unzipped as enemy.lua")
 }
 
 @Test func archiveWithoutMainLuaNamesTheMissingFile() {

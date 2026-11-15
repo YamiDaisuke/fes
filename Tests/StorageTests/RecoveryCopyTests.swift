@@ -34,7 +34,7 @@ func aWholeCartCopyReadsBackTheSame(folder: String?) {
     json(["files": sampleCart().files.filter { $0.key != "main.lua" }]),
     json(["files": sampleFiles(changing: "main.lua", to: 1)]),
     json(["files": sampleFiles(changing: "sprites.tiles", to: "0\n")]),
-    json(["files": sampleFiles(changing: "cart.json", to: "{\"format\": 3, \"name\": \"Mine\"}")]),
+    json(["files": sampleFiles(changing: "cart.json", to: "{\"format\": 4, \"name\": \"Mine\"}")]),
     json(["files": sampleFiles(changing: "cart.json", to: "{\"format\": 2, \"name\": \" \"}")]),
     json(["files": sampleCart().files, "folder": 1]),
     json(["name": "Mine", "mainLua": "x = 1", "folder": 1]),
