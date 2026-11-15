@@ -41,6 +41,10 @@ export function createCodeEditor(parent) {
       storedFiles.clear();
       shownName = undefined;
     },
+    forgetFile(name) {
+      storedFiles.delete(name);
+      if (shownName === name) shownName = undefined;
+    },
     onCodeChange(listener) {
       codeChanged = listener;
     },

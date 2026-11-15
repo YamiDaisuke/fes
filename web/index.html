@@ -29,7 +29,14 @@
   </div>
   <div id="code-view">
     <div id="code-pane">
-      <div id="code-files" role="tablist" aria-label="Code files"></div>
+      <div id="code-file-bar">
+        <div id="code-files" role="tablist" aria-label="Code files"></div>
+        <div id="code-file-actions" role="group" aria-label="File actions">
+          <button type="button" id="code-file-new">New file</button>
+          <button type="button" id="code-file-rename">Rename</button>
+          <button type="button" id="code-file-delete">Delete</button>
+        </div>
+      </div>
       <div id="code-editor"></div>
     </div>
     <p id="code-error" role="status"></p>
