@@ -4,7 +4,7 @@ extension Cart {
 
     public var fesArchive: [UInt8] {
         let files = self.files
-        return storedZip(Cart.fileNames.map { name in (name: name, bytes: Array(files[name]!.utf8)) })
+        return storedZip(fileNames.map { name in (name: name, bytes: Array(files[name]!.utf8)) })
     }
 
     public init(fesArchive: [UInt8]) throws {
@@ -12,17 +12,17 @@ extension Cart {
             throw ArchiveError("larger than 8 MiB")
         }
         let entries = try readStoredZip(fesArchive)
-        for name in entries.keys where !Cart.fileNames.contains(name) {
+        for name in entries.keys.sorted() where !isCartFile(name) {
             if let cartFile = cartFileUnzippedInPlace(ofEntry: name) {
                 throw ArchiveError("\(shownEntryName(name)) could be unzipped as \(cartFile)")
             }
+            if endsInLua(name) {
+                throw ArchiveError("\(shownEntryName(name)): \(codeFileNameProblem(name)!)")
+            }
         }
         var files: [String: String] = [:]
-        for name in Cart.fileNames {
-            guard let bytes = entries[name] else {
-                continue
-            }
-            guard let text = strictUTF8Text(bytes) else {
+        for name in entries.keys.sorted() where isCartFile(name) {
+            guard let text = strictUTF8Text(entries[name]!) else {
                 throw CartFileError(file: name, reason: "not valid UTF-8")
             }
             files[name] = text
@@ -56,7 +56,14 @@ private func cartFileUnzippedInPlace(ofEntry name: String) -> String? {
     while path.hasPrefix("/") || path.hasPrefix("./") {
         path = path.dropFirst(path.hasPrefix("/") ? 1 : 2)
     }
-    return Cart.fileNames.first { path == $0 || path == $0 + "/" }
+    if path.hasSuffix("/") {
+        path.removeLast()
+    }
+    return isCartFile(String(path)) ? String(path) : nil
+}
+
+private func isCartFile(_ name: String) -> Bool {
+    Cart.fixedFileNames.contains(name) || codeFileNameProblem(name) == nil
 }
 
 // String(validating:as:) needs macOS 15, and Package.swift supports macOS 13.

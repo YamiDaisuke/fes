@@ -1,9 +1,9 @@
-private let formatVersion = 2
+private let formatVersion = 3
 private let firstFormatWithMainPalette = 2
 private let longestName = 64
 
 extension Cart {
-    public static let fileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "main-palette.hex", "palettes.pal", "map.map"]
+    public static let fixedFileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "main-palette.hex", "palettes.pal", "map.map"]
 
     public init(files: [String: String]) throws(CartFileError) {
         let cartJSON = try parseCartJSON(fileText("cart.json", in: files))
@@ -15,18 +15,34 @@ extension Cart {
         spriteTiles = try parseTileSheet(fileText("sprites.tiles", in: files), file: "sprites.tiles")
         (backgroundPalettes, spritePalettes) = try parsePalettes(fileText("palettes.pal", in: files), file: "palettes.pal")
         background = try parseMap(fileText("map.map", in: files), file: "map.map")
+        for name in files.keys.sorted() where name != "main.lua" && endsInLua(name) {
+            if let problem = codeFileNameProblem(name) {
+                throw CartFileError(file: shownEntryName(name), reason: problem)
+            }
+            guard codeFiles.count < Cart.largestCodeFileCount else {
+                throw CartFileError(file: name, reason: tooManyCodeFiles)
+            }
+            codeFiles.append(CodeFile(name: name, text: withLFLineEndings(try fileText(name, in: files))))
+        }
+    }
+
+    public var fileNames: [String] {
+        Cart.fixedFileNames + codeFiles.dropFirst().map(\.name)
     }
 
     public var files: [String: String] {
-        [
+        var files = [
             "cart.json": cartJSONText(name: name),
-            "main.lua": mainLua,
             "background.tiles": tileSheetText(backgroundTiles),
             "sprites.tiles": tileSheetText(spriteTiles),
             "main-palette.hex": mainPaletteText(mainPalette),
             "palettes.pal": paletteText(background: backgroundPalettes, sprites: spritePalettes),
             "map.map": mapText(background),
         ]
+        for file in codeFiles {
+            files[file.name] = file.text
+        }
+        return files
     }
 }
 

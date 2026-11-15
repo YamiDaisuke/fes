@@ -47,7 +47,7 @@ public struct RecoveryCopy: Equatable {
 
     public static func text(folder: String?, cart: Cart) -> String {
         let files = cart.files
-        let fileFields = Cart.fileNames.map { "\(jsonString($0)): \(jsonString(files[$0]!))" }
+        let fileFields = cart.fileNames.map { "\(jsonString($0)): \(jsonString(files[$0]!))" }
         var fields: [String] = []
         if let folder {
             fields.append("\"folder\": \(jsonString(folder))")
