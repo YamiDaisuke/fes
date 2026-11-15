@@ -30,17 +30,30 @@ new ResizeObserver(fitCanvas).observe(gameView);
 const context = canvas.getContext("2d");
 listenForInput(document.getElementById("pad"));
 
-function drawFrame() {
-  let address;
-  try {
-    address = instance.exports.frame(buttonsForFrame());
-  } catch (error) {
-    document.getElementById("cart-error").textContent = `FES stopped: ${error}\nReload the page to start again.`;
-    throw error;
+const framePeriod = 1000 / 60;
+const mostFramesPerCallback = 4;
+let lastTime;
+let owedMs = framePeriod;
+
+function drawFrame(now) {
+  owedMs += now - (lastTime ?? now);
+  lastTime = now;
+  // The 1 ms slack keeps a 60 Hz display's timer jitter from alternating 0 and 2 frames.
+  const framesDue = Math.floor((owedMs + 1) / framePeriod);
+  const framesToRun = Math.min(framesDue, mostFramesPerCallback);
+  if (framesToRun > 0) {
+    let address;
+    try {
+      for (let i = 0; i < framesToRun; i++) address = instance.exports.frame(buttonsForFrame());
+    } catch (error) {
+      document.getElementById("cart-error").textContent = `FES stopped: ${error}\nReload the page to start again.`;
+      throw error;
+    }
+    // Memory growth detaches the old buffer, so take a fresh view every frame.
+    const pixels = new Uint8ClampedArray(instance.exports.memory.buffer, address, canvas.width * canvas.height * 4);
+    context.putImageData(new ImageData(pixels, canvas.width, canvas.height), 0, 0);
   }
-  // Memory growth detaches the old buffer, so take a fresh view every frame.
-  const pixels = new Uint8ClampedArray(instance.exports.memory.buffer, address, canvas.width * canvas.height * 4);
-  context.putImageData(new ImageData(pixels, canvas.width, canvas.height), 0, 0);
+  owedMs = framesDue > mostFramesPerCallback ? 0 : owedMs - framesDue * framePeriod;
   requestAnimationFrame(drawFrame);
 }
 requestAnimationFrame(drawFrame);
