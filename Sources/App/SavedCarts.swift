@@ -118,7 +118,7 @@ private func loadCart(folder: String) async {
 
 func readSavedCart(folder: String) async -> Cart? {
     var files: [String: String] = [:]
-    for file in Cart.fileNames {
+    for file in Cart.fixedFileNames {
         do {
             files[file] = string(from: try await awaitStorage(storage.readCartFile(folder, file)))
         } catch {

@@ -2,7 +2,7 @@ import Console
 
 public struct Cart: Equatable {
     public var name: String
-    public var mainLua: String
+    public internal(set) var codeFiles: [CodeFile]
     public var mainPalette = MainPalette()
     public var backgroundTiles = TileBank()
     public var spriteTiles = TileBank()
@@ -12,6 +12,11 @@ public struct Cart: Equatable {
 
     public init(name: String, mainLua: String) {
         self.name = name
-        self.mainLua = mainLua
+        codeFiles = [CodeFile(name: "main.lua", text: mainLua)]
+    }
+
+    public var mainLua: String {
+        get { codeFiles[0].text }
+        set { codeFiles[0].text = newValue }
     }
 }

@@ -11,3 +11,8 @@ func sampleCart() -> Cart {
     cart.background[column: 31, row: 31] = Tilemap.Cell(tile: 255, palette: 7)
     return cart
 }
+
+func threeFileCart() -> Cart {
+    let otherCodeFiles = ["player.lua": "return {x = 1}\n", "enemy_2.lua": "-- 🎮 \"q\" \\\n\treturn true\n"]
+    return try! Cart(files: sampleCart().files.merging(otherCodeFiles) { $1 })
+}
