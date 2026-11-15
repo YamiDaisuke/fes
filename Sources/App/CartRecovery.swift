@@ -50,11 +50,11 @@ func offerRecoveryCopy(_ text: String?) async {
         cart = restored
     case .codeOnly(let name, let mainLua):
         cart.name = name
-        cart.mainLua = mainLua
+        cart.replaceText(ofCodeFile: "main.lua", with: mainLua)
     }
     clearArtHistory()
     showCodeView()
-    showCodeInEditor(cart.mainLua)
+    showOpenedCartCode()
     showCartName()
     redrawArtView()
     keepRecoveryCopy()

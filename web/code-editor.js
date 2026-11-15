@@ -8,24 +8,38 @@ import { lintGutter, setDiagnostics } from "@codemirror/lint";
 
 export function createCodeEditor(parent) {
   let codeChanged = () => {};
-  const extensions = [
+  const extensionsFor = (name) => [
     basicSetup,
     keymap.of([indentWithTab]),
     StreamLanguage.define(lua),
     lintGutter(),
-    EditorView.contentAttributes.of({ autocapitalize: "off", autocorrect: "off", spellcheck: "false", "aria-label": "main.lua" }),
+    EditorView.contentAttributes.of({ autocapitalize: "off", autocorrect: "off", spellcheck: "false", "aria-label": name }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) codeChanged(update.state.doc.toString());
     }),
   ];
-  const view = new EditorView({ parent, extensions });
+  const view = new EditorView({ parent });
+  const storedFiles = new Map();
+  let shownName;
   const clampedLine = (lineNumber) => {
     const doc = view.state.doc;
     return doc.line(Math.min(Math.max(lineNumber, 1), doc.lines));
   };
   return {
-    setCode(doc) {
-      view.setState(EditorState.create({ doc, extensions }));
+    openFile(name, text) {
+      if (shownName !== undefined) storedFiles.set(shownName, { state: view.state, scroll: view.scrollSnapshot() });
+      shownName = name;
+      const stored = storedFiles.get(name);
+      if (stored && stored.state.doc.toString() === text) {
+        view.setState(stored.state);
+        view.dispatch({ effects: stored.scroll });
+      } else {
+        view.setState(EditorState.create({ doc: text, extensions: extensionsFor(name) }));
+      }
+    },
+    forgetFiles() {
+      storedFiles.clear();
+      shownName = undefined;
     },
     onCodeChange(listener) {
       codeChanged = listener;

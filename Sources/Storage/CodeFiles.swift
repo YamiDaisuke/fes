@@ -70,6 +70,12 @@ extension Cart {
         return nil
     }
 
+    public mutating func replaceText(ofCodeFile name: String, with text: String) {
+        if let index = codeFiles.firstIndex(where: { $0.name == name }) {
+            codeFiles[index].text = text
+        }
+    }
+
     public mutating func removeCodeFile(named name: String) -> String? {
         if name == "main.lua" {
             return "the cart starts from main.lua"

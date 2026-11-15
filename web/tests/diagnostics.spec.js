@@ -1,7 +1,6 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
-import { typeCode } from "./code-editor.js";
-import { storedZip } from "./stored-zip.js";
+import { typeCode, loadCodeFiles } from "./code-editor.js";
 
 async function openCodeView(page) {
   await page.goto("/");
@@ -97,30 +96,18 @@ ephemeralTest("an error with a CRLF in its text shows only its first line", asyn
   await expect(page.locator("#code-error")).toHaveText("main.lua:3: a");
 });
 
-test("a runtime error in a required file is named but not marked in main.lua", async ({ page }) => {
+test("a runtime error in a required file opens its tab with the cursor on its line", async ({ page }) => {
   await openCodeView(page);
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
-  const savedFiles = await page.evaluate(async () => {
-    const [folder] = await fesStorage.listCartFolders();
-    const names = ["palettes.pal", "background.tiles", "sprites.tiles", "main-palette.hex", "map.map"];
-    return Object.fromEntries(await Promise.all(names.map(async (name) => [name, await fesStorage.readCartFile(folder, name)])));
-  });
-  const codeFiles = {
+  await loadCodeFiles(page, {
     "main.lua": 'local player = require("player")\nfunction _update() player.move() end\n',
     "player.lua": "local player = {}\nfunction player.move() missing() end\nreturn player\n",
-  };
-  await page.locator("#cart-import-file").setInputFiles({
-    name: "two.fes",
-    mimeType: "application/zip",
-    buffer: storedZip({ ...savedFiles, "cart.json": '{"format": 3, "name": "Two files"}', ...codeFiles }),
   });
-  await page.locator("#cart-list").getByRole("button", { name: "Two files" }).click();
-  await expect(page.locator("#cart-status")).toHaveText("Loaded Two files.");
 
   await page.getByRole("button", { name: "Run" }).click();
   await expect(page.locator("#cart-error")).toContainText("player.lua:2: attempt to call a nil value (global 'missing')");
   await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.getByRole("tab", { name: "player.lua" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator(".cm-activeLine")).toHaveText("function player.move() missing() end");
+  await expect(line(page, 2).locator(".cm-lintRange-error")).toHaveCount(1);
   await expect(page.locator("#code-error")).toHaveText("player.lua:2: attempt to call a nil value (global 'missing')");
-  await expect(page.locator(".cm-lintRange-error")).toHaveCount(0);
 });

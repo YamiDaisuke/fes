@@ -15,7 +15,7 @@ private func sampleFiles(changing file: String, to value: Any) -> [String: Any] 
 @Test(arguments: ["0123456789abcdef", nil])
 func aWholeCartCopyReadsBackTheSame(folder: String?) {
     var cart = sampleCart()
-    cart.mainLua = "print(\"a\\b\")\n\tx = 1\u{1}\n-- 🎮\n"
+    cart.replaceText(ofCodeFile: "main.lua", with: "print(\"a\\b\")\n\tx = 1\u{1}\n-- 🎮\n")
     let copy = RecoveryCopy(text: RecoveryCopy.text(folder: folder, cart: cart))
     #expect(copy == RecoveryCopy(folder: folder, edits: .wholeCart(cart)))
 }

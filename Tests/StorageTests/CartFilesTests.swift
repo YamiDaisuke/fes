@@ -72,7 +72,7 @@ private func refusal(cartJSON: String) -> String? {
 @Test func mainLuaLineEndingsAreReadAsLFSoTheEditorTextMatchesTheLoadedCart() throws {
     var files = sampleCart().files
     files["main.lua"] = "a = 1\r\nb = 2\rc = 3\n\r\n\r\r"
-    #expect(try Cart(files: files).mainLua == "a = 1\nb = 2\nc = 3\n\n\n\n")
+    #expect(try Cart(files: files).codeFiles[0].text == "a = 1\nb = 2\nc = 3\n\n\n\n")
 }
 
 @Test func malformedGridFilesAreRefusedNamingTheFileAndLine() {
