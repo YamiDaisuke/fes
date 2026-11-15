@@ -32,6 +32,18 @@ The calls don't draw. They write the console's hardware state, and the PPU rende
 - So `camera()` in the middle of `_draw` also scrolls the map back to 0, 0. Until the window layer (M4), draw HUD sprites with the camera still set, at `cx + x, cy + y`, where `cx, cy` is the camera position.
 - The map repeats every 256 pixels in both directions. Sprites don't wrap.
 
+## Many files
+
+A cart starts from `main.lua`. Other code files are modules: they run only when something requires them.
+
+- Globals are shared between files; a module's `local` variables are its own. Return a table to share functions without making globals.
+- Errors name the file: `player.lua:12: attempt to index a nil value`.
+- `require` of a file the cart doesn't have stops the cart with `main.lua:3: module 'plyer' not found: this cart has no file plyer.lua`.
+- Two files that require each other while loading stop the cart with `module 'enemy' is still loading (circular require)`. Move the shared part to a third file, or require inside a function that runs later.
+- `main.lua` can't be required.
+- A module runs inside the budget of whatever called `require`, usually the main chunk + `_init`.
+- Renaming a file doesn't change the `require` calls that name it.
+
 ## Budgets
 
 Each frame's `_update` + `_draw` may run 500,000 Lua instructions (placeholder), and the main chunk + `_init` together get the same. Going over stops the cart with `main.lua:N: CPU budget exceeded`. `pcall` cannot catch it: the next function call, or the next 1,000 instructions, raise it again, and if `_update`, `_draw`, `_init` or the main chunk returns with the budget spent (for example through `return pcall(f)`, or a `coroutine.resume` whose coroutine ran out), the cart stops with `CPU budget exceeded` and no line. A frame that takes longer than 250 ms (placeholder) counts as over budget even if it ran few instructions, so library calls on large data in a loop can't freeze the console. Lua memory is capped at 8 MiB (placeholder). An allocation over the cap is a memory error: `pcall` sees `not enough memory`, and an uncaught one shows `memory budget exceeded` with no line. Recursion that goes too deep shows `stack overflow`.
@@ -112,6 +124,16 @@ Sets the camera to world position `x, y`: the map scrolls so that pixel is at th
 
 ```lua
 camera(px - 92, py - 68)
+```
+
+## require
+
+`require(name) -> value`
+
+Runs the cart's file `name.lua` and returns what it returns, or `true` if it returns nothing. Only the first `require` of a name runs the file; later ones return the same value. `name` is the file name without `.lua`: `require("player")` runs `player.lua`. The file receives `name` as `...`.
+
+```lua
+local player = require("player")
 ```
 
 ## Buttons
