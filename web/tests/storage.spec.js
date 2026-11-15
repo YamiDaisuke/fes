@@ -1,7 +1,7 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
-import { loadCartFromShelf, savedCartEntries } from "./shelf.js";
+import { loadCartFromShelf, openShelf, savedCartEntries, selectOnShelf } from "./shelf.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -196,7 +196,7 @@ test("Save still saves when the request for persistent storage never answers", a
   await expect(savedCartEntries(page)).toHaveText(["Hang"]);
 });
 
-test("a cart whose cart.json can't be read is listed as damaged, and choosing it names the file", async ({ page }) => {
+test("a cart whose cart.json can't be read is listed as damaged, and selecting it says it can only be deleted", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
@@ -206,8 +206,12 @@ test("a cart whose cart.json can't be read is listed as damaged, and choosing it
   });
   await openBooted(page);
 
-  await loadCartFromShelf(page, "Damaged cart");
-  await expect(page.locator("#cart-status")).toHaveText(/^Can't load: cart.json/);
+  await openShelf(page);
+  await selectOnShelf(page, "Damaged cart");
+  await expect(page.locator("#cart-status")).toHaveText(
+    "This cart's cart.json is missing or can't be read, so it can only be deleted.",
+  );
+  await expect(page.getByRole("button", { name: "Edit", exact: true })).toBeDisabled();
 });
 
 test("a saved cart whose files each start with a byte order mark is listed by name and loads", async ({ page }) => {
