@@ -279,6 +279,47 @@ test("a format 1 cart in storage loads with the default main palette and saves a
   expect(colors.slice(0, 2)).toEqual(["000000", "4d30bf"]);
 });
 
+function writeIntoSavedCart(page, files) {
+  return page.evaluate(async (files) => {
+    const [folder] = await fesStorage.listCartFolders();
+    for (const [name, text] of Object.entries(files)) await fesStorage.writeCartFile(folder, name, text);
+  }, files);
+}
+
+test("Save removes a code file the cart no longer has from its folder and leaves other files", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Demo");
+  await writeIntoSavedCart(page, { "old.lua": "return 1\n", "notes.txt": "mine" });
+
+  await saveAs(page, "Demo");
+  const listFolder = () =>
+    page.evaluate(async () => {
+      const [folder] = await fesStorage.listCartFolders();
+      return (await fesStorage.listCartFiles(folder)).sort();
+    });
+  await expect.poll(listFolder).toEqual(["background.tiles", "cart.json", "main-palette.hex", "main.lua", "map.map", "notes.txt", "palettes.pal", "sprites.tiles"]);
+});
+
+test("a code file that can't be removed leaves the cart saved and says so", async ({ page }) => {
+  await page.addInitScript(() => {
+    FileSystemDirectoryHandle.prototype.removeEntry = () => Promise.reject(new Error("removal refused"));
+  });
+  await openBooted(page);
+  await saveAs(page, "Demo");
+  await writeIntoSavedCart(page, { "old.lua": "return 1\n" });
+
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText(/^Saved Demo, but can't remove old\.lua, which the cart no longer has: /);
+  const questions = [];
+  page.on("dialog", (dialog) => {
+    questions.push(dialog.message());
+    dialog.dismiss();
+  });
+  await page.locator("#cart-list").getByRole("button", { name: "Demo" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
+  expect(questions).toEqual([]);
+});
+
 ephemeralTest("without OPFS saving is unavailable and the console still boots cleanly", async ({ page }) => {
   const errors = [];
   page.on("console", (message) => {

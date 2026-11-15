@@ -50,22 +50,54 @@ test("an exported cart imports as a new cart with identical files, leaving the o
   expect(await savedFolders(page)).toHaveLength(2);
 });
 
-test("a cart with code files other than main.lua is refused at import, naming the first, until Load can read them", async ({ page }) => {
+test("a cart with code files besides main.lua keeps every file through Import, Load, Save, reload, Load and Export", async ({ page }, testInfo) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
-  const files = await page.evaluate(async (fileNames) => {
+  const fixedFiles = await page.evaluate(async (fileNames) => {
     const [folder] = await fesStorage.listCartFolders();
     return Object.fromEntries(await Promise.all(fileNames.map(async (name) => [name, await fesStorage.readCartFile(folder, name)])));
   }, cartFileNames);
-
+  const codeFiles = { "player.lua": 'local p = {name = "ä"}\nreturn p\n', "enemy.lua": "return {hp = 3}\n" };
   await page.locator("#cart-import-file").setInputFiles({
     name: "two.fes",
     mimeType: "application/zip",
-    buffer: storedZip({ ...files, "zed.lua": "return 2\n", "player.lua": "return 1\n" }),
+    buffer: storedZip({ ...fixedFiles, "cart.json": '{"format": 3, "name": "Two files"}', ...codeFiles }),
   });
-  await expect(page.locator("#cart-status")).toHaveText("Can't import two.fes: player.lua: this FES can't open carts with more than main.lua yet");
-  expect(await savedFolders(page)).toHaveLength(1);
+  await expect(page.locator("#cart-status")).toHaveText("Imported Two files as a new cart.");
+
+  const loadTwoFiles = async () => {
+    await page.locator("#cart-list").getByRole("button", { name: "Two files" }).click();
+    await expect(page.locator("#cart-status")).toHaveText("Loaded Two files.");
+  };
+  await loadTwoFiles();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Two files.");
+  await openBooted(page);
+  await loadTwoFiles();
+  const downloading = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export" }).click();
+  const exported = testInfo.outputPath("exported.fes");
+  await (await downloading).saveAs(exported);
+  await page.locator("#cart-import-file").setInputFiles(exported);
+  await expect(page.locator("#cart-status")).toHaveText("Imported Two files as a new cart.");
+
+  const folderFiles = await page.evaluate(async () => {
+    const folders = await fesStorage.listCartFolders();
+    return Promise.all(
+      folders.map(async (folder) => {
+        const names = (await fesStorage.listCartFiles(folder)).sort();
+        return Object.fromEntries(await Promise.all(names.map(async (name) => [name, await fesStorage.readCartFile(folder, name)])));
+      }),
+    );
+  });
+  const withPlayer = folderFiles.filter((files) => "player.lua" in files);
+  expect(withPlayer).toHaveLength(2);
+  const [saved, reimported] = withPlayer;
+  expect(reimported).toEqual(saved);
+  expect(Object.keys(saved).sort()).toEqual([...cartFileNames, "enemy.lua", "player.lua"].sort());
+  expect(saved["player.lua"]).toBe(codeFiles["player.lua"]);
+  expect(saved["enemy.lua"]).toBe(codeFiles["enemy.lua"]);
 });
 
 test("importing a file that isn't a .fes reports why and saves nothing", async ({ page }) => {
