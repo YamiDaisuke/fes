@@ -165,7 +165,7 @@ func openCart(_ opened: Cart, folder: String) {
     clearArtHistory()
     lastSavedCart = opened
     cartFolder = folder
-    showCodeInEditor(opened.mainLua)
+    showOpenedCartCode()
     showCartName()
     keepRecoveryCopy()
     redrawArtView()

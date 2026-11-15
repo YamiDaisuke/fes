@@ -14,9 +14,4 @@ public struct Cart: Equatable {
         self.name = name
         codeFiles = [CodeFile(name: "main.lua", text: mainLua)]
     }
-
-    public var mainLua: String {
-        get { codeFiles[0].text }
-        set { codeFiles[0].text = newValue }
-    }
 }
