@@ -9,15 +9,16 @@ nonisolated(unsafe) let nameInput = document.getElementById("cart-name")
 nonisolated(unsafe) private let saveButton = document.getElementById("cart-save")
 nonisolated(unsafe) private let cartList = document.getElementById("cart-list")
 nonisolated(unsafe) private let cartStatus = document.getElementById("cart-status")
+nonisolated(unsafe) private var lastStorageTask: Task<Void, Never>?
 
 nonisolated(unsafe) private let saveClicked = JSClosure { _ in
-    Task { await saveCart() }
+    afterEarlierStorageWork { await saveCart() }
     return .undefined
 }
 
 nonisolated(unsafe) private let cartListClicked = JSClosure { arguments in
     if let button = arguments[0].target.closest("[data-folder]").object, let folder = string(from: button.dataset.folder) {
-        Task { await loadCart(folder: folder) }
+        afterEarlierStorageWork { await loadCart(folder: folder) }
     }
     return .undefined
 }
@@ -28,8 +29,8 @@ func startSavedCarts() {
     _ = cartList.addEventListener("click", cartListClicked)
     // Read before the first await, so edits made while the carts are listed can't replace the copy before it is offered.
     let recoveryCopyText = readRecoveryCopyText()
-    Task {
-        _ = try? await awaitStorage(storage.requestPersistentStorage())
+    Task { _ = try? await awaitStorage(storage.requestPersistentStorage()) }
+    afterEarlierStorageWork {
         var savingIsUnavailable = false
         do {
             try await refreshCartList()
@@ -42,6 +43,14 @@ func startSavedCarts() {
         if savingIsUnavailable {
             showStatus("Saving is unavailable (Private Browsing?)")
         }
+    }
+}
+
+func afterEarlierStorageWork(_ work: sending @escaping () async -> Void) {
+    let earlier = lastStorageTask
+    lastStorageTask = Task {
+        await earlier?.value
+        await work()
     }
 }
 
