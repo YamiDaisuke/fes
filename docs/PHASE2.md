@@ -591,7 +591,7 @@ A read of `main` at T22. Bugs and gaps that became tasks above are marked with t
 | The Game view can only be reached by Run, which restarts the cart | `App/CodeAndGameViews.swift` | T43 |
 | Pad buttons ignore VoiceOver and Switch Control | `web/input.js` | T44 |
 | Art view scrolls or clips on smaller iPads | `web/index.html` | T47 |
-| Error positions only understand `main.lua` | `Runtime/MainLua.swift` | T34 |
+| Error positions only understand `main.lua` | `Runtime/CodeErrors.swift` | T34 |
 
 ## Recommendations for the old outlines (M4–M8)
 
