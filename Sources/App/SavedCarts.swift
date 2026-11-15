@@ -98,8 +98,12 @@ func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
     _ = try await awaitStorage(storage.writeCartFile(folder, "cart.json", cartJSON))
 }
 
+func unsavedChangesMayBeDiscarded() -> Bool {
+    cart == lastSavedCart || JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") == .boolean(true)
+}
+
 func loadCart(folder: String) async -> Bool {
-    if cart != lastSavedCart && JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") != .boolean(true) {
+    guard unsavedChangesMayBeDiscarded() else {
         return false
     }
     if folder == demoFolder {
@@ -156,14 +160,18 @@ func showCartName() {
     nameInput.value = .string(cart.name)
 }
 
-func savedCartEntries() async throws(JSException) -> [(folder: String, name: String)] {
+func savedCartEntries() async throws(JSException) -> [(folder: String, name: String?)] {
     let folders = try await names(fromStorage: storage.listCartFolders())
-    var entries: [(folder: String, name: String)] = []
+    var entries: [(folder: String, name: String?)] = []
     for folder in folders {
-        entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
+        entries.append((folder, await savedCartName(folder: folder)))
     }
-    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
+    entries.sort { ($0.name ?? damagedCartTitle, $0.folder) < ($1.name ?? damagedCartTitle, $1.folder) }
     return entries
+}
+
+func removeSavedCart(folder: String) async throws(JSException) {
+    _ = try await awaitStorage(storage.removeCartFolder(folder))
 }
 
 private func savedCartName(folder: String) async -> String? {
