@@ -101,6 +101,11 @@ import Testing
     #expect(cart.error == "memory budget exceeded")
 }
 
+@Test func moduleAllocatingPastTheCapWhileItRunsStopsWithTheMemoryBudget() {
+    let cart = RunningCart(mainLua: #"require("player")"#, modules: ["player.lua": #"local s = string.rep("x", 16 << 20)"#])
+    #expect(cart.error == "memory budget exceeded")
+}
+
 @Test func tableErrorInAModuleIsPlacedFromTheTraceback() {
     let cart = RunningCart(mainLua: "\n\nrequire(\"player\")", modules: ["player.lua": "\nerror({})"])
     let position = codePosition(inError: cart.error!, files: ["main.lua", "player.lua"])
