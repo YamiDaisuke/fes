@@ -5,7 +5,7 @@ import Storage
 
 nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) private let storage = JSObject.global.fesStorage
-nonisolated(unsafe) let nameInput = document.getElementById("cart-name")
+nonisolated(unsafe) private let nameInput = document.getElementById("cart-name")
 nonisolated(unsafe) private let saveButton = document.getElementById("cart-save")
 nonisolated(unsafe) private let cartStatus = document.getElementById("cart-status")
 nonisolated(unsafe) private var lastStorageTask: Task<Void, Never>?
