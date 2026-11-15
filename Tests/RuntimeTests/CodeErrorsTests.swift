@@ -52,3 +52,9 @@ import Testing
     #expect(cart.error == "memory budget exceeded")
     #expect(codePosition(inError: cart.error!, files: ["main.lua"]) == nil)
 }
+
+@Test func errorNamingAFileTheCartLacksFallsBackToTheTraceback() {
+    let cart = RunningCart(mainLua: "\n\nerror(\"x.lua:3: hi\", 0)")
+    #expect(codePosition(inError: cart.error!, files: ["main.lua"])?.line == 3)
+    #expect(codePosition(inError: cart.error!, files: ["main.lua"])?.file == "main.lua")
+}

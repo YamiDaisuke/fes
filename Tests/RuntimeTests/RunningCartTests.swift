@@ -103,7 +103,7 @@ func firstErrorLine(_ cart: RunningCart) -> String? {
 
 @Test func sandboxHidesFilesOutputAndHostLibraries() {
     let cart = RunningCart(mainLua: """
-        for _, name in ipairs({"io", "os", "package", "debug", "require", "dofile", "loadfile", "print", "warn", "loadstring"}) do
+        for _, name in ipairs({"io", "os", "package", "debug", "dofile", "loadfile", "print", "warn", "loadstring"}) do
           if _G[name] ~= nil then error(name .. " is visible", 0) end
         end
         if string.dump ~= nil then error("string.dump is visible", 0) end

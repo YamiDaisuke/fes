@@ -19,7 +19,7 @@ func registerConsoleAPI(_ state: OpaquePointer, cart: RunningCart) {
     }
 }
 
-private func runningCart(_ state: OpaquePointer?) -> RunningCart {
+func runningCart(_ state: OpaquePointer?) -> RunningCart {
     Unmanaged<RunningCart>.fromOpaque(lua_touserdata(state, firstUpvalueIndex)!).takeUnretainedValue()
 }
 
