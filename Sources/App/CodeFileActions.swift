@@ -21,7 +21,7 @@ nonisolated(unsafe) private let newFileClicked = JSClosure { _ in
 
 nonisolated(unsafe) private let renameFileClicked = JSClosure { _ in
     let oldName = shownCodeFile
-    guard let typed = string(from: JSObject.global.prompt!("Rename \(oldName) to:", String(oldName.dropLast(4)))) else {
+    guard let typed = string(from: JSObject.global.prompt!("Rename \(oldName) to:", String(oldName.dropLast(".lua".count)))) else {
         return .undefined
     }
     let newName = codeFileName(typed: typed)
