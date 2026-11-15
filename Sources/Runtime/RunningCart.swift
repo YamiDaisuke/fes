@@ -23,7 +23,7 @@ public final class RunningCart {
 
         meter.pointee.startPeriod()
         startEnforcingCPUBudget(state)
-        let loadStatus = loadMainLua(state, mainLua, meter: meter)
+        let loadStatus = loadCode(state, mainLua, fileName: "main.lua", meter: meter)
         guard loadStatus == LUA_OK else {
             stop(status: loadStatus)
             return
