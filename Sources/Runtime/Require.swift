@@ -1,6 +1,5 @@
 import CLua
 
-// require's own frame holds only plain values: every Swift value lives in loadModule, which can't raise (docs/decisions/037-require.md).
 func registerRequire(_ state: OpaquePointer, cart: RunningCart) {
     lua_pushlightuserdata(state, Unmanaged.passUnretained(cart).toOpaque())
     lua_createtable(state, 0, 0)
@@ -10,6 +9,7 @@ func registerRequire(_ state: OpaquePointer, cart: RunningCart) {
 
 private let loadedModulesIndex = secondUpvalueIndex
 
+// require's own frame holds only plain values: every Swift value lives in loadModule, which can't raise (docs/decisions/037-require.md).
 private func require(_ state: OpaquePointer?) -> Int32 {
     luaL_checklstring(state, 1, nil)
     lua_settop(state, 1)
