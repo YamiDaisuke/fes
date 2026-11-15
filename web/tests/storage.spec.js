@@ -121,6 +121,71 @@ test("code typed while a save is running stays unsaved", async ({ page }) => {
   await cancelLoadAfterQuestion(page, "Mine", "Discard unsaved changes to Mine?");
 });
 
+test("a second Save tapped while the first is still writing is the one that stays saved", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = "-- saved twice";
+    const createWritable = FileSystemFileHandle.prototype.createWritable;
+    FileSystemFileHandle.prototype.createWritable = async function (...options) {
+      if (this.name !== "cart.json" || "firstCartJSONWritten" in window) return createWritable.apply(this, options);
+      window.firstCartJSONWritten = false;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const writable = await createWritable.apply(this, options);
+      const close = writable.close.bind(writable);
+      writable.close = async () => {
+        await close();
+        window.firstCartJSONWritten = true;
+      };
+      return writable;
+    };
+  });
+  await openBooted(page);
+  const save = page.getByRole("button", { name: "Save", exact: true });
+  await page.locator("#cart-name").fill("First");
+  await save.click();
+  await page.locator("#cart-name").fill("Second");
+  await save.click();
+  await page.waitForFunction(() => window.firstCartJSONWritten);
+  await expect(page.locator("#cart-status")).toHaveText("Saved Second.");
+  await expect(page.locator("#cart-list button")).toHaveText(["Second"]);
+
+  await openBooted(page);
+  await expect(page.locator("#cart-list button")).toHaveText(["Second"]);
+  await page.locator("#cart-list").getByRole("button", { name: "Second" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Second.");
+  await expect(page.locator("#cart-name")).toHaveValue("Second");
+  await expect(page.locator(".cm-content")).toHaveText("-- saved twice");
+});
+
+test("a cart tapped while a save is running loads after the save, without asking about unsaved changes", async ({ page }) => {
+  await page.addInitScript(() => {
+    const close = FileSystemWritableFileStream.prototype.close;
+    FileSystemWritableFileStream.prototype.close = async function () {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return close.call(this);
+    };
+  });
+  const questions = [];
+  page.on("dialog", (dialog) => {
+    questions.push(dialog.message());
+    dialog.accept();
+  });
+  await openBooted(page);
+  await saveAs(page, "Other");
+  await openBooted(page);
+  await typeCode(page, "-- mine");
+  await page.locator("#cart-name").fill("Mine");
+
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator("#cart-list").getByRole("button", { name: "Other" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Other.");
+  await expect(page.locator("#cart-name")).toHaveValue("Other");
+
+  await page.locator("#cart-list").getByRole("button", { name: "Mine" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Mine.");
+  await expect(page.locator(".cm-content")).toHaveText("-- mine");
+  expect(questions).toEqual([]);
+});
+
 test("a cart whose cart.json can't be read is listed as damaged, and choosing it names the file", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
