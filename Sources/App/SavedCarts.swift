@@ -156,7 +156,17 @@ func showCartName() {
     nameInput.value = .string(cart.name)
 }
 
-func savedCartName(folder: String) async -> String? {
+func savedCartEntries() async throws(JSException) -> [(folder: String, name: String)] {
+    let folders = try await names(fromStorage: storage.listCartFolders())
+    var entries: [(folder: String, name: String)] = []
+    for folder in folders {
+        entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
+    }
+    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
+    return entries
+}
+
+private func savedCartName(folder: String) async -> String? {
     guard let value = try? await awaitStorage(storage.readCartFile(folder, "cart.json")), let text = string(from: value) else {
         return nil
     }
@@ -167,7 +177,7 @@ private func awaitStorage(_ promise: JSValue) async throws(JSException) -> JSVal
     try await JSPromise(promise.object!)!.value
 }
 
-func names(fromStorage promise: JSValue) async throws(JSException) -> [String] {
+private func names(fromStorage promise: JSValue) async throws(JSException) -> [String] {
     JSArray(try await awaitStorage(promise).object!)!.map { string(from: $0)! }
 }
 

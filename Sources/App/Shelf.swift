@@ -1,7 +1,6 @@
 import JavaScriptKit
 
 nonisolated(unsafe) private let document = JSObject.global.document
-nonisolated(unsafe) private let storage = JSObject.global.fesStorage
 nonisolated(unsafe) private let shelfList = document.getElementById("shelf-list")
 nonisolated(unsafe) private let playButton = document.getElementById("shelf-play")
 nonisolated(unsafe) private let editButton = document.getElementById("shelf-edit")
@@ -59,13 +58,7 @@ func showShelf() {
 }
 
 func refreshShelf() async throws(JSException) {
-    let folders = try await names(fromStorage: storage.listCartFolders())
-    var entries: [(folder: String, name: String)] = []
-    for folder in folders {
-        entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
-    }
-    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
-    showShelfEntries(entries)
+    showShelfEntries(try await savedCartEntries())
 }
 
 private func showShelfEntries(_ savedCarts: [(folder: String, name: String)]) {
