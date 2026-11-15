@@ -29,8 +29,8 @@ func startSavedCarts() {
     _ = cartList.addEventListener("click", cartListClicked)
     // Read before the first await, so edits made while the carts are listed can't replace the copy before it is offered.
     let recoveryCopyText = readRecoveryCopyText()
+    Task { _ = try? await awaitStorage(storage.requestPersistentStorage()) }
     afterEarlierStorageWork {
-        _ = try? await awaitStorage(storage.requestPersistentStorage())
         var savingIsUnavailable = false
         do {
             try await refreshCartList()

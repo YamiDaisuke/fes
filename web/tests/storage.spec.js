@@ -186,6 +186,15 @@ test("a cart tapped while a save is running loads after the save, without asking
   expect(questions).toEqual([]);
 });
 
+test("Save still saves when the request for persistent storage never answers", async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.storage.persist = () => new Promise(() => {});
+  });
+  await openBooted(page);
+  await saveAs(page, "Hang");
+  await expect(page.locator("#cart-list button")).toHaveText(["Hang"]);
+});
+
 test("a cart whose cart.json can't be read is listed as damaged, and choosing it names the file", async ({ page }) => {
   await openBooted(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
