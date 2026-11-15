@@ -201,11 +201,13 @@ test("deleting a file shows main.lua, and Save removes the file from the folder"
   await expect(page.getByRole("button", { name: "Rename" })).toBeDisabled();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Two files.");
-  const codeFilesInFolders = await page.evaluate(async () => {
-    const folders = await fesStorage.listCartFolders();
-    return (await Promise.all(folders.map((folder) => fesStorage.listCartFiles(folder)))).flat().filter((name) => name.endsWith(".lua"));
+  const codeFilesInTwoFilesFolder = await page.evaluate(async () => {
+    for (const folder of await fesStorage.listCartFolders()) {
+      const cartJSON = JSON.parse(await fesStorage.readCartFile(folder, "cart.json"));
+      if (cartJSON.name === "Two files") return (await fesStorage.listCartFiles(folder)).filter((name) => name.endsWith(".lua"));
+    }
   });
-  expect(codeFilesInFolders).toEqual(["main.lua", "main.lua"]);
+  expect(codeFilesInTwoFilesFolder).toEqual(["main.lua"]);
 
   await page.reload();
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
