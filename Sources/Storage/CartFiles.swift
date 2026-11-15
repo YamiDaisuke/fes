@@ -34,7 +34,7 @@ private func fileText(_ file: String, in files: [String: String]) throws(CartFil
     guard let text = files[file] else {
         throw CartFileError(file: file, reason: "file is missing")
     }
-    return text
+    return withoutByteOrderMark(text)
 }
 
 private func withLFLineEndings(_ text: String) -> String {

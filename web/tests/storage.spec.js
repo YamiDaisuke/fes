@@ -135,6 +135,24 @@ test("a cart whose cart.json can't be read is listed as damaged, and choosing it
   await expect(page.locator("#cart-status")).toHaveText(/^Can't load: cart.json/);
 });
 
+test("a saved cart whose files each start with a byte order mark is listed by name and loads", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Marked");
+  const cartJSONAsRead = await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    const carts = await (await navigator.storage.getDirectory()).getDirectoryHandle("carts");
+    for await (const name of (await carts.getDirectoryHandle(folder)).keys()) {
+      await fesStorage.writeCartFile(folder, name, "\uFEFF" + (await fesStorage.readCartFile(folder, name)));
+    }
+    return fesStorage.readCartFile(folder, "cart.json");
+  });
+  expect(cartJSONAsRead.startsWith("\uFEFF")).toBe(true);
+  await openBooted(page);
+
+  await page.locator("#cart-list").getByRole("button", { name: "Marked" }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Loaded Marked.");
+});
+
 test("an empty name is refused and nothing is saved", async ({ page }) => {
   await openBooted(page);
   await page.locator("#cart-name").fill("  ");

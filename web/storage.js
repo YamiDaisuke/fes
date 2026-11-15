@@ -22,7 +22,7 @@ export async function readCartFile(folder, name) {
   }
   const bytes = await file.arrayBuffer();
   try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
   } catch {
     throw new TypeError("not valid UTF-8");
   }

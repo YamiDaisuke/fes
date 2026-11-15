@@ -145,7 +145,7 @@ private func savedCartName(folder: String) async -> String? {
     guard let value = try? await awaitStorage(storage.readCartFile(folder, "cart.json")), let text = string(from: value) else {
         return nil
     }
-    return try? parseCartJSON(text).name
+    return try? parseCartJSON(withoutByteOrderMark(text)).name
 }
 
 private func awaitStorage(_ promise: JSValue) async throws(JSException) -> JSValue {
