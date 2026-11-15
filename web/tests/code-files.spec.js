@@ -1,5 +1,7 @@
+
 import { test, expect } from "./persistent-context.js";
 import { typeCode, loadCodeFiles } from "./code-editor.js";
+import { loadCartFromShelf } from "./shelf.js";
 
 const twoFiles = {
   "main.lua": 'local player = require("player")',
@@ -118,7 +120,7 @@ test("Save, reload and Load keep every file and its tab", async ({ page }) => {
   await page.reload();
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
   await page.getByRole("button", { name: "Code" }).click();
-  await page.locator("#cart-list").getByRole("button", { name: "Two files" }).click();
+  await loadCartFromShelf(page, "Two files");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Two files.");
   await expect(page.getByRole("tab")).toHaveText(["main.lua", "player.lua"]);
   await tab(page, "player.lua").click();
@@ -132,7 +134,7 @@ test("loading a cart forgets the undo history of the code it replaces", async ({
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Two files.");
 
-  await page.locator("#cart-list").getByRole("button", { name: "Two files" }).click();
+  await loadCartFromShelf(page, "Two files");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Two files.");
   await page.locator(".cm-content").focus();
   await page.keyboard.press("Meta+z");
@@ -212,7 +214,7 @@ test("deleting a file shows main.lua, and Save removes the file from the folder"
   await page.reload();
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
   await page.getByRole("button", { name: "Code" }).click();
-  await page.locator("#cart-list").getByRole("button", { name: "Two files" }).click();
+  await loadCartFromShelf(page, "Two files");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Two files.");
   await expect(page.getByRole("tab")).toHaveText(["main.lua"]);
 });
@@ -245,7 +247,7 @@ test("a code file that can't be removed doesn't lock a full cart out of loading 
   await expect(page.locator("#cart-status")).toHaveText(/^Can't save: can't remove m31\.lua, which the cart no longer has: /);
 
   answerNextDialog(page);
-  await page.locator("#cart-list").getByRole("button", { name: "Full" }).click();
+  await loadCartFromShelf(page, "Full");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Full.");
   await expect(page.getByRole("tab")).toHaveCount(32);
   await expect(tab(page, "m31.lua")).toBeVisible();

@@ -1,5 +1,6 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
+import { loadCartFromShelf } from "./shelf.js";
 
 async function openArtView(page) {
   await page.goto("/");
@@ -37,7 +38,7 @@ test.describe("with a cart that draws sprite tile 2", () => {
     await button(page, "Save").click();
     await expect(page.locator("#cart-status")).toHaveText("Saved Recolored.");
     await page.reload();
-    await page.locator("#cart-list").getByRole("button", { name: "Recolored", includeHidden: true }).dispatchEvent("click");
+    await loadCartFromShelf(page, "Recolored");
     await expect(page.locator("#cart-status")).toHaveText("Loaded Recolored.");
     await page.locator("#show-art").click();
     await button(page, "Sprites").click();

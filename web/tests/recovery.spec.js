@@ -1,6 +1,7 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
+import { savedCartEntries } from "./shelf.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -25,8 +26,8 @@ function recordDialogs(page, answer) {
 
 async function reloadUntilCartsListed(page) {
   await page.reload();
-  // FES offers the copy in the same microtask run that draws the cart list.
-  await expect(page.locator("#cart-list button")).not.toHaveCount(0);
+  // FES offers the copy in the same microtask run that draws the shelf.
+  await expect(savedCartEntries(page)).not.toHaveCount(0);
 }
 
 test.beforeEach(async ({ page }) => {

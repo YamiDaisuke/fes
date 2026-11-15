@@ -1,5 +1,6 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
+import { loadCartFromShelf } from "./shelf.js";
 
 async function openPalettes(page) {
   await page.goto("/");
@@ -46,7 +47,7 @@ test("an edited main color recolors every entry using it, shows in Run, and is s
   await button(page, "Save").click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Red.");
   await page.reload();
-  await page.locator("#cart-list").getByRole("button", { name: "Red", includeHidden: true }).dispatchEvent("click");
+  await loadCartFromShelf(page, "Red");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Red.");
   await page.locator("#show-art").click();
   await button(page, "Palettes").click();

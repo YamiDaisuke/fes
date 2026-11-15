@@ -1,6 +1,7 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
+import { loadCartFromShelf, savedCartEntries } from "./shelf.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -20,7 +21,7 @@ async function cancelLoadAfterQuestion(page, name, question) {
     questions.push(dialog.message());
     dialog.dismiss();
   });
-  await page.locator("#cart-list").getByRole("button", { name }).click();
+  await loadCartFromShelf(page, name);
   await expect.poll(() => questions).toEqual([question]);
 }
 
@@ -31,11 +32,11 @@ test("a saved cart's code runs when it is loaded on another page", async ({ cont
   await openBooted(page);
   await saveAs(page, "Saved");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator("#cart-list button")).toHaveCount(1);
+  await expect(savedCartEntries(page)).toHaveCount(1);
 
   const secondPage = await context.newPage();
   await openBooted(secondPage);
-  await secondPage.locator("#cart-list").getByRole("button", { name: "Saved" }).click();
+  await loadCartFromShelf(secondPage, "Saved");
   await expect(secondPage.locator(".cm-content")).toHaveText('error("from saved cart")');
   await expect(secondPage.locator("#cart-name")).toHaveValue("Saved");
   await secondPage.getByRole("button", { name: "Run" }).click();
@@ -62,7 +63,7 @@ test("code with a NUL character survives edit, Save, reload and load", async ({ 
   expect(saved).toBe(code);
 
   await openBooted(page);
-  await page.locator("#cart-list").getByRole("button", { name: "N" }).click();
+  await loadCartFromShelf(page, "N");
   await expect(page.locator("#cart-status")).toHaveText("Loaded N.");
   await page.getByRole("button", { name: "Run" }).click();
   await expect(page.locator("#cart-error")).toContainText("main.lua:3: len 3 y 2");
@@ -81,7 +82,7 @@ test("loading over unsaved code asks first, and cancelling keeps the edit", asyn
   });
   await openBooted(page);
   await saveAs(page, "Mine");
-  await expect(page.locator("#cart-list button")).toHaveCount(1);
+  await expect(savedCartEntries(page)).toHaveCount(1);
   const editor = page.locator(".cm-content");
   await typeCode(page, "-- edited");
 
@@ -89,7 +90,7 @@ test("loading over unsaved code asks first, and cancelling keeps the edit", asyn
   await expect(editor).toHaveText("-- edited");
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.locator("#cart-list").getByRole("button", { name: "Mine" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Loaded Mine.");
   await expect(editor).toHaveText("-- saved");
 });
@@ -146,11 +147,11 @@ test("a second Save tapped while the first is still writing is the one that stay
   await save.click();
   await page.waitForFunction(() => window.firstCartJSONWritten);
   await expect(page.locator("#cart-status")).toHaveText("Saved Second.");
-  await expect(page.locator("#cart-list button")).toHaveText(["Second"]);
+  await expect(savedCartEntries(page)).toHaveText(["Second"]);
 
   await openBooted(page);
-  await expect(page.locator("#cart-list button")).toHaveText(["Second"]);
-  await page.locator("#cart-list").getByRole("button", { name: "Second" }).click();
+  await expect(savedCartEntries(page)).toHaveText(["Second"]);
+  await loadCartFromShelf(page, "Second");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Second.");
   await expect(page.locator("#cart-name")).toHaveValue("Second");
   await expect(page.locator(".cm-content")).toHaveText("-- saved twice");
@@ -176,11 +177,11 @@ test("a cart tapped while a save is running loads after the save, without asking
   await page.locator("#cart-name").fill("Mine");
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await page.locator("#cart-list").getByRole("button", { name: "Other" }).click();
+  await loadCartFromShelf(page, "Other");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Other.");
   await expect(page.locator("#cart-name")).toHaveValue("Other");
 
-  await page.locator("#cart-list").getByRole("button", { name: "Mine" }).click();
+  await loadCartFromShelf(page, "Mine");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Mine.");
   await expect(page.locator(".cm-content")).toHaveText("-- mine");
   expect(questions).toEqual([]);
@@ -192,7 +193,7 @@ test("Save still saves when the request for persistent storage never answers", a
   });
   await openBooted(page);
   await saveAs(page, "Hang");
-  await expect(page.locator("#cart-list button")).toHaveText(["Hang"]);
+  await expect(savedCartEntries(page)).toHaveText(["Hang"]);
 });
 
 test("a cart whose cart.json can't be read is listed as damaged, and choosing it names the file", async ({ page }) => {
@@ -205,7 +206,7 @@ test("a cart whose cart.json can't be read is listed as damaged, and choosing it
   });
   await openBooted(page);
 
-  await page.locator("#cart-list").getByRole("button", { name: "Damaged cart" }).click();
+  await loadCartFromShelf(page, "Damaged cart");
   await expect(page.locator("#cart-status")).toHaveText(/^Can't load: cart.json/);
 });
 
@@ -223,7 +224,7 @@ test("a saved cart whose files each start with a byte order mark is listed by na
   expect(cartJSONAsRead.startsWith("\uFEFF")).toBe(true);
   await openBooted(page);
 
-  await page.locator("#cart-list").getByRole("button", { name: "Marked" }).click();
+  await loadCartFromShelf(page, "Marked");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Marked.");
 });
 
@@ -234,7 +235,7 @@ test("an empty name is refused and nothing is saved", async ({ page }) => {
   await expect(page.locator("#cart-status")).toHaveText("Can't save: the name is empty");
   await page.reload();
   await expect(page.locator("#cart-status")).toBeEmpty();
-  await expect(page.locator("#cart-list button")).toHaveCount(0);
+  await expect(savedCartEntries(page)).toHaveCount(0);
 });
 
 test("loading a cart with a damaged map names the file and line and keeps the current cart", async ({ page }) => {
@@ -247,7 +248,7 @@ test("loading a cart with a damaged map names the file and line and keeps the cu
   });
   await page.locator("#cart-name").fill("Renamed but unsaved");
 
-  await page.locator("#cart-list").getByRole("button", { name: "Room" }).click();
+  await loadCartFromShelf(page, "Room");
   await expect(page.locator("#cart-status")).toHaveText("Can't load: map.map line 32: expected 32 lines, found 31");
   await expect(page.locator("#cart-name")).toHaveValue("Renamed but unsaved");
 });
@@ -263,7 +264,7 @@ test("a format 1 cart in storage loads with the default main palette and saves a
   });
   await openBooted(page);
 
-  await page.locator("#cart-list").getByRole("button", { name: "Old" }).click();
+  await loadCartFromShelf(page, "Old");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Old.");
   await saveAs(page, "Old");
   const saved = await page.evaluate(async () => {
