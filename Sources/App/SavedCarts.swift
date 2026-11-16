@@ -1,5 +1,6 @@
 import JavaScriptEventLoop
 import JavaScriptKit
+import Editors
 import Runtime
 import Storage
 
@@ -175,10 +176,28 @@ func removeSavedCart(folder: String) async throws(JSException) {
 }
 
 private func savedCartName(folder: String) async -> String? {
-    guard let value = try? await awaitStorage(storage.readCartFile(folder, "cart.json")), let text = string(from: value) else {
+    guard let text = await savedCartFileText(folder: folder, file: "cart.json") else {
         return nil
     }
-    return try? parseCartJSON(withoutByteOrderMark(text)).name
+    return try? parseCartJSON(text).name
+}
+
+func savedCartLabelImage(folder: String) async -> RGBAImage? {
+    guard let labelText = await savedCartFileText(folder: folder, file: "label.hex"),
+        let mainPaletteText = await savedCartFileText(folder: folder, file: "main-palette.hex"),
+        let label = try? parseLabel(labelText, file: "label.hex"),
+        let mainPalette = try? parseMainPalette(mainPaletteText, file: "main-palette.hex")
+    else {
+        return nil
+    }
+    return labelImage(label, mainPalette: mainPalette)
+}
+
+private func savedCartFileText(folder: String, file: String) async -> String? {
+    guard let value = try? await awaitStorage(storage.readCartFile(folder, file)), let text = string(from: value) else {
+        return nil
+    }
+    return withoutByteOrderMark(text)
 }
 
 private func awaitStorage(_ promise: JSValue) async throws(JSException) -> JSValue {
