@@ -343,7 +343,7 @@ Fonts are vendored files, so each needs a decision record and the owner's yes (C
 
 | Role | Recommendation | Why | Alternatives | Check |
 |---|---|---|---|---|
-| Chrome (labels, buttons, status) | **Pixel Operator 8** by Jayvee Enaguas | Drawn on an 8 px grid, proportional, mixed case, clear at 16 px; reported CC0 | Silkscreen (OFL; caps only), Press Start 2P (OFL; wide, eats space), m5x7 by Daniel Linssen | The author's readme confirms CC0 for the `8` variants |
+| Chrome (labels, buttons, status) | **Pixel Operator 8** by Jayvee Enaguas | Drawn on an 8 px grid, proportional, mixed case, clear at 16 px; reported CC0 | Silkscreen (OFL; caps only), Press Start 2P (OFL; wide, eats space), m5x7 by Daniel Linssen | Done in T42: the font's name record and the zip's CC0 legal code confirm CC0 |
 | Code editor | **Departure Mono** by Helena Zhang | OFL 1.1, monospaced, mixed case, an official WOFF2; an 11 px grid, used at 22 px | Print Char 21 by Kreative Korp (Kreative Free Use License: no modification or conversion; not chosen), Pet Me 64 (the Commodore 64 set, same foundry and licence) | Done in T42: the licence file is vendored next to the font |
 
 Rules for using them: only sizes that are whole multiples of each font's own grid (8 px for Pixel Operator 8, 11 px for Departure Mono), with line heights as in `docs/decisions/045-the-look-foundation.md`; `@font-face` with `font-display: block`; WOFF2 or TTF files as their authors distribute them, in `web/fonts/` with their license files; precached (T30 makes that automatic); a system monospace fallback in the stack so text never disappears. `-webkit-font-smoothing` does nothing on iPadOS, so crispness depends on whole-pixel sizes and positions, which is what T42 proves.
@@ -376,7 +376,7 @@ Depends: T41, T30 · **Ask the owner** (decisions 3 and 4) · a spike: it exists
 **Do.**
 1. Ask the owner the font and color questions, with a picture: a PR preview page (step 4) is the way to show the choices.
 2. Vendor the two fonts as WOFF2 in `web/fonts/` with license files. `scripts/build.sh` copies the folder. Decision record: which fonts, their authors, licenses and source URLs, the rule about whole-multiple sizes.
-3. `web/style.css`: the tokens above on `:root`, `--u`, the two `@font-face` rules, `--font-ui` and `--font-code` stacks, and the component classes from "Components" (they can be applied to nothing yet).
+3. `web/style.css`: the tokens above on `:root`, `--u`, the two `@font-face` rules, `--font-ui` and `--font-code` stacks, the `--type-ui` and `--type-code` shorthands, and the component classes from "Components" (they can be applied to nothing yet).
 4. A static page `web/look.html` (copied by the build, linked from nowhere in the app) that shows every component in every state, both fonts at 16 and 24 px, and the token swatches with their names. It is the owner's proofing sheet and QA's reference; it stays in the repo.
 5. On the iPad preview, QA checks at 100% zoom that the fonts have no grey edges (compare a screenshot at 2× against the font's own pixels) in landscape and portrait, and reports with screenshots. If text is blurry where an element sits at a half pixel, find the cause (usually centering with `place-items: center` or a percentage width) and write the rule that avoids it into the decision record.
 6. If the fonts can't be made crisp: stop, and put the fallback to the owner (larger whole multiples only; or text drawn into canvases by Swift for the few fixed labels, which costs accessibility and is the last resort).
@@ -428,7 +428,7 @@ Depends: T43 · **Ask the owner** (decision 5)
 - A CodeMirror theme in `web/code-editor.js` with `EditorView.theme` and a `HighlightStyle` (from `@codemirror/language`; the tags come from `@lezer/highlight`, which CodeMirror already depends on: add it to `package.json` explicitly, same family as the approved CodeMirror dependency, and say so in the PR).
 - Default (C64 indigo): background `#2b2a5c`, text `#d6d4ff`, gutter `#232250` with `#a9a6ee` numbers, active line `#34337a`, selection `#5552b0`. Syntax, all pastel on indigo, each between 7.7:1 and 11:1 (text itself is 9.3:1): keyword `--pink`, string `--butter`, number `--coral`, comment `#9d99d9` (5.0:1, the one exception, and never below 4.5:1), function names and calls `--mint`, operators and punctuation the text color. Alternates to offer: Apple II green (`#0f1a12` / `#7dffb0`) and amber (`#1a1408` / `#ffcc66`), one fixed theme, not a setting.
 - A block cursor: `.cm-cursor` as a `1ch`-wide block in the text color with `mix-blend-mode: difference`, blinking with `steps(1)`; no blink under `prefers-reduced-motion`.
-- `--font-code` at 22 px, line height 28 px (Departure Mono's 11 px grid, decision record 045). The lint gutter's marker and tooltip restyled as a coral plate.
+- `--type-code`: Departure Mono at 22 px, line height 28 px (its 11 px grid, decision record 045). The lint gutter's marker and tooltip restyled as a coral plate.
 - The editor sits in a monitor bezel like the game screen. The file tabs become the tab component, shaped like disk labels; the name field and the file buttons sit in the row above.
 - `#code-error` becomes a coral readout under the editor.
 
