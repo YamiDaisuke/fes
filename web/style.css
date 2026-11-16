@@ -410,3 +410,14 @@ canvas { image-rendering: pixelated; }
   font: inherit;
 }
 .dialog::backdrop { background: color-mix(in srgb, var(--ink) 60%, transparent); }
+
+#ask {
+  --ask-width: min(calc(220 * var(--u)), calc(100vw - 8 * var(--u)));
+  box-sizing: border-box; width: var(--ask-width); max-width: none; max-height: none;
+  /* Near the top: the iPad keyboard covers the lower half while the name field has focus. */
+  inset: calc(32 * var(--u)) auto auto 0;
+  margin: 0 0 0 round(down, calc((100vw - var(--ask-width)) / 2), var(--u));
+}
+#ask form { display: grid; gap: calc(4 * var(--u)); }
+#ask h2 { margin-bottom: 0; }
+#ask-keys { display: flex; justify-content: end; gap: calc(4 * var(--u)); margin: 0; }

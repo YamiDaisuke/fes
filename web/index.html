@@ -180,6 +180,13 @@
       </div>
     </div>
   </div>
+  <dialog id="ask" class="plate dialog" aria-labelledby="ask-question">
+    <form method="dialog">
+      <h2 id="ask-question"></h2>
+      <input type="text" id="ask-field" class="field" aria-labelledby="ask-question" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">
+      <p id="ask-keys"><button type="button" id="ask-cancel" class="key"></button><button type="submit" id="ask-confirm" class="key" value="confirm"></button></p>
+    </form>
+  </dialog>
   <script type="module" src="boot.js"></script>
 </body>
 </html>

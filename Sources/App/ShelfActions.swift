@@ -5,7 +5,7 @@ nonisolated(unsafe) private let document = JSObject.global.document
 
 nonisolated(unsafe) private let newCartClicked = JSClosure { _ in
     afterEarlierStorageWork {
-        guard unsavedChangesMayBeDiscarded() else {
+        guard await unsavedChangesMayBeDiscarded() else {
             return
         }
         openCart(newCart(), folder: nil)
@@ -76,10 +76,10 @@ private func deleteCart(folder: String) async {
         return
     }
     let title = listed.name ?? "the damaged cart"
-    let wasOpen = folder == cartFolder
-    guard JSObject.global.confirm!(deleteQuestion(for: listed)) == .boolean(true) else {
+    guard await ask(deleteQuestion(for: listed), confirm: "Delete", destructive: true) != nil else {
         return
     }
+    let wasOpen = folder == cartFolder
     do {
         try await removeSavedCart(folder: folder)
         if wasOpen {

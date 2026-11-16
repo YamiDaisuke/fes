@@ -39,7 +39,8 @@ nonisolated(unsafe) private let importFileChosen = JSClosure { _ in
         return .undefined
     }
     importInput.value = ""
-    Task { await importSheet(from: file) }
+    let usesImageColors = importUsesImageColors
+    afterEarlierStorageWork { await importSheet(from: file, usesImageColors: usesImageColors) }
     return .undefined
 }
 
@@ -55,8 +56,7 @@ func startArtSheetImport() {
     _ = report.addEventListener("close", reportClosed)
 }
 
-private func importSheet(from file: JSValue) async {
-    let usesImageColors = importUsesImageColors
+private func importSheet(from file: JSValue, usesImageColors: Bool) async {
     let pressedButton = usesImageColors ? importColorsButton : importButton
     let fileName = string(from: file.name) ?? ""
     guard let size = file.size.number, size <= Double(largestSheetFileBytes) else {
@@ -118,7 +118,7 @@ private func importSheet(from file: JSValue) async {
         let question = usesImageColors
             ? "Replace all \(TileBank.tileCount) \(bankName) tiles, the \(bankName) palettes and the main palette with \(fileName) and its colors? The \(otherBankName) tiles may change color too. Undo puts them back."
             : "Replace all \(TileBank.tileCount) \(bankName) tiles with \(fileName)? Undo puts them back."
-        guard JSObject.global.confirm!(question) == .boolean(true) else { return }
+        guard await ask(question, confirm: "Replace", destructive: true) != nil else { return }
         dropArtStroke()
         let artBefore = cart.art
         cart.art = art
