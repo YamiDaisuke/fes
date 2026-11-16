@@ -151,6 +151,8 @@ canvas { image-rendering: pixelated; }
   --paper: #fff8e7;
   --font-ui: "Pixel Operator 8", system-ui, sans-serif;
   --font-code: "Departure Mono", ui-monospace, Menlo, monospace;
+  --type-ui: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  --type-code: calc(11 * var(--u)) / calc(14 * var(--u)) var(--font-code);
   --raised: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-dark);
   --recessed: inset var(--u) var(--u) 0 0 var(--shell-deep), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-light);
   font-synthesis: none;
@@ -182,7 +184,7 @@ canvas { image-rendering: pixelated; }
   appearance: none; border: var(--u) solid var(--ink); border-radius: 0;
   color: var(--ink); background: var(--key-face);
   box-shadow: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--key-dark), 0 var(--key-skirt) 0 0 var(--key-dark);
-  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  font: var(--type-ui);
   touch-action: manipulation;
 }
 .key-go { --key-face: var(--mint); --key-dark: var(--mint-dark); }
@@ -208,7 +210,7 @@ canvas { image-rendering: pixelated; }
   color: var(--readout-ink);
   background: var(--readout);
   box-shadow: inset var(--u) var(--u) 0 0 var(--ink);
-  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  font: var(--type-ui);
 }
 
 .led { display: inline-block; width: calc(3 * var(--u)); height: calc(3 * var(--u)); border: var(--u) solid var(--ink); background: var(--led-off); }
@@ -223,7 +225,7 @@ canvas { image-rendering: pixelated; }
   color: var(--ink); background: var(--paper);
   box-shadow: var(--recessed);
   caret-color: var(--ink);
-  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  font: var(--type-ui);
 }
 
 .fader {
@@ -266,11 +268,11 @@ canvas { image-rendering: pixelated; }
   padding: var(--u) calc(6 * var(--u)) var(--u) calc(4 * var(--u));
   color: var(--ink);
   background: var(--paper);
-  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  font: var(--type-ui);
   clip-path: polygon(var(--u) 0, calc(100% - 2 * var(--u)) 0, calc(100% - 2 * var(--u)) calc(3 * var(--u)), 100% calc(3 * var(--u)), 100% calc(6 * var(--u)), calc(100% - var(--u)) calc(6 * var(--u)), calc(100% - var(--u)) calc(9 * var(--u)), 100% calc(9 * var(--u)), 100% 100%, var(--u) 100%, var(--u) calc(100% - var(--u)), 0 calc(100% - var(--u)), 0 var(--u), var(--u) var(--u));
 }
 
-.dialog { color: var(--ink); font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui); }
+.dialog { color: var(--ink); font: var(--type-ui); }
 .dialog h2 {
   margin: calc(-4 * var(--u)) calc(-4 * var(--u)) calc(4 * var(--u));
   padding: var(--u) calc(4 * var(--u));
