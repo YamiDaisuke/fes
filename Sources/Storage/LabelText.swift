@@ -17,11 +17,11 @@ func parseLabel(_ text: String, file: String) throws(CartFileError) -> CartLabel
     var indices: [UInt8] = []
     indices.reserveCapacity(Screen.width * Screen.height)
     for (row, line) in try textLines(text, count: Screen.height, file: file).enumerated() {
-        let characters = Array(line)
-        guard characters.count == Screen.width * 2 else {
+        guard line.count == Screen.width * 2 else {
             throw CartFileError(
-                file: file, line: row + 1, reason: "expected \(Screen.width * 2) hex digits, found \(characters.count)")
+                file: file, line: row + 1, reason: "expected \(Screen.width * 2) hex digits, found \(line.count)")
         }
+        let characters = Array(line)
         for pairStart in stride(from: 0, to: characters.count, by: 2) {
             let pair = String(characters[pairStart...(pairStart + 1)])
             guard let index = hexValue(Substring(pair)), index < MainPalette.colorCount else {
