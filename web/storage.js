@@ -59,6 +59,10 @@ export async function removeCartFile(folder, name) {
   }
 }
 
+export async function removeCartFolder(folder) {
+  await (await cartsDirectory()).removeEntry(folder, { recursive: true });
+}
+
 export async function requestPersistentStorage() {
   return navigator.storage.persist();
 }

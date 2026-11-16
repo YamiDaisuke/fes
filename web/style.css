@@ -6,6 +6,7 @@ body:not([data-view="game"]) #game-view,
 body:not([data-view="art"]) #art-view,
 body:not([data-view="shelf"]) #shelf-view,
 body[data-view="shelf"] #show-shelf,
+body[data-view="shelf"] #cart-save,
 body[data-view="code"] #show-code,
 body[data-view="art"] #show-art { display: none; }
 #toolbar {
