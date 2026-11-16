@@ -16,6 +16,13 @@ nonisolated(unsafe) private let runClicked = JSClosure { _ in
     return .undefined
 }
 
+nonisolated(unsafe) private let setLabelClicked = JSClosure { _ in
+    cart.label = labelOfLastFrame()
+    keepRecoveryCopy()
+    showStatus("Label set. Save to keep it.")
+    return .undefined
+}
+
 nonisolated(unsafe) private let codeClicked = JSClosure { _ in
     showCodeView()
     return .undefined
@@ -27,6 +34,7 @@ func startCodeAndGameViews() {
     showOpenedCartCode()
     _ = codeEditor.onCodeChange(codeChanged)
     _ = document.getElementById("run").addEventListener("click", runClicked)
+    _ = document.getElementById("set-label").addEventListener("click", setLabelClicked)
     _ = document.getElementById("show-code").addEventListener("click", codeClicked)
 }
 

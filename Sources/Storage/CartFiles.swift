@@ -1,9 +1,9 @@
-private let formatVersion = 3
+private let formatVersion = 4
 private let firstFormatWithMainPalette = 2
 private let longestName = 64
 
 extension Cart {
-    public static let fixedFileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "main-palette.hex", "palettes.pal", "map.map"]
+    public static let fixedFileNames = ["cart.json", "main.lua", "background.tiles", "sprites.tiles", "main-palette.hex", "palettes.pal", "map.map", "label.hex"]
 
     public init(files: [String: String]) throws(CartFileError) {
         let cartJSON = try parseCartJSON(fileText("cart.json", in: files))
@@ -15,6 +15,9 @@ extension Cart {
         spriteTiles = try parseTileSheet(fileText("sprites.tiles", in: files), file: "sprites.tiles")
         (backgroundPalettes, spritePalettes) = try parsePalettes(fileText("palettes.pal", in: files), file: "palettes.pal")
         background = try parseMap(fileText("map.map", in: files), file: "map.map")
+        if let text = files["label.hex"] {
+            label = try parseLabel(withoutByteOrderMark(text), file: "label.hex")
+        }
         for name in files.keys.sorted() where name != "main.lua" && endsInLua(name) {
             if let problem = codeFileNameProblem(name) {
                 throw CartFileError(file: shownEntryName(name), reason: problem)
@@ -27,7 +30,11 @@ extension Cart {
     }
 
     public var fileNames: [String] {
-        Cart.fixedFileNames + codeFiles.dropFirst().map(\.name)
+        var names = Cart.fixedFileNames
+        if label == nil {
+            names.removeAll { $0 == "label.hex" }
+        }
+        return names + codeFiles.dropFirst().map(\.name)
     }
 
     public var files: [String: String] {
@@ -39,6 +46,9 @@ extension Cart {
             "palettes.pal": paletteText(background: backgroundPalettes, sprites: spritePalettes),
             "map.map": mapText(background),
         ]
+        if let label {
+            files["label.hex"] = labelText(label)
+        }
         for file in codeFiles {
             files[file.name] = file.text
         }

@@ -257,7 +257,7 @@ test("loading a cart with a damaged map names the file and line and keeps the cu
   await expect(page.locator("#cart-name")).toHaveValue("Renamed but unsaved");
 });
 
-test("a format 1 cart in storage loads with the default main palette and saves as format 3", async ({ page }) => {
+test("a format 1 cart in storage loads with the default main palette and saves as format 4", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Old");
   await page.evaluate(async () => {
@@ -278,7 +278,7 @@ test("a format 1 cart in storage loads with the default main palette and saves a
       mainPalette: await fesStorage.readCartFile(folder, "main-palette.hex"),
     };
   });
-  expect(saved.cartJSON).toContain('"format" : 3');
+  expect(saved.cartJSON).toContain('"format" : 4');
   const colors = saved.mainPalette.trimEnd().split("\n");
   expect(colors).toHaveLength(64);
   expect(colors.slice(0, 2)).toEqual(["000000", "4d30bf"]);

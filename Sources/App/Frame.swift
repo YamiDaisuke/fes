@@ -24,8 +24,12 @@ func frame(heldButtons: UInt32) -> UnsafeRawPointer {
         }
         runningCart.ppu.render(into: &framebuffer)
     }
-    // Valid until the next frame(): only frame() touches this private global, so its storage can't move before JS blits it.
+    // Valid until the next frame(): only frame() writes this private global, so its storage can't move before JS blits it.
     return framebuffer.rgba.withUnsafeBytes { $0.baseAddress! }
+}
+
+func labelOfLastFrame() -> CartLabel {
+    CartLabel(framebuffer: framebuffer, mainPalette: runningCart.ppu.mainPalette)
 }
 
 func demoCart() -> Cart {

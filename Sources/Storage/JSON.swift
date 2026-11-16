@@ -26,7 +26,7 @@ func parseJSONObject(_ text: String) throws(JSONError) -> [String: JSONValue] {
     return fields
 }
 
-private let hexDigits = Array("0123456789abcdef".utf8)
+let hexDigits = Array("0123456789abcdef".utf8)
 
 func jsonString(_ string: String) -> String {
     var bytes = [UInt8(ascii: "\"")]
