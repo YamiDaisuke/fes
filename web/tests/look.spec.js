@@ -34,6 +34,13 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
 });
 
+test("the token list shows every colour token's value", async ({ page }) => {
+  const items = await page.locator("#tokens li").allTextContents();
+
+  expect(items).toHaveLength(23);
+  for (const item of items) expect(item).toMatch(/^--[a-z-]+ #[0-9a-f]{6}$/);
+});
+
 test("every text-on-surface token pair keeps a contrast of at least 7:1", async ({ page }) => {
   const pairs = await page.locator(".pair").evaluateAll((elements) =>
     elements.map((element) => {

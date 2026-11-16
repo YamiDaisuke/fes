@@ -137,7 +137,8 @@
   <p>Pixel Operator 8 by Jayvee Enaguas (HarvettFox96), CC0 1.0</p>
   <p>Departure Mono by Helena Zhang, SIL Open Font License 1.1</p>
 
-  <script type="module">
+  <!-- A module script can run before style.css applies and read empty tokens; a classic one waits for it. -->
+  <script>
     const names = ["ink", "shell", "shell-light", "shell-dark", "shell-deep", "well", "screen-off", "mint", "mint-dark", "coral", "coral-dark", "butter", "butter-dark", "sky", "sky-dark", "pink", "pink-dark", "readout", "readout-ink", "led-on", "led-error", "led-off", "paper"];
     const root = getComputedStyle(document.documentElement);
     for (const name of names) {
