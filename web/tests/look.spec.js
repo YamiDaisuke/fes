@@ -95,6 +95,14 @@ for (const [orientation, viewport] of [["landscape", { width: 1194, height: 834 
       expect(counts.otherCount, id).toBe(0);
     }
   });
+
+  test(`token chips keep their whole-pixel width when labels wrap, in ${orientation}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+
+    const widths = await page.locator(".chip").evaluateAll((chips) => chips.map((chip) => chip.getBoundingClientRect().width));
+
+    expect(new Set(widths)).toEqual(new Set([36]));
+  });
 }
 
 test("ten Departure Mono characters at 22 px are exactly 140 px wide", async ({ page }) => {
