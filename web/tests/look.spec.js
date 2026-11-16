@@ -95,6 +95,21 @@ test("the focus ring shows on the selected swatch", async ({ page }) => {
   expect(focused.equals(unfocused)).toBe(false);
 });
 
+test("a focused key in a switch row shows its whole focus ring over its neighbours", async ({ page }) => {
+  const pencil = await tabTo(page, "Pencil");
+  const box = await pencil.boundingBox();
+  const butter = rgb(await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--butter)";
+    document.body.append(probe);
+    return getComputedStyle(probe).color;
+  })).join();
+
+  const rightRing = await page.screenshot({ clip: { x: box.x + box.width, y: box.y, width: 2, height: box.height } });
+
+  expect(new Set(await pixelColors(page, rightRing))).toEqual(new Set([butter]));
+});
+
 for (const [orientation, viewport] of [["landscape", { width: 1194, height: 834 }], ["portrait", { width: 834, height: 1194 }]]) {
   test(`pixel-font text is drawn only in ink and surface colour, with no grey edges, in ${orientation}`, async ({ page }) => {
     await page.setViewportSize(viewport);
