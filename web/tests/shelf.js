@@ -18,3 +18,9 @@ export async function loadCartFromShelf(page, name) {
   await selectOnShelf(page, name);
   await page.getByRole("button", { name: "Edit", exact: true }).click();
 }
+
+export async function playOnShelf(page, name) {
+  await selectOnShelf(page, name);
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-view", "game");
+}

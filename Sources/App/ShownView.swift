@@ -4,7 +4,7 @@ enum ShownView: String {
     case code, game, art, shelf
 }
 
-nonisolated(unsafe) var shownView = ShownView.game
+nonisolated(unsafe) var shownView = ShownView.shelf
 
 func show(_ view: ShownView) {
     let previousView = shownView

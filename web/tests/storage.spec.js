@@ -335,14 +335,7 @@ ephemeralTest("without OPFS saving is unavailable and the console still boots cl
 
   await page.goto("/");
 
-  await expect
-    .poll(() =>
-      page.evaluate(() => {
-        const canvas = document.getElementById("screen");
-        return canvas.getContext("2d").getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data[3];
-      }),
-    )
-    .toBe(255);
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeVisible();
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saving is unavailable (Private Browsing?)");
   await expect(page.getByRole("button", { name: "Save", exact: true })).toBeDisabled();
