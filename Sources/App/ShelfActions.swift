@@ -82,15 +82,13 @@ private func deleteCart(folder: String) async {
     }
     do {
         try await removeSavedCart(folder: folder)
+        if wasOpen {
+            openCart(demoCart(), folder: nil)
+        }
+        showStatus("Deleted \(title).")
     } catch {
         showStatus("Can't delete \(title): \(error.thrownValue)")
-        try? await refreshShelf()
-        return
     }
-    if wasOpen {
-        openCart(demoCart(), folder: nil)
-    }
-    showStatus("Deleted \(title).")
     try? await refreshShelf()
     if shownView == .shelf {
         focusShelfSelection()
