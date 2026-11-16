@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { playOnShelf } from "./shelf.js";
 
 function collectErrors(page) {
   const errors = [];
@@ -22,11 +23,18 @@ async function expectDemoDrawn(page) {
     .toBe(255);
 }
 
-test("boots the wasm and draws to the canvas without console errors", async ({ page }) => {
+test("boots to the shelf with the demo's picture and no console errors, and Play on the demo draws to the canvas", async ({ page }) => {
   const errors = collectErrors(page);
 
   await page.goto("/");
 
+  await expect(page.locator("body")).toHaveAttribute("data-view", "shelf");
+  const demoLabel = page.locator('#shelf-list [data-folder=""] canvas');
+  const centerPixel = await demoLabel.evaluate((label) =>
+    Array.from(label.getContext("2d").getImageData(label.width / 2, label.height / 2, 1, 1).data),
+  );
+  expect(centerPixel).not.toEqual([0, 0, 0, 0]);
+  await playOnShelf(page, "Built-in demo");
   await expectDemoDrawn(page);
   expect(errors).toEqual([]);
 });
@@ -44,7 +52,7 @@ test("boots and lets the install hint be dismissed when every localStorage call 
 
   await page.goto("/");
 
-  await expectDemoDrawn(page);
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeVisible();
   await expect(page.locator("#install-hint")).toBeVisible();
   await page.getByRole("button", { name: "Not now" }).click();
   await expect(page.locator("#install-hint")).toBeHidden();

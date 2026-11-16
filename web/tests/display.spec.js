@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { openPaused, runFrames } from "./frames.js";
+import { playOnShelf } from "./shelf.js";
 
 function readGoldenRGBA(name) {
   const png = readFileSync(new URL(`../../Tests/RuntimeTests/Golden/${name}.png`, import.meta.url));
@@ -50,12 +51,14 @@ async function expectCanvasMatchesGolden(page, name) {
 
 test("the demo's first frame matches the native golden", async ({ page }) => {
   await openPaused(page);
+  await playOnShelf(page, "Built-in demo");
   await runFrames(page, 1);
   await expectCanvasMatchesGolden(page, "demo-start");
 });
 
 test("holding the down-right D-pad corner for 60 frames walks the player and scrolls the room, matching the native golden", async ({ page }) => {
   await openPaused(page);
+  await playOnShelf(page, "Built-in demo");
   const corner = page.locator('[data-buttons="down right"]');
   const box = await corner.boundingBox();
   await corner.dispatchEvent("pointerdown", {

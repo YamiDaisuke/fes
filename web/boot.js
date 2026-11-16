@@ -1,4 +1,5 @@
-import { init } from "../.build/js/index.js";
+import { instantiate } from "../.build/js/instantiate.js";
+import { defaultBrowserSetup } from "../.build/js/platforms/browser.js";
 import { listenForInput, buttonsForFrame } from "./input.js";
 import * as storage from "./storage.js";
 import * as files from "./files.js";
@@ -23,8 +24,14 @@ globalThis.fesFiles = files;
 globalThis.fesCodeEditor = createCodeEditor(document.getElementById("code-editor"));
 let wasmMemory;
 globalThis.fesArtView = createArtView(() => wasmMemory.buffer);
-const { instance } = await init();
-wasmMemory = instance.exports.memory;
+const { instance } = await instantiate({
+  ...(await defaultBrowserSetup({ module: fetch(new URL("App.wasm", import.meta.url)) })),
+  // main() draws the shelf's demo picture through fesArtView, so it needs the memory before main() runs.
+  instrumentInstance(instance) {
+    wasmMemory = instance.exports.memory;
+    return instance;
+  },
+});
 new ResizeObserver(fitCanvas).observe(gameView);
 
 const context = canvas.getContext("2d");
