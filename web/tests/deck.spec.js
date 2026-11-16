@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { openPaused, runFrames } from "./frames.js";
+import { pixelColors, rgb } from "./pixels.js";
 
 const erroringOnThirdFrame = `frames = 0
 function _update()
@@ -154,3 +155,26 @@ test("at 600×834, the narrowest supported width, the game view's deck wraps ins
   }));
   expect(overflow).toEqual({ deck: 0, page: 0 });
 });
+
+for (const name of ["Carts", "Run", "Not now"]) {
+  test(`a focused ${name} key is framed in ink on all four sides, outside its butter ring`, async ({ page }) => {
+    await openApp(page);
+    const key = page.getByRole("button", { name, exact: true });
+    for (let presses = 0; presses < 40 && !(await key.evaluate((element) => element === document.activeElement)); presses += 1) {
+      await page.keyboard.press("Tab");
+    }
+    await expect(key).toBeFocused();
+    const ink = rgb(await key.evaluate((element) => getComputedStyle(element).borderTopColor)).join();
+
+    const { x, y, width, height } = await key.boundingBox();
+    const frameSides = [
+      { x, y: y - 4, width, height: 2 },
+      { x, y: y + height + 2, width, height: 2 },
+      { x: x - 4, y, width: 2, height },
+      { x: x + width + 2, y, width: 2, height },
+    ];
+    for (const clip of frameSides) {
+      expect(new Set(await pixelColors(page, await page.screenshot({ clip })))).toEqual(new Set([ink]));
+    }
+  });
+}

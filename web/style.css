@@ -17,9 +17,7 @@ body[data-view="shelf"] #cart-save { display: none; }
   flex: 1 0 calc(120 * var(--u)); margin: 0; box-sizing: border-box; height: calc(24 * var(--u));
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
 }
-#toolbar .key:focus-visible {
-  box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink), inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--key-dark), 0 var(--key-skirt) 0 0 var(--key-dark);
-}
+#toolbar .key:focus-visible, .tape .key:focus-visible { --key-ring: 0 0 0 calc(2 * var(--u)) var(--ink); }
 body[data-led="on"] .power-led { background: var(--led-on); }
 body[data-led="error"] .power-led { background: var(--led-error); }
 #notices p {
@@ -196,13 +194,13 @@ canvas { image-rendering: pixelated; }
 .plate.screws::after { right: calc(2 * var(--u)); }
 
 .key, .tab {
-  --key-face: var(--shell); --key-dark: var(--shell-dark); --key-skirt: calc(2 * var(--u));
+  --key-face: var(--shell); --key-dark: var(--shell-dark); --key-skirt: calc(2 * var(--u)); --key-ring: 0 0 transparent;
   box-sizing: border-box;
   min-width: calc(22 * var(--u)); min-height: calc(22 * var(--u));
   margin: 0; padding: 0 calc(4 * var(--u));
   appearance: none; border: var(--u) solid var(--ink); border-radius: 0;
   color: var(--ink); background: var(--key-face);
-  box-shadow: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--key-dark), 0 var(--key-skirt) 0 0 var(--key-dark);
+  box-shadow: var(--key-ring), inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--key-dark), 0 var(--key-skirt) 0 0 var(--key-dark);
   font: var(--type-ui);
   touch-action: manipulation;
 }
