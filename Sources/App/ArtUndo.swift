@@ -65,7 +65,7 @@ nonisolated(unsafe) private let redoClicked = JSClosure { _ in
 nonisolated(unsafe) private let keyPressed = JSClosure { arguments in
     let event = arguments[0]
     guard shownView == .art, event.metaKey.boolean == true, string(from: event.key)?.lowercased() == "z",
-        event.target.closest("dialog").isNull
+        document.querySelector("dialog:modal").isNull
     else {
         return .undefined
     }

@@ -148,7 +148,7 @@ ephemeralTest("cancelling the confirm changes nothing and adds no undo step", as
   await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveAttribute("aria-disabled", "true");
 });
 
-ephemeralTest("⌘Z pressed in the Replace question doesn't undo the art behind it", async ({ page }) => {
+ephemeralTest("⌘Z pressed while the Replace question is open doesn't undo the art behind it", async ({ page }) => {
   await openArtView(page);
   const colors = await previewColors(page);
   const sheet = { name: "sheet.png", mimeType: "image/png", buffer: encodePNG(8, 8, imagePixels(8, 8, () => colors[1])) };
@@ -158,6 +158,11 @@ ephemeralTest("⌘Z pressed in the Replace question doesn't undo the art behind 
 
   await page.locator("#art-import-file").setInputFiles(sheet);
   await expect(page.locator("#ask")).toBeVisible();
+  await page.keyboard.press("Meta+z");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Meta+z");
+  await page.evaluate(() => document.activeElement.blur());
   await page.keyboard.press("Meta+z");
   await answerQuestion(page, "Cancel");
 
