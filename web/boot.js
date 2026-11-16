@@ -1,6 +1,6 @@
 import { instantiate } from "../.build/js/instantiate.js";
 import { defaultBrowserSetup } from "../.build/js/platforms/browser.js";
-import { listenForInput, buttonsForFrame } from "./input.js";
+import { listenForInput, buttonsForFrame, showHeldButtons } from "./input.js";
 import * as storage from "./storage.js";
 import * as files from "./files.js";
 import { createCodeEditor } from "./code-editor.js";
@@ -10,10 +10,13 @@ import { startPWA } from "./pwa.js";
 startPWA();
 
 const canvas = document.getElementById("screen");
-const gameView = document.getElementById("game-view");
+const bezel = document.getElementById("bezel");
+const screenSlot = document.getElementById("screen-slot");
 
 function fitCanvas() {
-  const fit = Math.min(gameView.clientWidth / canvas.width, gameView.clientHeight / canvas.height);
+  const chromeWidth = bezel.offsetWidth - canvas.offsetWidth;
+  const chromeHeight = bezel.offsetHeight - canvas.offsetHeight;
+  const fit = Math.min((screenSlot.clientWidth - chromeWidth) / canvas.width, (screenSlot.clientHeight - chromeHeight) / canvas.height);
   const scale = Math.max(1, Math.floor(fit));
   canvas.style.width = `${canvas.width * scale}px`;
   canvas.style.height = `${canvas.height * scale}px`;
@@ -32,7 +35,7 @@ const { instance } = await instantiate({
     return instance;
   },
 });
-new ResizeObserver(fitCanvas).observe(gameView);
+new ResizeObserver(fitCanvas).observe(screenSlot);
 
 const context = canvas.getContext("2d");
 listenForInput(document.getElementById("pad"));
@@ -51,7 +54,11 @@ function drawFrame(now) {
   if (framesToRun > 0) {
     let address;
     try {
-      for (let i = 0; i < framesToRun; i++) address = instance.exports.frame(buttonsForFrame());
+      for (let i = 0; i < framesToRun; i++) {
+        const buttons = buttonsForFrame();
+        showHeldButtons(buttons);
+        address = instance.exports.frame(buttons);
+      }
     } catch (error) {
       document.getElementById("cart-error").textContent = `FES stopped: ${error}\nReload the page to start again.`;
       throw error;

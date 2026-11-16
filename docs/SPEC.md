@@ -27,7 +27,7 @@ Swift owns all state and logic. JavaScript is a thin layer that renders, capture
 - Boot: load the wasm module, run the frame loop with `requestAnimationFrame`.
 - Display: blit the framebuffer from wasm memory to a canvas with integer scaling. Start with Canvas 2D and `image-rendering: pixelated`; move to WebGL only if profiling demands it or for an optional CRT/LCD shader.
 - Code editor: CodeMirror 6 with Lua highlighting, diagnostics fed from the Lua or Teal compiler running in wasm.
-- Input: keyboard and a touch overlay (D-pad, A, B, Start, Select) drawn in HTML/CSS; gamepads are not planned (owner, 2026-11-05). All reduced to one button bitmask passed to Swift each frame.
+- Input: keyboard and an on-screen controller (D-pad, A, B, Start, Select) drawn in HTML/CSS beside the screen in landscape and under it in portrait (decision 047); gamepads are not planned (owner, 2026-11-05). All reduced to one button bitmask passed to Swift each frame.
 - Audio: an AudioWorklet that hosts a second, tiny Swift wasm module containing only the synth. The main thread sends APU register writes through the worklet's message port. No SharedArrayBuffer.
 - PWA shell: manifest, service worker, a small async OPFS wrapper.
 - Editor chrome: plain HTML and CSS.

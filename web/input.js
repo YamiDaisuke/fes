@@ -22,14 +22,23 @@ const KEY_BUTTONS = {
   ShiftRight: "select",
 };
 
+const CLICK_PRESS_FRAMES = 6;
+const FINGER_CLICK_WINDOW_MS = 500;
+
 const heldKeys = new Set();
 const pointerButtons = new Map();
+const clickPresses = new Map();
 let pressedSinceLastFrame = 0;
+let lastPointerEnd = -Infinity;
+let padButtons = [];
+
+function buttonBits(control) {
+  return control.dataset.buttons.split(" ").reduce((bits, name) => bits | BUTTON_BITS[name], 0);
+}
 
 function buttonsAt(x, y) {
   const control = document.elementFromPoint(x, y)?.closest("[data-buttons]");
-  if (!control) return 0;
-  return control.dataset.buttons.split(" ").reduce((bits, name) => bits | BUTTON_BITS[name], 0);
+  return control ? buttonBits(control) : 0;
 }
 
 function trackPointer(event) {
@@ -39,7 +48,14 @@ function trackPointer(event) {
 }
 
 function releasePointer(event) {
-  pointerButtons.delete(event.pointerId);
+  // iPadOS follows a finger's tap with a click; the tap already pressed the button.
+  if (pointerButtons.delete(event.pointerId)) lastPointerEnd = performance.now();
+}
+
+function pressForClick(event) {
+  const button = event.target.closest("button[data-buttons]");
+  if (!button || pointerButtons.size > 0 || performance.now() - lastPointerEnd < FINGER_CLICK_WINDOW_MS) return;
+  clickPresses.set(buttonBits(button), CLICK_PRESS_FRAMES);
 }
 
 function isPageKey(event) {
@@ -59,7 +75,9 @@ export function listenForInput(overlay) {
   addEventListener("keyup", (event) => {
     if (heldKeys.delete(event.code)) event.preventDefault();
   });
+  padButtons = [...overlay.querySelectorAll("button[data-buttons]")];
   overlay.addEventListener("pointerdown", trackPointer);
+  overlay.addEventListener("click", pressForClick);
   addEventListener("pointermove", (event) => {
     if (pointerButtons.has(event.pointerId)) trackPointer(event);
   });
@@ -68,13 +86,23 @@ export function listenForInput(overlay) {
   addEventListener("blur", () => {
     heldKeys.clear();
     pointerButtons.clear();
+    clickPresses.clear();
   });
+}
+
+export function showHeldButtons(bits) {
+  for (const button of padButtons) button.toggleAttribute("data-held", (bits & buttonBits(button)) !== 0);
 }
 
 export function buttonsForFrame() {
   let bits = pressedSinceLastFrame;
   for (const code of heldKeys) bits |= BUTTON_BITS[KEY_BUTTONS[code]];
   for (const pointerBits of pointerButtons.values()) bits |= pointerBits;
+  for (const [clickBits, framesLeft] of clickPresses) {
+    bits |= clickBits;
+    if (framesLeft === 1) clickPresses.delete(clickBits);
+    else clickPresses.set(clickBits, framesLeft - 1);
+  }
   pressedSinceLastFrame = 0;
   return bits;
 }

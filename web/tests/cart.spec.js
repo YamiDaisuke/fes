@@ -28,7 +28,7 @@ end`;
   );
 });
 
-test("a long error wraps and scrolls inside a bar that stays above the controls", async ({ page }) => {
+test("a long error wraps and scrolls inside a plate that stays on the screen", async ({ page }) => {
   await page.addInitScript(() => {
     window.testCartMainLua = `error(string.rep("A", 3000) .. string.rep("\\nline", 200), 0)`;
   });
@@ -42,8 +42,8 @@ test("a long error wraps and scrolls inside a bar that stays above the controls"
     clientHeight: bar.clientHeight,
     bottom: bar.getBoundingClientRect().bottom,
   }));
-  const controlsTop = await page.locator("#pad").evaluate((pad) => pad.getBoundingClientRect().top);
+  const screenBottom = await page.locator("#screen").evaluate((screen) => screen.getBoundingClientRect().bottom);
   expect(bar.scrollWidth).toBe(bar.clientWidth);
   expect(bar.scrollHeight).toBeGreaterThan(bar.clientHeight);
-  expect(bar.bottom).toBeLessThan(controlsTop);
+  expect(bar.bottom).toBeLessThan(screenBottom);
 });
