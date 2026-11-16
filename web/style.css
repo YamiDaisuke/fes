@@ -419,5 +419,5 @@ canvas { image-rendering: pixelated; }
   margin: 0 0 0 round(down, calc((100vw - var(--ask-width)) / 2), var(--u));
 }
 #ask form { display: grid; gap: calc(4 * var(--u)); }
-#ask h2 { margin-bottom: 0; }
+#ask h2 { margin-bottom: 0; overflow-wrap: anywhere; }
 #ask-keys { display: flex; justify-content: end; gap: calc(4 * var(--u)); margin: 0; }

@@ -39,6 +39,19 @@ test("a destructive question starts on Cancel, so Enter keeps the file", async (
   await expect(page.getByRole("tab")).toHaveText(["main.lua", "player.lua"]);
 });
 
+test("Tab and Shift+Tab stay inside the question", async ({ page }) => {
+  await openCodeView(page);
+  await button(page, "New file").click();
+  await expect(page.locator("#ask-field")).toBeFocused();
+
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#ask-field")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator("#ask-confirm")).toBeFocused();
+});
+
 test("Enter on the Restore question restores, since declining drops the copy", async ({ page }) => {
   await openCodeView(page);
   await page.evaluate(() => fesStorage.writeRecoveryCopy(JSON.stringify({ name: "Demo", mainLua: "-- restored" })));
@@ -50,7 +63,7 @@ test("Enter on the Restore question restores, since declining drops the copy", a
   await expect(page.locator(".cm-content")).toHaveText("-- restored");
 });
 
-test("console keys pressed in a question don't play or move the shelf", async ({ page }) => {
+test("console keys pressed while a question is open don't play or move the shelf, wherever focus is", async ({ page }) => {
   await openCodeView(page);
   await page.locator("#cart-name").fill("Mine");
   await button(page, "Save").click();
@@ -60,8 +73,13 @@ test("console keys pressed in a question don't play or move the shelf", async ({
   await button(page, "Delete").click();
   await expect(page.locator("#ask")).toBeVisible();
 
-  await page.keyboard.press("z");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
   await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("z");
+  await page.evaluate(() => document.activeElement.blur());
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("z");
   await waitTwoAnimationFrames(page);
   await answerQuestion(page, "Cancel");
   await button(page, "Duplicate").click();
@@ -97,4 +115,22 @@ test("a question sits on whole pixels in an odd-width window", async ({ page }) 
   const box = await page.locator("#ask").evaluate((dialog) => dialog.getBoundingClientRect().toJSON());
   expect(Number.isInteger(box.x)).toBe(true);
   expect(Number.isInteger(box.y)).toBe(true);
+});
+
+test("a long name with no spaces wraps inside the question", async ({ page }) => {
+  await page.setViewportSize({ width: 744, height: 1133 });
+  await openCodeView(page);
+  const longName = "W".repeat(64);
+  await page.locator("#cart-name").fill(longName);
+  await button(page, "Save").click();
+  await expect(page.locator("#cart-status")).toHaveText(`Saved ${longName}.`);
+  await openShelf(page);
+  await selectOnShelf(page, longName);
+  await button(page, "Delete").click();
+
+  const question = page.locator("#ask-question");
+  await expect(question).toContainText(longName);
+  const questionBox = await question.boundingBox();
+  const dialogBox = await page.locator("#ask").boundingBox();
+  expect(questionBox.width).toBeLessThanOrEqual(dialogBox.width);
 });
