@@ -28,7 +28,7 @@ func offerRecoveryCopy(_ text: String?) async {
         return
     }
     guard let copy = RecoveryCopy(text: text),
-        JSObject.global.confirm!("Restore unsaved changes to \(copy.name)?") == .boolean(true)
+        await ask("Restore unsaved changes to \(copy.name)?", confirm: "Restore", cancel: "Discard") != nil
     else {
         keepRecoveryCopy()
         return

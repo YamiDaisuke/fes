@@ -1,6 +1,7 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
 import { loadCartFromShelf } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 async function openPalettes(page) {
   await page.goto("/");
@@ -60,14 +61,9 @@ test("a reload straight after a picker value restores that color", async ({ page
   await picker(page).fill("#123456");
   await picker(page).fill("#ff0000");
 
-  const prompts = [];
-  page.on("dialog", (dialog) => {
-    prompts.push(dialog.message());
-    dialog.accept();
-  });
   await page.reload();
+  expect(await answerQuestion(page, "Restore")).toBe("Restore unsaved changes to Demo?");
   await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Demo.");
-  expect(prompts).toEqual(["Restore unsaved changes to Demo?"]);
   await page.locator("#show-art").click();
   await button(page, "Palettes").click();
   await expect(button(page, "Main color 3, #ff0000")).toBeVisible();
@@ -81,18 +77,13 @@ ephemeralTest("Reset puts back Z64 without asking, and Undo brings the colors ba
   await picker(page).fill("#123456");
   await picker(page).fill("#ff0000");
   await expect(reset).toBeEnabled();
-  const dialogs = [];
-  page.on("dialog", (dialog) => {
-    dialogs.push(dialog.message());
-    dialog.dismiss();
-  });
 
   await reset.click();
   await expect(button(page, "Main color 3, #c058cc")).toBeVisible();
   await expect(picker(page)).toHaveValue("#c058cc");
   await expect(reset).toBeDisabled();
   await expect(page.locator("#cart-status")).toHaveText("Reset the main palette.");
-  expect(dialogs).toEqual([]);
+  await expect(page.locator("#ask")).toBeHidden();
 
   await page.getByRole("button", { name: "Undo main palette reset" }).click();
   await expect(button(page, "Main color 3, #ff0000")).toBeVisible();

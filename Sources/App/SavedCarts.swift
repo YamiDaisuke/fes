@@ -99,12 +99,15 @@ func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
     _ = try await awaitStorage(storage.writeCartFile(folder, "cart.json", cartJSON))
 }
 
-func unsavedChangesMayBeDiscarded() -> Bool {
-    cart == lastSavedCart || JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") == .boolean(true)
+func unsavedChangesMayBeDiscarded() async -> Bool {
+    if cart == lastSavedCart {
+        return true
+    }
+    return await ask("Discard unsaved changes to \(cart.name)?", confirm: "Discard", destructive: true) != nil
 }
 
 func loadCart(folder: String) async -> Bool {
-    guard unsavedChangesMayBeDiscarded() else {
+    guard await unsavedChangesMayBeDiscarded() else {
         return false
     }
     if folder == demoFolder {

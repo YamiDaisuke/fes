@@ -1,6 +1,7 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { encodePNG, pngHeader } from "./png.js";
+import { answerQuestion } from "./ask.js";
 
 async function openArtView(page) {
   await page.goto("/");
@@ -104,16 +105,11 @@ test.describe("with a cart that draws sprite tile 17", () => {
     const colorAt = (x, y) => (isTransparentPixel(x, y) ? null : colors[1 + ((x + y) % 7)]);
     const png = encodePNG(16, 16, imagePixels(16, 16, colorAt));
     const sheetBefore = await sheetImage(page);
-    const questions = [];
-    page.on("dialog", (dialog) => {
-      questions.push(dialog.message());
-      dialog.accept();
-    });
 
     await page.locator("#art-import-file").setInputFiles({ name: "sheet.png", mimeType: "image/png", buffer: png });
 
+    expect(await answerQuestion(page, "Replace")).toBe("Replace all 256 sprite tiles with sheet.png? Undo puts them back.");
     await expect(page.locator("#cart-status")).toHaveText("Imported sheet.png into the sprite tiles.");
-    expect(questions).toEqual(["Replace all 256 sprite tiles with sheet.png? Undo puts them back."]);
     const tile17Color = (x, y) => colorAt(8 + x, 8 + y);
     expect(opaquePixelsMatch(await sheetTileRGB(page, 17), tile17Color)).toBe(true);
     const sheetAfter = await sheetImage(page);
@@ -128,7 +124,7 @@ test.describe("with a cart that draws sprite tile 17", () => {
     await expect.poll(async () => opaquePixelsMatch(await screenTopLeftTile(page), tile17Color)).toBe(true);
 
     await page.reload();
-    await expect.poll(() => questions.at(-1)).toBe("Restore unsaved changes to Demo?");
+    expect(await answerQuestion(page, "Restore")).toBe("Restore unsaved changes to Demo?");
     await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Demo.");
     await page.locator("#show-art").click();
     await page.getByRole("button", { name: "Sprites" }).click();
@@ -142,19 +138,35 @@ ephemeralTest("cancelling the confirm changes nothing and adds no undo step", as
   const colors = await previewColors(page);
   const sheetBefore = await sheetImage(page);
   const statusBefore = await page.locator("#cart-status").textContent();
-  const questions = [];
-  page.on("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.dismiss();
-  });
 
   const png = encodePNG(8, 8, imagePixels(8, 8, () => colors[1]));
   await page.locator("#art-import-file").setInputFiles({ name: "sheet.png", mimeType: "image/png", buffer: png });
 
-  await expect.poll(() => questions).toHaveLength(1);
+  await answerQuestion(page, "Cancel");
   await expect(page.locator("#cart-status")).toHaveText(statusBefore);
   expect(await sheetImage(page)).toBe(sheetBefore);
   await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveAttribute("aria-disabled", "true");
+});
+
+ephemeralTest("⌘Z pressed while the Replace question is open doesn't undo the art behind it", async ({ page }) => {
+  await openArtView(page);
+  const colors = await previewColors(page);
+  const sheet = { name: "sheet.png", mimeType: "image/png", buffer: encodePNG(8, 8, imagePixels(8, 8, () => colors[1])) };
+  await page.locator("#art-import-file").setInputFiles(sheet);
+  await answerQuestion(page, "Replace");
+  const sheetAfterImport = await sheetImage(page);
+
+  await page.locator("#art-import-file").setInputFiles(sheet);
+  await expect(page.locator("#ask")).toBeVisible();
+  await page.keyboard.press("Meta+z");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Meta+z");
+  await page.evaluate(() => document.activeElement.blur());
+  await page.keyboard.press("Meta+z");
+  await answerQuestion(page, "Cancel");
+
+  expect(await sheetImage(page)).toBe(sheetAfterImport);
 });
 
 ephemeralTest("a 9-color tile is refused with a report naming it, and Close returns focus to Import sheet", async ({ page }) => {
@@ -209,18 +221,13 @@ ephemeralTest("Import sheet and colors shows the image's own colors in the runni
   }
   const sheet = { name: "sheet.png", mimeType: "image/png", buffer: encodePNG(24, 16, imagePixels(24, 16, colorAt)) };
   const mainColorsBefore = await mainColors(page);
-  const questions = [];
-  page.on("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.accept();
-  });
 
   await chooseSheet(page, "Import sheet and colors", sheet);
 
-  await expect(page.locator("#cart-status")).toHaveText("Imported sheet.png and its colors into the sprite tiles.");
-  expect(questions).toEqual([
+  expect(await answerQuestion(page, "Replace")).toBe(
     "Replace all 256 sprite tiles, the sprite palettes and the main palette with sheet.png and its colors? The background tiles may change color too. Undo puts them back.",
-  ]);
+  );
+  await expect(page.locator("#cart-status")).toHaveText("Imported sheet.png and its colors into the sprite tiles.");
   expect((await mainColors(page)).slice(0, 7)).toEqual(imageColorsInReadingOrder);
   const tile17Color = (x, y) => colorAt(8 + x, 8 + y);
   expect(opaquePixelsMatch(await sheetTileRGB(page, 17), tile17Color)).toBe(true);
@@ -274,16 +281,11 @@ for (const buttonName of ["Import sheet", "Import sheet and colors"]) {
     await page.getByRole("button", { name: "Sprites" }).click();
     const colors = await previewColors(page);
     const png = encodePNG(128, 128, imagePixels(128, 128, (x, y) => colors[1 + ((x * 3 + y * 5) % 7)]));
-    let asked = false;
-    page.on("dialog", (dialog) => {
-      asked = true;
-      dialog.dismiss();
-    });
 
     await chooseSheet(page, buttonName, { name: "half.png", mimeType: "image/png", buffer: png.subarray(0, png.length / 2) });
 
     await expect(page.locator("#cart-status")).toHaveText("Can't import half.png: it isn't a complete PNG.");
-    expect(asked).toBe(false);
+    await expect(page.locator("#ask")).toBeHidden();
   });
 }
 

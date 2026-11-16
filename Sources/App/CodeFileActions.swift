@@ -5,53 +5,65 @@ nonisolated(unsafe) private let renameButton = document.getElementById("code-fil
 nonisolated(unsafe) private let deleteButton = document.getElementById("code-file-delete")
 
 nonisolated(unsafe) private let newFileClicked = JSClosure { _ in
-    guard let typed = string(from: JSObject.global.prompt!("New code file name:", "")) else {
-        return .undefined
-    }
-    let name = codeFileName(typed: typed)
-    if let problem = cart.addCodeFile(named: name) {
-        showStatus("Can't add \(name): \(problem)")
-        return .undefined
-    }
-    showStatus("Added \(name).")
-    showCodeFilesAfterChange(showing: name)
-    _ = codeEditor.focus()
+    afterEarlierStorageWork { await addCodeFile() }
     return .undefined
 }
 
 nonisolated(unsafe) private let renameFileClicked = JSClosure { _ in
-    let oldName = shownCodeFile
-    guard let typed = string(from: JSObject.global.prompt!("Rename \(oldName) to:", String(oldName.dropLast(".lua".count)))) else {
-        return .undefined
-    }
-    let newName = codeFileName(typed: typed)
-    if newName == oldName {
-        return .undefined
-    }
-    if let problem = cart.renameCodeFile(oldName, to: newName) {
-        showStatus("Can't rename \(oldName) to \(newName): \(problem)")
-        return .undefined
-    }
-    showStatus("Renamed \(oldName) to \(newName).")
-    _ = codeEditor.forgetFile(oldName)
-    showCodeFilesAfterChange(showing: newName)
+    afterEarlierStorageWork { await renameShownCodeFile() }
     return .undefined
 }
 
 nonisolated(unsafe) private let deleteFileClicked = JSClosure { _ in
+    afterEarlierStorageWork { await deleteShownCodeFile() }
+    return .undefined
+}
+
+private func addCodeFile() async {
+    guard let typed = await ask("New code file name:", confirm: "Add", textField: "") else {
+        return
+    }
+    let name = codeFileName(typed: typed)
+    if let problem = cart.addCodeFile(named: name) {
+        showStatus("Can't add \(name): \(problem)")
+        return
+    }
+    showStatus("Added \(name).")
+    showCodeFilesAfterChange(showing: name)
+    _ = codeEditor.focus()
+}
+
+private func renameShownCodeFile() async {
+    let oldName = shownCodeFile
+    guard let typed = await ask("Rename \(oldName) to:", confirm: "Rename", textField: String(oldName.dropLast(".lua".count))) else {
+        return
+    }
+    let newName = codeFileName(typed: typed)
+    if newName == oldName {
+        return
+    }
+    if let problem = cart.renameCodeFile(oldName, to: newName) {
+        showStatus("Can't rename \(oldName) to \(newName): \(problem)")
+        return
+    }
+    showStatus("Renamed \(oldName) to \(newName).")
+    _ = codeEditor.forgetFile(oldName)
+    showCodeFilesAfterChange(showing: newName)
+}
+
+private func deleteShownCodeFile() async {
     let name = shownCodeFile
-    guard JSObject.global.confirm!("Delete \(name)?") == .boolean(true) else {
-        return .undefined
+    guard await ask("Delete \(name)?", confirm: "Delete", destructive: true) != nil else {
+        return
     }
     if let problem = cart.removeCodeFile(named: name) {
         showStatus("Can't delete \(name): \(problem)")
-        return .undefined
+        return
     }
     showStatus("Deleted \(name).")
     _ = codeEditor.forgetFile(name)
     showCodeFilesAfterChange(showing: "main.lua")
     _ = tab(showing: "main.lua").focus()
-    return .undefined
 }
 
 func startCodeFileActions() {
@@ -66,7 +78,7 @@ func updateRenameAndDeleteButtons() {
     deleteButton.disabled = .boolean(isMainShown)
 }
 
-// The iPad keyboard capitalises the first letter typed into a prompt.
+// Decision 039: code file names are lower case whatever was typed.
 private func codeFileName(typed: String) -> String {
     let lowercased = typed.lowercased()
     return lowercased.hasSuffix(".lua") ? lowercased : lowercased + ".lua"

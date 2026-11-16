@@ -2,6 +2,7 @@ import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { savedCartEntries } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -13,15 +14,6 @@ async function saveAs(page, name) {
   await page.locator("#cart-name").fill(name);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText(`Saved ${name}.`);
-}
-
-function recordDialogs(page, answer) {
-  const messages = [];
-  page.on("dialog", (dialog) => {
-    messages.push(dialog.message());
-    answer === "accept" ? dialog.accept() : dialog.dismiss();
-  });
-  return messages;
 }
 
 async function reloadUntilCartsListed(page) {
@@ -40,10 +32,9 @@ test("unsaved code comes back after a reload when the prompt is accepted", async
   await openBooted(page);
   await saveAs(page, "Mine");
   await typeCode(page, 'error("edited")');
-  const questions = recordDialogs(page, "accept");
 
   await page.reload();
-  await expect.poll(() => questions).toEqual(["Restore unsaved changes to Mine?"]);
+  expect(await answerQuestion(page, "Restore")).toBe("Restore unsaved changes to Mine?");
   await expect(page.locator(".cm-content")).toHaveText('error("edited")');
   await expect(page.locator("#cart-name")).toHaveValue("Mine");
   await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Mine.");
@@ -55,26 +46,24 @@ test("declining the prompt drops the copy", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");
   await typeCode(page, "-- edited");
-  const questions = recordDialogs(page, "dismiss");
 
   await reloadUntilCartsListed(page);
-  await expect.poll(() => questions).toEqual(["Restore unsaved changes to Mine?"]);
+  expect(await answerQuestion(page, "Discard")).toBe("Restore unsaved changes to Mine?");
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator(".cm-content")).toHaveText("-- original");
   expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
 
   await reloadUntilCartsListed(page);
-  expect(questions).toHaveLength(1);
+  await expect(page.locator("#ask")).toBeHidden();
 });
 
 test("saving removes the copy", async ({ page }) => {
   await openBooted(page);
   await typeCode(page, "-- edited");
   await saveAs(page, "Mine");
-  const questions = recordDialogs(page, "accept");
 
   await reloadUntilCartsListed(page);
-  expect(questions).toEqual([]);
+  await expect(page.locator("#ask")).toBeHidden();
 });
 
 test("code whose saved cart can't be read is restored as a new cart", async ({ page }) => {
@@ -85,9 +74,9 @@ test("code whose saved cart can't be read is restored as a new cart", async ({ p
     const [folder] = await fesStorage.listCartFolders();
     await fesStorage.writeCartFile(folder, "cart.json", "{");
   });
-  recordDialogs(page, "accept");
 
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator("#cart-status")).toHaveText(
     "Restored unsaved changes to Mine as a new cart: its saved cart couldn't be read or was renamed.",
   );
@@ -100,10 +89,9 @@ test("a malformed copy is removed without asking", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");
   await page.evaluate(() => fesStorage.writeRecoveryCopy("{"));
-  const questions = recordDialogs(page, "accept");
 
   await reloadUntilCartsListed(page);
-  expect(questions).toEqual([]);
+  await expect(page.locator("#ask")).toBeHidden();
   expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
 });
 
@@ -114,9 +102,9 @@ test("a copy whose folder now holds another cart is restored as a new cart", asy
   await page.evaluate((folder) => {
     fesStorage.writeRecoveryCopy(JSON.stringify({ folder, name: "Other", mainLua: "-- other's edit" }));
   }, mineFolder);
-  recordDialogs(page, "accept");
 
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator("#cart-status")).toHaveText(
     "Restored unsaved changes to Other as a new cart: its saved cart couldn't be read or was renamed.",
   );
@@ -129,10 +117,9 @@ test("a copy whose folder now holds another cart is restored as a new cart", asy
 test("an edited cart that was never saved is restored under its name", async ({ page }) => {
   await openBooted(page);
   await typeCode(page, "-- edited demo");
-  const questions = recordDialogs(page, "accept");
 
   await page.reload();
-  await expect.poll(() => questions).toEqual(["Restore unsaved changes to Demo?"]);
+  expect(await answerQuestion(page, "Restore")).toBe("Restore unsaved changes to Demo?");
   await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Demo.");
   await expect(page.locator(".cm-content")).toHaveText("-- edited demo");
   await saveAs(page, "Demo");
@@ -144,9 +131,9 @@ test("a restored cart that was never saved doesn't run until Game, which runs it
   await page.getByRole("button", { name: "Carts" }).click();
   await page.getByRole("button", { name: "New cart" }).click();
   await typeCode(page, 'error("top level ran", 0)');
-  recordDialogs(page, "accept");
 
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to New cart.");
   await expect(page.locator("body")).toHaveAttribute("data-led", "off");
   await expect(page.locator("#cart-error")).toBeEmpty();
@@ -178,9 +165,9 @@ test("a copy from an older FES restores its code over the saved cart's art", asy
     await fesStorage.writeCartFile(folder, "sprites.tiles", savedSprites);
     fesStorage.writeRecoveryCopy(JSON.stringify({ folder, name: "Mine", mainLua: "-- old" }));
   }, savedSprites);
-  recordDialogs(page, "accept");
 
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Mine.");
   await expect(page.locator(".cm-content")).toHaveText("-- old");
   const rewritten = JSON.parse(await page.evaluate(() => fesStorage.readRecoveryCopy()));
@@ -208,9 +195,9 @@ test("a failed write removes the older copy and says so", async ({ page }) => {
 ephemeralTest("a restore without saving still says why Save is unavailable", async ({ page }) => {
   await openBooted(page);
   await typeCode(page, "-- edited demo");
-  recordDialogs(page, "accept");
 
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator(".cm-content")).toHaveText("-- edited demo");
   await expect(page.locator("#cart-status")).toHaveText("Saving is unavailable (Private Browsing?)");
 });

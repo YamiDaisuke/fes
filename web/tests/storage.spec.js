@@ -2,6 +2,7 @@ import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { loadCartFromShelf, openShelf, savedCartEntries, selectOnShelf } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 async function openBooted(page) {
   await page.goto("/");
@@ -16,13 +17,8 @@ async function saveAs(page, name) {
 }
 
 async function cancelLoadAfterQuestion(page, name, question) {
-  const questions = [];
-  page.once("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.dismiss();
-  });
   await loadCartFromShelf(page, name);
-  await expect.poll(() => questions).toEqual([question]);
+  expect(await answerQuestion(page, "Cancel")).toBe(question);
 }
 
 test("a saved cart's code runs when it is loaded on another page", async ({ context, page }) => {
@@ -89,8 +85,8 @@ test("loading over unsaved code asks first, and cancelling keeps the edit", asyn
   await cancelLoadAfterQuestion(page, "Mine", "Discard unsaved changes to Mine?");
   await expect(editor).toHaveText("-- edited");
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Edit", exact: true }).click();
+  await answerQuestion(page, "Discard");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Mine.");
   await expect(editor).toHaveText("-- saved");
 });
@@ -165,11 +161,6 @@ test("a cart tapped while a save is running loads after the save, without asking
       return close.call(this);
     };
   });
-  const questions = [];
-  page.on("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.accept();
-  });
   await openBooted(page);
   await saveAs(page, "Other");
   await openBooted(page);
@@ -184,7 +175,7 @@ test("a cart tapped while a save is running loads after the save, without asking
   await loadCartFromShelf(page, "Mine");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Mine.");
   await expect(page.locator(".cm-content")).toHaveText("-- mine");
-  expect(questions).toEqual([]);
+  await expect(page.locator("#ask")).toBeHidden();
 });
 
 test("Save still saves when the request for persistent storage never answers", async ({ page }) => {

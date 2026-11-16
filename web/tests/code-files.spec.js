@@ -2,6 +2,7 @@
 import { test, expect } from "./persistent-context.js";
 import { typeCode, loadCodeFiles } from "./code-editor.js";
 import { loadCartFromShelf } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 const twoFiles = {
   "main.lua": 'local player = require("player")',
@@ -18,13 +19,9 @@ async function openTwoFiles(page, codeFiles = twoFiles) {
 const tab = (page, name) => page.getByRole("tab", { name });
 const lines = (page) => page.locator(".cm-line");
 
-function answerNextDialog(page, text) {
-  page.once("dialog", (dialog) => dialog.accept(text));
-}
-
-async function clickAndAnswer(page, buttonName, text) {
-  answerNextDialog(page, text);
+async function clickAndAnswer(page, buttonName, answer, typed) {
   await page.getByRole("button", { name: buttonName, exact: true }).click();
+  await answerQuestion(page, answer, typed);
 }
 
 async function typeAtEnd(page, text) {
@@ -143,7 +140,7 @@ test("loading a cart forgets the undo history of the code it replaces", async ({
 
 test("a new file opens empty and shown, and main.lua can require it", async ({ page }) => {
   await openTwoFiles(page);
-  await clickAndAnswer(page, "New file", "Enemy");
+  await clickAndAnswer(page, "New file", "Add", "Enemy");
 
   await expect(page.locator("#cart-status")).toHaveText("Added enemy.lua.");
   await expect(page.getByRole("tab")).toHaveText(["main.lua", "enemy.lua", "player.lua"]);
@@ -160,7 +157,7 @@ test("a new file opens empty and shown, and main.lua can require it", async ({ p
 test("renaming a file keeps its text, and a require of the old name is then not found", async ({ page }) => {
   await openTwoFiles(page, { "main.lua": 'require("enemy")', "enemy.lua": "return 1" });
   await tab(page, "enemy.lua").click();
-  await clickAndAnswer(page, "Rename", "foe");
+  await clickAndAnswer(page, "Rename", "Rename", "foe");
 
   await expect(page.locator("#cart-status")).toHaveText("Renamed enemy.lua to foe.lua.");
   await expect(page.getByRole("tab")).toHaveText(["main.lua", "foe.lua"]);
@@ -176,11 +173,11 @@ test("a bad name and a taken name each show their message and change nothing", a
   await tab(page, "player.lua").click();
   const status = page.locator("#cart-status");
 
-  await clickAndAnswer(page, "New file", "2fast");
+  await clickAndAnswer(page, "New file", "Add", "2fast");
   await expect(status).toHaveText("Can't add 2fast.lua: code file names can't start with a digit");
-  await clickAndAnswer(page, "New file", "player");
+  await clickAndAnswer(page, "New file", "Add", "player");
   await expect(status).toHaveText("Can't add player.lua: this cart already has it");
-  await clickAndAnswer(page, "Rename", "main");
+  await clickAndAnswer(page, "Rename", "Rename", "main");
   await expect(status).toHaveText("Can't rename player.lua to main.lua: this cart already has it");
 
   await expect(page.getByRole("tab")).toHaveText(["main.lua", "player.lua"]);
@@ -194,7 +191,7 @@ test("deleting a file shows main.lua, and Save removes the file from the folder"
   await expect(deleteButton).toBeDisabled();
   await tab(page, "player.lua").click();
   await expect(deleteButton).toBeEnabled();
-  await clickAndAnswer(page, "Delete");
+  await clickAndAnswer(page, "Delete", "Delete");
 
   await expect(page.locator("#cart-status")).toHaveText("Deleted player.lua.");
   await expect(tab(page, "main.lua")).toHaveAttribute("aria-selected", "true");
@@ -221,10 +218,10 @@ test("deleting a file shows main.lua, and Save removes the file from the folder"
 
 test("an unsaved new file comes back from the recovery copy after a reload", async ({ page }) => {
   await openTwoFiles(page);
-  await clickAndAnswer(page, "New file", "enemy");
+  await clickAndAnswer(page, "New file", "Add", "enemy");
 
-  answerNextDialog(page);
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Two files.");
   await expect(page.getByRole("tab")).toHaveText(["main.lua", "enemy.lua", "player.lua"]);
 });
@@ -241,13 +238,13 @@ test("a code file that can't be removed doesn't lock a full cart out of loading 
   });
 
   await tab(page, "m31.lua").click();
-  await clickAndAnswer(page, "Delete");
-  await clickAndAnswer(page, "New file", "extra");
+  await clickAndAnswer(page, "Delete", "Delete");
+  await clickAndAnswer(page, "New file", "Add", "extra");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText(/^Can't save: can't remove m31\.lua, which the cart no longer has: /);
 
-  answerNextDialog(page);
   await loadCartFromShelf(page, "Full");
+  await answerQuestion(page, "Discard");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Full.");
   await expect(page.getByRole("tab")).toHaveCount(32);
   await expect(tab(page, "m31.lua")).toBeVisible();

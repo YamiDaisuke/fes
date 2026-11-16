@@ -1,6 +1,7 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
 import { typeCode, loadCodeFiles } from "./code-editor.js";
+import { answerQuestion } from "./ask.js";
 
 async function openCodeView(page) {
   await page.goto("/");
@@ -41,9 +42,9 @@ ephemeralTest("Code after a runtime error puts the cursor on its line", async ({
 test("restored code with a syntax error shows it without typing", async ({ page }) => {
   await openCodeView(page);
   await page.evaluate(() => fesStorage.writeRecoveryCopy(JSON.stringify({ name: "Demo", mainLua: "x = 1\ny = 2\nz = = 3" })));
-  page.on("dialog", (dialog) => dialog.accept());
 
   await page.reload();
+  await answerQuestion(page, "Restore");
   await expect(page.locator("#code-error")).toHaveText("main.lua:3: unexpected symbol near '='");
   await expect(line(page, 3).locator(".cm-lintRange-error")).toHaveCount(1);
 });
