@@ -153,27 +153,30 @@
     </dialog>
   </div>
   <div id="game-view">
-    <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
-    <pre id="cart-error" role="alert"></pre>
+    <div id="screen-slot">
+      <div id="bezel" class="plate">
+        <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
+        <pre id="cart-error" class="plate" role="alert"></pre>
+        <p id="bezel-strip" aria-hidden="true"><span class="led power-led"></span><span id="badge">FES</span></p>
+      </div>
+    </div>
     <div id="pad" role="group" aria-label="Controller">
       <div id="dpad">
         <div data-buttons="up left" aria-hidden="true"></div>
-        <button type="button" tabindex="-1" data-buttons="up" aria-label="Up">↑</button>
+        <button type="button" tabindex="-1" data-buttons="up" aria-label="Up"></button>
         <div data-buttons="up right" aria-hidden="true"></div>
-        <button type="button" tabindex="-1" data-buttons="left" aria-label="Left">←</button>
-        <div></div>
-        <button type="button" tabindex="-1" data-buttons="right" aria-label="Right">→</button>
+        <button type="button" tabindex="-1" data-buttons="left" aria-label="Left"></button>
+        <div id="dpad-center"></div>
+        <button type="button" tabindex="-1" data-buttons="right" aria-label="Right"></button>
         <div data-buttons="down left" aria-hidden="true"></div>
-        <button type="button" tabindex="-1" data-buttons="down" aria-label="Down">↓</button>
+        <button type="button" tabindex="-1" data-buttons="down" aria-label="Down"></button>
         <div data-buttons="down right" aria-hidden="true"></div>
       </div>
-      <div id="system">
-        <button type="button" tabindex="-1" data-buttons="select">Select</button>
-        <button type="button" tabindex="-1" data-buttons="start">Start</button>
-      </div>
+      <button type="button" tabindex="-1" data-buttons="select" class="shaped-key pill"><span></span>Select</button>
+      <button type="button" tabindex="-1" data-buttons="start" class="shaped-key pill"><span></span>Start</button>
       <div id="face">
-        <button type="button" tabindex="-1" data-buttons="b">B</button>
-        <button type="button" tabindex="-1" data-buttons="a">A</button>
+        <button type="button" tabindex="-1" data-buttons="b" class="shaped-key"><span>B</span></button>
+        <button type="button" tabindex="-1" data-buttons="a" class="shaped-key"><span>A</span></button>
       </div>
     </div>
   </div>

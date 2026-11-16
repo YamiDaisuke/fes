@@ -7,7 +7,7 @@ body:not([data-view="art"]) #art-view,
 body:not([data-view="shelf"]) #shelf-view,
 body:not([data-view="game"]) #set-label,
 body[data-view="shelf"] #cart-save { display: none; }
-#code-view, #art-view, #game-view { background: #000; }
+#code-view, #art-view { background: #000; }
 #toolbar {
   display: flex; flex-wrap: wrap; align-items: center; gap: calc(4 * var(--u));
   margin: calc(2 * var(--u) + env(safe-area-inset-top)) calc(2 * var(--u) + env(safe-area-inset-right)) 0 calc(2 * var(--u) + env(safe-area-inset-left));
@@ -46,37 +46,133 @@ body[data-led="error"] .power-led { background: var(--led-error); }
 /* WebKit may not announce a live region that was display: none when its text arrived. */
 #code-error:empty { padding: 0; }
 .cm-editor { height: 100%; font-size: 16px; }
-#game-view { position: relative; display: grid; place-items: center; }
 canvas { image-rendering: pixelated; }
+#game-view {
+  display: grid; gap: calc(4 * var(--u)); box-sizing: border-box;
+  /* 100vw, not 100%: WebKit's round() breaks when only one argument is a percentage (WebKit bug 278852). */
+  width: round(down, 100vw, var(--u));
+  padding: calc(2 * var(--u)) calc(2 * var(--u) + env(safe-area-inset-right)) calc(2 * var(--u) + env(safe-area-inset-bottom)) calc(2 * var(--u) + env(safe-area-inset-left));
+  grid-template: "dpad screen face" minmax(0, 1fr) "select screen start" auto / auto minmax(0, 1fr) auto;
+}
+#screen-slot { grid-area: screen; min-width: 0; min-height: 0; overflow: hidden; display: grid; justify-items: center; align-items: start; }
+#bezel {
+  position: relative; padding-bottom: 0; background: var(--well);
+  box-shadow: inset var(--u) var(--u) 0 0 var(--screen-off), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-deep);
+}
+#screen { display: block; background: var(--screen-off); }
+#bezel-strip { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: calc(2 * var(--u)) 0; font: var(--type-ui); }
+#badge { padding: 0 calc(2 * var(--u)); color: var(--ink); background: var(--pink); }
+#cart-error {
+  position: absolute; top: calc(4 * var(--u)); left: calc(4 * var(--u)); right: calc(4 * var(--u)); margin: 0;
+  max-height: 50%; overflow: auto;
+  background: var(--coral);
+  box-shadow: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--coral-dark);
+  color: var(--ink); font: var(--type-code); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+#cart-error:empty { display: none; }
 #pad {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  display: flex; justify-content: space-between; align-items: end;
-  padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  grid-area: 1 / 1 / -1 / -1; display: grid; grid-template: subgrid / subgrid;
   pointer-events: none;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  --round-shape:
+    linear-gradient(#000 0 0) center / calc(100% - 24 * var(--u)) 100% no-repeat,
+    linear-gradient(#000 0 0) center / calc(100% - 16 * var(--u)) calc(100% - 4 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) center / calc(100% - 12 * var(--u)) calc(100% - 8 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) center / calc(100% - 8 * var(--u)) calc(100% - 12 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) center / calc(100% - 4 * var(--u)) calc(100% - 16 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) center / 100% calc(100% - 24 * var(--u)) no-repeat;
+  --pill-shape:
+    linear-gradient(#000 0 0) center / calc(100% - 4 * var(--u)) 100% no-repeat,
+    linear-gradient(#000 0 0) center / calc(100% - 2 * var(--u)) calc(100% - 2 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) center / 100% calc(100% - 4 * var(--u)) no-repeat;
 }
-#pad > div { pointer-events: auto; }
-#pad button {
-  border: 0; padding: 0; color: #fff; font: 600 16px system-ui, sans-serif;
-  background: rgb(255 255 255 / 0.25);
+#pad > * { pointer-events: auto; }
+[data-buttons="select"] { grid-area: select; justify-self: center; }
+[data-buttons="start"] { grid-area: start; justify-self: center; }
+#dpad {
+  --key-face: var(--shell-dark); --key-dark: var(--shell-deep);
+  --lit-top: inset 0 var(--u) 0 0 var(--shell-light); --lit-left: inset var(--u) 0 0 0 var(--shell-light);
+  --shade-right: inset calc(-1 * var(--u)) 0 0 0 var(--key-dark); --shade-bottom: inset 0 calc(-1 * var(--u)) 0 0 var(--key-dark);
+  --skirt: 0 calc(2 * var(--u)) 0 0 var(--key-dark);
+  grid-area: dpad; align-self: end;
+  display: grid; grid-template: repeat(3, calc(28 * var(--u))) / repeat(3, calc(28 * var(--u)));
 }
-#dpad { display: grid; grid-template: repeat(3, 56px) / repeat(3, 56px); }
-#dpad button { border-radius: 8px; }
-#system { display: flex; gap: 16px; }
-#system button { width: 88px; height: 32px; border-radius: 16px; }
-#face { display: flex; gap: 16px; }
-#face button { width: 72px; height: 72px; border-radius: 50%; }
-#cart-error {
-  position: absolute; top: 0; left: 0; right: 0; margin: 0;
-  padding: 8px calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
-  color: #fff; background: rgb(0 0 0 / 0.75); font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
-  max-height: 40vh; overflow: auto;
+#dpad button {
+  position: relative; margin: 0; padding: 0; border: var(--u) solid var(--ink); border-radius: 0;
+  appearance: none; background: var(--key-face);
 }
-#cart-error:empty { display: none; }
+#dpad button[data-held] { background: var(--key-dark); }
+#dpad button::before {
+  content: ""; position: absolute; inset: 0; margin: auto; width: calc(6 * var(--u)); height: calc(6 * var(--u));
+  background: var(--ink);
+  mask:
+    linear-gradient(#000 0 0) top / calc(2 * var(--u)) calc(2 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) center / calc(4 * var(--u)) calc(2 * var(--u)) no-repeat,
+    linear-gradient(#000 0 0) bottom / calc(6 * var(--u)) calc(2 * var(--u)) no-repeat;
+}
+#dpad [data-buttons="up"] { border-bottom: 0; box-shadow: var(--lit-top), var(--lit-left), var(--shade-right); }
+#dpad [data-buttons="left"] { border-right: 0; box-shadow: var(--lit-top), var(--lit-left), var(--shade-bottom), var(--skirt); }
+#dpad [data-buttons="left"]::before { rotate: -90deg; }
+#dpad [data-buttons="right"] { border-left: 0; box-shadow: var(--lit-top), var(--shade-right), var(--shade-bottom), var(--skirt); }
+#dpad [data-buttons="right"]::before { rotate: 90deg; }
+#dpad [data-buttons="down"] { border-top: 0; box-shadow: var(--lit-left), var(--shade-right), var(--shade-bottom), var(--skirt); }
+#dpad [data-buttons="down"]::before { rotate: 180deg; }
+#dpad-center {
+  --ink-corner: linear-gradient(var(--ink) 0 0) no-repeat;
+  position: relative;
+  background: var(--ink-corner) top left / var(--u) var(--u), var(--ink-corner) top right / var(--u) var(--u),
+    var(--ink-corner) bottom left / var(--u) var(--u), var(--ink-corner) bottom right / var(--u) var(--u), var(--key-face);
+}
+#dpad-center::before {
+  content: ""; position: absolute; top: calc(10 * var(--u)); left: calc(10 * var(--u)); width: calc(8 * var(--u)); height: calc(8 * var(--u));
+  background: var(--shell-deep); box-shadow: inset var(--u) var(--u) 0 0 var(--ink);
+}
+.shaped-key {
+  --press: 0px;
+  position: relative; isolation: isolate; box-sizing: border-box;
+  margin: 0; padding: 0; border: 0; border-radius: 0; appearance: none;
+  background: none; color: var(--ink); font: var(--type-ui);
+}
+.shaped-key[data-held] { --press: var(--u); }
+.shaped-key::after, .shaped-key::before, .shaped-key > span, .shaped-key > span::before, .shaped-key > span::after {
+  position: absolute; mask: var(--shape);
+}
+.shaped-key::after, .shaped-key::before, .shaped-key > span::before, .shaped-key > span::after { content: ""; }
+.shaped-key::after {
+  top: calc(2 * var(--u)); height: var(--cap-height); left: var(--cap-side); right: var(--cap-side);
+  background: var(--key-dark); z-index: -1;
+}
+.shaped-key::before { top: var(--press); height: var(--cap-height); left: var(--cap-side); right: var(--cap-side); background: var(--ink); }
+.shaped-key > span {
+  top: calc(var(--u) + var(--press)); height: calc(var(--cap-height) - 2 * var(--u));
+  left: calc(var(--cap-side) + var(--u)); right: calc(var(--cap-side) + var(--u));
+  isolation: isolate; background: var(--shell-light);
+}
+.shaped-key > span::before { inset: var(--u) 0 0 var(--u); background: var(--key-dark); z-index: -1; }
+.shaped-key > span::after { inset: var(--u); background: var(--key-face); z-index: -1; }
+#face { grid-area: face; align-self: end; display: flex; align-items: start; }
+#face .shaped-key {
+  --shape: var(--round-shape); --cap-height: calc(36 * var(--u)); --cap-side: 0px;
+  width: calc(36 * var(--u)); height: calc(38 * var(--u));
+}
+#face .shaped-key > span { display: grid; place-items: center; }
+[data-buttons="a"] { --key-face: var(--coral); --key-dark: var(--coral-dark); }
+[data-buttons="b"] { --key-face: var(--butter); --key-dark: var(--butter-dark); margin-top: calc(16 * var(--u)); }
+.shaped-key.pill {
+  --shape: var(--pill-shape); --cap-height: calc(8 * var(--u)); --cap-side: calc(10 * var(--u));
+  --key-face: var(--pink); --key-dark: var(--pink-dark);
+  width: calc(44 * var(--u)); height: calc(22 * var(--u)); padding-top: calc(12 * var(--u)); text-align: center;
+}
+@media (orientation: portrait) {
+  #game-view { grid-template: "screen screen screen screen" minmax(0, 1fr) "dpad select start face" auto / 1fr auto auto 1fr; }
+  #dpad { justify-self: start; }
+  #face { justify-self: end; }
+  [data-buttons="select"], [data-buttons="start"] { align-self: end; }
+}
 #shelf-view {
   display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); gap: 8px;
   padding: 8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
