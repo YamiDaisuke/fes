@@ -46,6 +46,7 @@ func startShelf() {
     _ = playButton.addEventListener("click", playClicked)
     _ = editButton.addEventListener("click", editClicked)
     startShelfActions()
+    // No pictures yet: boot.js hands fesArtView the wasm memory only after main() returns, so blit would fail here.
     showShelfEntries([], labelImages: [:])
 }
 
