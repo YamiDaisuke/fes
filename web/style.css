@@ -9,12 +9,12 @@ body:not([data-view="game"]) #set-label,
 body[data-view="shelf"] #cart-save { display: none; }
 #code-view, #art-view, #game-view { background: #000; }
 #toolbar {
-  display: flex; align-items: center; gap: calc(4 * var(--u));
+  display: flex; flex-wrap: wrap; align-items: center; gap: calc(4 * var(--u));
   margin: calc(2 * var(--u) + env(safe-area-inset-top)) calc(2 * var(--u) + env(safe-area-inset-right)) 0 calc(2 * var(--u) + env(safe-area-inset-left));
 }
 #toolbar > * { flex: none; }
 #cart-status {
-  flex: 1 1 0; min-width: 0; margin: 0; box-sizing: border-box; height: calc(24 * var(--u));
+  flex: 1 0 calc(120 * var(--u)); margin: 0; box-sizing: border-box; height: calc(24 * var(--u));
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
 }
 body[data-led="on"] .power-led { background: var(--led-on); }

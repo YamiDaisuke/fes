@@ -69,8 +69,16 @@ test("the power LED is off on the shelf and on in the game", async ({ page }) =>
   await expect(body).toHaveAttribute("data-led", "off");
 });
 
-for (const viewport of [{ width: 1194, height: 834 }, { width: 1133, height: 744 }, { width: 834, height: 1194 }]) {
-  test(`at ${viewport.width}×${viewport.height} the full deck is one row that fits, with keys of at least 44 px on whole pixels`, async ({ page }) => {
+const deckLayouts = [
+  { width: 1194, height: 834, readoutBesideKeys: true },
+  { width: 1133, height: 744, readoutBesideKeys: true },
+  { width: 834, height: 1194, readoutBesideKeys: false },
+  { width: 744, height: 1133, readoutBesideKeys: false },
+  { width: 678, height: 1024, readoutBesideKeys: false },
+];
+
+for (const { readoutBesideKeys, ...viewport } of deckLayouts) {
+  test(`at ${viewport.width}×${viewport.height} the deck's keys are one row that fits, with the readout ${readoutBesideKeys ? "beside them" : "under them"}, keys of at least 44 px and everything on whole pixels`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await openApp(page);
     await page.getByRole("button", { name: "Game" }).click();
@@ -101,6 +109,7 @@ for (const viewport of [{ width: 1194, height: 834 }, { width: 1133, height: 744
       expect(button.width, button.name).toBeGreaterThanOrEqual(44);
       expect(button.height, button.name).toBeGreaterThanOrEqual(44);
     }
+    expect(deck.readout.y < carts.y + carts.height, "the readout shares the keys' row").toBe(readoutBesideKeys);
     expect(deck.overflow).toBeLessThanOrEqual(0);
     expect(deck.right).toBeLessThanOrEqual(deck.window.width);
     expect(deck.page.width).toBeLessThanOrEqual(deck.window.width);
@@ -111,3 +120,37 @@ for (const viewport of [{ width: 1194, height: 834 }, { width: 1133, height: 744
     }
   });
 }
+
+for (const viewport of [{ width: 744, height: 1133 }, { width: 678, height: 1024 }]) {
+  test(`at ${viewport.width}×${viewport.height} the readout shows the Set label message in full`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await openApp(page);
+    await page.getByRole("button", { name: "Game" }).click();
+    await page.getByRole("button", { name: "Set label" }).click();
+    const readout = page.locator("#cart-status");
+    await expect(readout).toHaveText("Label set. Save to keep it.");
+
+    const { textBottom, contentBottom } = await readout.evaluate((status) => {
+      const text = document.createRange();
+      text.selectNodeContents(status);
+      const style = getComputedStyle(status);
+      return {
+        textBottom: text.getBoundingClientRect().bottom,
+        contentBottom: status.getBoundingClientRect().bottom - parseFloat(style.borderBottomWidth) - parseFloat(style.paddingBottom),
+      };
+    });
+    expect(textBottom).toBeLessThanOrEqual(contentBottom);
+  });
+}
+
+test("at 600×834, the narrowest supported width, the game view's deck wraps instead of overflowing", async ({ page }) => {
+  await page.setViewportSize({ width: 600, height: 834 });
+  await openApp(page);
+  await page.getByRole("button", { name: "Game" }).click();
+
+  const overflow = await page.locator("#toolbar").evaluate((toolbar) => ({
+    deck: toolbar.scrollWidth - toolbar.clientWidth,
+    page: document.documentElement.scrollWidth - innerWidth,
+  }));
+  expect(overflow).toEqual({ deck: 0, page: 0 });
+});
