@@ -70,3 +70,19 @@ test("a malformed label leaves the entry named with a blank picture", async ({ p
   await page.getByRole("button", { name: "Play" }).click();
   await expect(page.locator("#cart-status")).toContainText("Can't load: label.hex");
 });
+
+test("the demo's picture shows on the shelf when saved carts can't be listed", async ({ page }) => {
+  await page.addInitScript(() => {
+    StorageManager.prototype.getDirectory = () => Promise.reject(new Error("unavailable"));
+  });
+  await page.goto("/");
+  await expect(page.locator("#cart-status")).toHaveText("Saving is unavailable (Private Browsing?)");
+
+  await openShelf(page);
+  const demoCenter = await page
+    .locator("#shelf-list")
+    .getByRole("button", { name: "Built-in demo" })
+    .locator("canvas")
+    .evaluate((canvas) => [...canvas.getContext("2d").getImageData(96, 72, 1, 1).data]);
+  expect(demoCenter).not.toEqual([0, 0, 0, 0]);
+});
