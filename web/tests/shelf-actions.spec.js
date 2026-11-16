@@ -1,6 +1,7 @@
 import { test, expect } from "./persistent-context.js";
 import { loadCodeFiles, typeCode } from "./code-editor.js";
 import { openShelf, savedCartEntries, selectOnShelf } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -18,15 +19,6 @@ async function saveAs(page, name) {
   await page.locator("#cart-name").fill(name);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText(`Saved ${name}.`);
-}
-
-function answerNextDialog(page, answer) {
-  const questions = [];
-  page.once("dialog", (dialog) => {
-    questions.push(dialog.message());
-    answer === "accept" ? dialog.accept() : dialog.dismiss();
-  });
-  return questions;
 }
 
 function button(page, name) {
@@ -58,10 +50,9 @@ test("New cart asks before discarding unsaved changes, opens the template in the
   await typeCode(page, "-- edited");
 
   await openShelf(page);
-  const questions = answerNextDialog(page, "accept");
   await button(page, "New cart").click();
+  expect(await answerQuestion(page, "Discard")).toBe("Discard unsaved changes to Demo?");
   await expect(page.locator("#cart-status")).toHaveText("Opened a new cart.");
-  expect(questions).toEqual(["Discard unsaved changes to Demo?"]);
   await expect(page.locator("body")).toHaveAttribute("data-view", "code");
   await expect(page.locator("#cart-name")).toHaveValue("New cart");
   await expect(page.locator(".cm-content")).toContainText("function _draw()");
@@ -104,14 +95,13 @@ test("Delete removes only the confirmed cart", async ({ page }) => {
 
   await openShelf(page);
   await selectOnShelf(page, "Gone");
-  const cancelled = answerNextDialog(page, "dismiss");
   await button(page, "Delete").click();
-  await expect.poll(() => cancelled).toEqual(["Delete Gone? This can't be undone. Export it first if you want a backup."]);
+  expect(await answerQuestion(page, "Cancel")).toBe("Delete Gone? This can't be undone. Export it first if you want a backup.");
   await expect(savedCartEntries(page)).toHaveText(["Gone", "Kept"]);
   await expect(button(page, "Delete")).toBeFocused();
 
-  answerNextDialog(page, "accept");
   await button(page, "Delete").click();
+  await answerQuestion(page, "Delete");
   await expect(page.locator("#cart-status")).toHaveText("Deleted Gone.");
   await expect(savedCartEntries(page)).toHaveText(["Kept"]);
   expect(await page.evaluate(() => fesStorage.listCartFolders())).toHaveLength(1);
@@ -131,21 +121,17 @@ test("a double-tapped Delete asks once and removes only the selected cart", asyn
 
   await openShelf(page);
   await selectOnShelf(page, "Gone");
-  const questions = [];
-  page.on("dialog", (dialog) => {
-    questions.push(dialog.message());
-    dialog.accept();
-  });
   await page.evaluate(() => {
     document.getElementById("shelf-delete").click();
     document.getElementById("shelf-delete").click();
   });
+  expect(await answerQuestion(page, "Delete")).toBe("Delete Gone? This can't be undone. Export it first if you want a backup.");
   await expect(page.locator("#cart-status")).toHaveText("Deleted Gone.");
   await expect(savedCartEntries(page)).toHaveText(["Kept"]);
   await page.getByRole("button", { name: "Code" }).click();
   await button(page, "Save").click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
-  expect(questions).toEqual(["Delete Gone? This can't be undone. Export it first if you want a backup."]);
+  await expect(page.locator("#ask")).toBeHidden();
   await expect(savedCartEntries(page)).toHaveText(["Demo", "Kept"]);
 });
 
@@ -156,12 +142,11 @@ test("deleting the open cart with unsaved edits warns about them, opens the demo
 
   await openShelf(page);
   await selectOnShelf(page, "Mine");
-  const questions = answerNextDialog(page, "accept");
   await button(page, "Delete").click();
-  await expect(page.locator("#cart-status")).toHaveText("Deleted Mine.");
-  expect(questions).toEqual([
+  expect(await answerQuestion(page, "Delete")).toBe(
     "Delete Mine and your unsaved changes to it? This can't be undone. Export it first if you want a backup.",
-  ]);
+  );
+  await expect(page.locator("#cart-status")).toHaveText("Deleted Mine.");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
   expect(await page.evaluate(() => fesStorage.readRecoveryCopy())).toBeNull();
 });
@@ -179,8 +164,8 @@ test("a failed delete keeps the open cart and its folder, so Save rewrites it", 
 
   await openShelf(page);
   await selectOnShelf(page, "Mine");
-  answerNextDialog(page, "accept");
   await button(page, "Delete").click();
+  await answerQuestion(page, "Delete");
   await expect(page.locator("#cart-status")).toHaveText(/^Can't delete Mine: /);
   await expect(savedCartEntries(page)).toHaveText(["Mine"]);
   await expect(page.locator("#cart-name")).toHaveValue("Mine");
@@ -201,8 +186,8 @@ test("a delete that fails because the folder is already gone drops the entry and
     const [folder] = await fesStorage.listCartFolders();
     await fesStorage.removeCartFolder(folder);
   });
-  answerNextDialog(page, "accept");
   await button(page, "Delete").click();
+  await answerQuestion(page, "Delete");
   await expect(page.locator("#cart-status")).toHaveText(/^Can't delete Mine: /);
   await expect(savedCartEntries(page)).toHaveText([]);
   await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeFocused();
@@ -221,10 +206,9 @@ test("a folder without cart.json is listed as damaged, offers only Delete, and c
   for (const name of ["Play", "Edit", "Duplicate", "Export"]) {
     await expect(button(page, name)).toBeDisabled();
   }
-  const questions = answerNextDialog(page, "accept");
   await button(page, "Delete").click();
+  expect(await answerQuestion(page, "Delete")).toBe("Delete the damaged cart? This can't be undone.");
   await expect(page.locator("#cart-status")).toHaveText("Deleted the damaged cart.");
-  expect(questions).toEqual(["Delete the damaged cart? This can't be undone."]);
   expect(await page.evaluate(() => fesStorage.listCartFolders())).toEqual([]);
 });
 
@@ -247,9 +231,8 @@ test("deleting the open cart's damaged folder warns about its unsaved changes", 
   await expect(savedCartEntries(page)).toHaveText(["Damaged cart", "Mine copy", "Mine copy copy"]);
 
   await selectOnShelf(page, "Damaged cart");
-  const questions = answerNextDialog(page, "dismiss");
   await button(page, "Delete").click();
-  await expect.poll(() => questions).toEqual([
+  expect(await answerQuestion(page, "Cancel")).toBe(
     "Delete the damaged cart and your unsaved changes to Mine? This can't be undone.",
-  ]);
+  );
 });

@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { openShelf, selectOnShelf } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -21,15 +22,6 @@ async function saveCodeAs(page, name, code) {
   await page.locator("#cart-name").fill(name);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText(`Saved ${name}.`);
-}
-
-function answerNextDialog(page, answer) {
-  const questions = [];
-  page.once("dialog", (dialog) => {
-    questions.push(dialog.message());
-    answer === "accept" ? dialog.accept() : dialog.dismiss();
-  });
-  return questions;
 }
 
 test("Play runs the selected saved cart in the game view", async ({ page }) => {
@@ -80,10 +72,9 @@ test("the built-in demo opens after asking about unsaved changes, and saves as a
 
   await openShelf(page);
   await selectOnShelf(page, "Built-in demo");
-  const questions = answerNextDialog(page, "accept");
   await page.getByRole("button", { name: "Edit", exact: true }).click();
+  expect(await answerQuestion(page, "Discard")).toBe("Discard unsaved changes to Mine?");
   await expect(page.locator("#cart-status")).toHaveText("Opened the built-in demo.");
-  expect(questions).toEqual(["Discard unsaved changes to Mine?"]);
   await expect(page.locator(".cm-content")).toHaveText('error("from boot")');
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
 
@@ -113,9 +104,8 @@ test("cancelling the unsaved-changes question on Play keeps the edit and stays o
 
   await openShelf(page);
   await selectOnShelf(page, "Mine");
-  const questions = answerNextDialog(page, "dismiss");
   await page.getByRole("button", { name: "Play" }).click();
-  await expect.poll(() => questions).toEqual(["Discard unsaved changes to Mine?"]);
+  expect(await answerQuestion(page, "Cancel")).toBe("Discard unsaved changes to Mine?");
   await expect(page.locator("body")).toHaveAttribute("data-view", "shelf");
   await page.getByRole("button", { name: "Code" }).click();
   await expect(page.locator(".cm-content")).toHaveText("-- edited");

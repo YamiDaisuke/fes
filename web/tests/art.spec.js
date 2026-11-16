@@ -2,6 +2,7 @@ import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { loadCartFromShelf, savedCartEntries } from "./shelf.js";
+import { answerQuestion } from "./ask.js";
 
 async function openArtView(page) {
   await page.goto("/");
@@ -338,15 +339,10 @@ test.describe("with a cart that draws sprite tile 2", () => {
     const drawnColor = (await editRowColors(page, 0))[0];
     await page.getByRole("button", { name: "Code" }).click();
     await typeCode(page, "function _draw() cls() spr(2, 1, 0) end");
-    const questions = [];
-    page.on("dialog", (dialog) => {
-      questions.push(dialog.message());
-      dialog.accept();
-    });
 
     await page.reload();
+    expect(await answerQuestion(page, "Restore")).toBe("Restore unsaved changes to Mine?");
     await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to Mine.");
-    expect(questions).toEqual(["Restore unsaved changes to Mine?"]);
     await expect(page.locator(".cm-content")).toHaveText("function _draw() cls() spr(2, 1, 0) end");
     await page.locator("#show-art").click();
     await showTile(page, "Background", 5);
@@ -363,7 +359,7 @@ test.describe("with a cart that draws sprite tile 2", () => {
     await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
     await page.reload();
     await expect(savedCartEntries(page)).not.toHaveCount(0);
-    expect(questions).toHaveLength(1);
+    await expect(page.locator("#ask")).toBeHidden();
   });
 });
 
@@ -419,11 +415,12 @@ test("a stroke cut short by opening the shelf, cancelled after a cart loads from
   const savedTile = await editTileColors(page);
   await drag(page, [0, 0], [7, 0]);
   await pressMouseOnPixel(page, 7, 7);
-  page.on("dialog", (dialog) => dialog.accept());
 
   await page.locator("#show-shelf").dispatchEvent("click");
   await page.locator("#shelf-list").getByRole("button", { name: "Demo", exact: true }).dispatchEvent("click");
   await page.locator("#shelf-edit").dispatchEvent("click");
+  await expect(page.locator("#ask")).toBeVisible();
+  await page.locator("#ask-confirm").dispatchEvent("click");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
   await cancelMouseStroke(page);
   await page.mouse.up();
@@ -661,7 +658,6 @@ test("a copied block pastes into another cart, at the sheet's edge", async ({ pa
   await showTile(page, "Background", 1);
   const copied = await sheetTilePixels(page, 1);
   await page.getByRole("button", { name: "Copy" }).click();
-  page.on("dialog", (dialog) => dialog.accept());
 
   await loadCartFromShelf(page, "Demo");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
