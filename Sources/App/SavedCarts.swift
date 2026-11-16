@@ -5,9 +5,8 @@ import Storage
 
 nonisolated(unsafe) private let document = JSObject.global.document
 nonisolated(unsafe) private let storage = JSObject.global.fesStorage
-nonisolated(unsafe) let nameInput = document.getElementById("cart-name")
+nonisolated(unsafe) private let nameInput = document.getElementById("cart-name")
 nonisolated(unsafe) private let saveButton = document.getElementById("cart-save")
-nonisolated(unsafe) private let cartList = document.getElementById("cart-list")
 nonisolated(unsafe) private let cartStatus = document.getElementById("cart-status")
 nonisolated(unsafe) private var lastStorageTask: Task<Void, Never>?
 
@@ -16,27 +15,19 @@ nonisolated(unsafe) private let saveClicked = JSClosure { _ in
     return .undefined
 }
 
-nonisolated(unsafe) private let cartListClicked = JSClosure { arguments in
-    if let button = arguments[0].target.closest("[data-folder]").object, let folder = string(from: button.dataset.folder) {
-        afterEarlierStorageWork { await loadCart(folder: folder) }
-    }
-    return .undefined
-}
-
 func startSavedCarts() {
     showCartName()
     _ = saveButton.addEventListener("click", saveClicked)
-    _ = cartList.addEventListener("click", cartListClicked)
     // Read before the first await, so edits made while the carts are listed can't replace the copy before it is offered.
     let recoveryCopyText = readRecoveryCopyText()
     Task { _ = try? await awaitStorage(storage.requestPersistentStorage()) }
     afterEarlierStorageWork {
         var savingIsUnavailable = false
         do {
-            try await refreshCartList()
+            try await refreshShelf()
         } catch {
             saveButton.disabled = .boolean(true)
-            document.getElementById("cart-import").disabled = .boolean(true)
+            document.getElementById("shelf-import").disabled = .boolean(true)
             savingIsUnavailable = true
         }
         await offerRecoveryCopy(recoveryCopyText)
@@ -65,6 +56,10 @@ private func saveCart() async {
     cart.name = name
     let folder = cartFolder ?? newFolderName()
     cartFolder = folder
+    if let problem = await removeCodeFiles(notIn: saving, folder: folder) {
+        showStatus("Can't save: \(problem)")
+        return
+    }
     do {
         try await writeCart(saving, folder: folder)
     } catch {
@@ -74,25 +69,24 @@ private func saveCart() async {
     lastSavedCart = saving
     keepRecoveryCopy()
     showStatus("Saved \(name).")
-    await removeCodeFilesNotIn(saving, folder: folder)
-    try? await refreshCartList()
+    try? await refreshShelf()
 }
 
-private func removeCodeFilesNotIn(_ saved: Cart, folder: String) async {
+private func removeCodeFiles(notIn saving: Cart, folder: String) async -> String? {
     let files: [String]
     do throws(JSException) {
         files = try await names(fromStorage: storage.listCartFiles(folder))
     } catch {
-        showStatus("Saved \(saved.name), but can't look for code files the cart no longer has: \(error.thrownValue)")
-        return
+        return "can't look for code files the cart no longer has: \(error.thrownValue)"
     }
-    for file in files where endsInLua(file) && !saved.fileNames.contains(file) {
+    for file in files where endsInLua(file) && !saving.fileNames.contains(file) {
         do throws(JSException) {
             _ = try await awaitStorage(storage.removeCartFile(folder, file))
         } catch {
-            showStatus("Saved \(saved.name), but can't remove \(file), which the cart no longer has: \(error.thrownValue)")
+            return "can't remove \(file), which the cart no longer has: \(error.thrownValue)"
         }
     }
+    return nil
 }
 
 func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
@@ -104,34 +98,21 @@ func writeCart(_ writing: Cart, folder: String) async throws(JSException) {
     _ = try await awaitStorage(storage.writeCartFile(folder, "cart.json", cartJSON))
 }
 
-func refreshCartList() async throws(JSException) {
-    let folders = try await names(fromStorage: storage.listCartFolders())
-    var entries: [(folder: String, name: String)] = []
-    for folder in folders {
-        entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
-    }
-    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
-    cartList.textContent = ""
-    for entry in entries {
-        let button = document.createElement("button")
-        button.type = "button"
-        button.dataset.folder = .string(entry.folder)
-        button.textContent = .string(entry.name)
-        let item = document.createElement("li")
-        _ = item.append(button)
-        _ = cartList.append(item)
-    }
-}
-
-private func loadCart(folder: String) async {
+func loadCart(folder: String) async -> Bool {
     if cart != lastSavedCart && JSObject.global.confirm!("Discard unsaved changes to \(cart.name)?") != .boolean(true) {
-        return
+        return false
+    }
+    if folder == demoFolder {
+        openCart(demoCart(), folder: nil)
+        showStatus("Opened the built-in demo.")
+        return true
     }
     guard let loaded = await readSavedCart(folder: folder) else {
-        return
+        return false
     }
     openCart(loaded, folder: folder)
     showStatus("Loaded \(loaded.name).")
+    return true
 }
 
 func readSavedCart(folder: String) async -> Cart? {
@@ -159,7 +140,7 @@ func readSavedCart(folder: String) async -> Cart? {
     }
 }
 
-func openCart(_ opened: Cart, folder: String) {
+func openCart(_ opened: Cart, folder: String?) {
     dropArtStroke()
     cart = opened
     clearArtHistory()
@@ -173,6 +154,16 @@ func openCart(_ opened: Cart, folder: String) {
 
 func showCartName() {
     nameInput.value = .string(cart.name)
+}
+
+func savedCartEntries() async throws(JSException) -> [(folder: String, name: String)] {
+    let folders = try await names(fromStorage: storage.listCartFolders())
+    var entries: [(folder: String, name: String)] = []
+    for folder in folders {
+        entries.append((folder, await savedCartName(folder: folder) ?? "Damaged cart"))
+    }
+    entries.sort { ($0.name, $0.folder) < ($1.name, $1.folder) }
+    return entries
 }
 
 private func savedCartName(folder: String) async -> String? {

@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { storedZip } from "./stored-zip.js";
+import { loadCartFromShelf } from "./shelf.js";
 
 export async function typeCode(page, code) {
   // WebKit's fill() on CodeMirror sometimes leaves an extra empty first line (T14 QA-6).
@@ -22,6 +23,6 @@ export async function loadCodeFiles(page, codeFiles, name = "Two files") {
     mimeType: "application/zip",
     buffer: storedZip({ ...savedFiles, "cart.json": `{"format": 3, "name": "${name}"}`, ...codeFiles }),
   });
-  await page.locator("#cart-list").getByRole("button", { name }).click();
+  await loadCartFromShelf(page, name);
   await expect(page.locator("#cart-status")).toHaveText(`Loaded ${name}.`);
 }

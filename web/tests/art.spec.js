@@ -1,6 +1,7 @@
 import { test as ephemeralTest, expect } from "@playwright/test";
 import { test } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
+import { loadCartFromShelf, savedCartEntries } from "./shelf.js";
 
 async function openArtView(page) {
   await page.goto("/");
@@ -99,7 +100,7 @@ test("Save works from the art view", async ({ page }) => {
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
 });
 
-test("loading a cart while the art view is shown redraws the sheet in its colors", async ({ page }) => {
+test("the art view shows a loaded cart in its own colors", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
   await page.getByRole("button", { name: "Code" }).click();
@@ -113,8 +114,9 @@ test("loading a cart while the art view is shown redraws the sheet in its colors
   await page.locator("#show-art").click();
   const demoSheet = await sheetPixels(page);
 
-  await page.locator("#cart-list").getByRole("button", { name: "Recolored", includeHidden: true }).dispatchEvent("click");
+  await loadCartFromShelf(page, "Recolored");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Recolored.");
+  await page.locator("#show-art").click();
   expect(await sheetPixels(page)).not.toBe(demoSheet);
 });
 
@@ -309,7 +311,7 @@ test.describe("with a cart that draws sprite tile 2", () => {
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.locator("#cart-status")).toHaveText("Saved Painted.");
     await page.reload();
-    await page.locator("#cart-list").getByRole("button", { name: "Painted", includeHidden: true }).dispatchEvent("click");
+    await loadCartFromShelf(page, "Painted");
     await expect(page.locator("#cart-status")).toHaveText("Loaded Painted.");
     await page.locator("#show-art").click();
     await showTile(page, "Sprites", 2);
@@ -360,7 +362,7 @@ test.describe("with a cart that draws sprite tile 2", () => {
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.locator("#cart-status")).toHaveText("Saved Mine.");
     await page.reload();
-    await expect(page.locator("#cart-list button")).not.toHaveCount(0);
+    await expect(savedCartEntries(page)).not.toHaveCount(0);
     expect(questions).toHaveLength(1);
   });
 });
@@ -409,7 +411,7 @@ test("Run during a held stroke writes the recovery copy before the cart starts",
   expect(await page.evaluate(() => viewsAtWrite)).toEqual(["art"]);
 });
 
-test("a stroke cancelled after another cart loads leaves that cart's art alone", async ({ page }) => {
+test("a stroke cut short by opening the shelf, cancelled after a cart loads from there, leaves that cart's art alone", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
@@ -419,10 +421,13 @@ test("a stroke cancelled after another cart loads leaves that cart's art alone",
   await pressMouseOnPixel(page, 7, 7);
   page.on("dialog", (dialog) => dialog.accept());
 
-  await page.locator("#cart-list").getByRole("button", { name: "Demo", includeHidden: true }).dispatchEvent("click");
+  await page.locator("#show-shelf").dispatchEvent("click");
+  await page.locator("#shelf-list").getByRole("button", { name: "Demo", exact: true }).dispatchEvent("click");
+  await page.locator("#shelf-edit").dispatchEvent("click");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
   await cancelMouseStroke(page);
   await page.mouse.up();
+  await page.locator("#show-art").click();
 
   await nextFrame(page);
   expect(await editTileColors(page)).toEqual(savedTile);
@@ -525,7 +530,7 @@ ephemeralTest("pressing the edit area hides the cursor ring, and Tab then starts
 
   expect(await editAreaRingsPixel(page, 0, 0)).toBe(false);
   await page.keyboard.press("Tab");
-  await expect(page.locator("#run")).toBeFocused();
+  await expect(page.locator("#show-shelf")).toBeFocused();
 });
 
 ephemeralTest("at 2 by 2 one drag across the tile border paints both tiles", async ({ page }) => {
@@ -658,8 +663,9 @@ test("a copied block pastes into another cart, at the sheet's edge", async ({ pa
   await page.getByRole("button", { name: "Copy" }).click();
   page.on("dialog", (dialog) => dialog.accept());
 
-  await page.locator("#cart-list").getByRole("button", { name: "Demo", includeHidden: true }).dispatchEvent("click");
+  await loadCartFromShelf(page, "Demo");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Demo.");
+  await page.locator("#show-art").click();
   await showTile(page, "Background", 255);
   expect(await sheetTilePixels(page, 255)).not.toBe(copied);
   await page.getByRole("button", { name: "Paste" }).click();

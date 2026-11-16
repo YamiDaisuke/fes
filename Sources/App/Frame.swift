@@ -28,7 +28,7 @@ func frame(heldButtons: UInt32) -> UnsafeRawPointer {
     return framebuffer.rgba.withUnsafeBytes { $0.baseAddress! }
 }
 
-private func demoCart() -> Cart {
+func demoCart() -> Cart {
     var cart = Cart(name: "Demo", mainLua: string(from: JSObject.global.testCartMainLua) ?? DemoCart.mainLua)
     let demoPPU = DemoCart.ppuWithTiles()
     cart.backgroundTiles = demoPPU.backgroundTiles

@@ -1,6 +1,7 @@
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { storedZip } from "./stored-zip.js";
+import { loadCartFromShelf, openShelf, savedCartEntries, selectOnShelf } from "./shelf.js";
 
 const cartFileNames = ["cart.json", "main.lua", "palettes.pal", "background.tiles", "sprites.tiles", "main-palette.hex", "map.map"];
 
@@ -24,18 +25,21 @@ test("an exported cart imports as a new cart with identical files, leaving the o
   await expect(page.locator("#cart-status")).toHaveText("Saved Ünï:a/b.");
 
   const downloading = page.waitForEvent("download");
+  await openShelf(page);
+  await selectOnShelf(page, "Ünï:a/b");
   await page.getByRole("button", { name: "Export" }).click();
   const download = await downloading;
   expect(download.suggestedFilename()).toBe("Ünï-a-b.fes");
   await expect(page.locator("#cart-status")).toHaveText("Exported Ünï-a-b.fes.");
   const exported = testInfo.outputPath("exported.fes");
   await download.saveAs(exported);
+  await page.getByRole("button", { name: "Code" }).click();
   await page.locator("#cart-name").fill("Unsaved");
   await typeCode(page, "-- unsaved");
 
   await page.locator("#cart-import-file").setInputFiles(exported);
   await expect(page.locator("#cart-status")).toHaveText("Imported Ünï:a/b as a new cart.");
-  await expect(page.locator("#cart-list").getByRole("button", { name: "Ünï:a/b" })).toHaveCount(2);
+  await expect(savedCartEntries(page)).toHaveText(["Ünï:a/b", "Ünï:a/b"]);
 
   const [original, imported] = await page.evaluate(async (fileNames) => {
     const folders = await fesStorage.listCartFolders();
@@ -67,7 +71,7 @@ test("a cart with code files besides main.lua keeps every file through Import, L
   await expect(page.locator("#cart-status")).toHaveText("Imported Two files as a new cart.");
 
   const loadTwoFiles = async () => {
-    await page.locator("#cart-list").getByRole("button", { name: "Two files" }).click();
+    await loadCartFromShelf(page, "Two files");
     await expect(page.locator("#cart-status")).toHaveText("Loaded Two files.");
   };
   await loadTwoFiles();
@@ -76,6 +80,8 @@ test("a cart with code files besides main.lua keeps every file through Import, L
   await openBooted(page);
   await loadTwoFiles();
   const downloading = page.waitForEvent("download");
+  await openShelf(page);
+  await selectOnShelf(page, "Two files");
   await page.getByRole("button", { name: "Export" }).click();
   const exported = testInfo.outputPath("exported.fes");
   await (await downloading).saveAs(exported);
@@ -122,13 +128,17 @@ test("a file over 8 MiB is refused without reading its bytes", async ({ page }) 
   expect(await page.evaluate(() => window.bytesRead)).toBe(0);
 });
 
-test("a cart whose archive would be over 8 MiB is not exported", async ({ page }) => {
+test("a saved cart whose archive would be over 8 MiB is not exported", async ({ page }) => {
   await page.addInitScript(() => {
     window.testCartMainLua = "--" + "x".repeat(8 << 20);
   });
   let downloads = 0;
   page.on("download", () => downloads++);
   await openBooted(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");
+  await openShelf(page);
+  await selectOnShelf(page, "Demo");
   await page.getByRole("button", { name: "Export" }).click();
   await expect(page.locator("#cart-status")).toHaveText("Can't export: the cart is larger than 8 MiB, so it couldn't be imported");
   expect(downloads).toBe(0);

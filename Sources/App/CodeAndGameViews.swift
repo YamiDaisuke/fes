@@ -23,6 +23,7 @@ nonisolated(unsafe) private let codeClicked = JSClosure { _ in
 
 func startCodeAndGameViews() {
     startCodeFileTabs()
+    startCodeFileActions()
     showOpenedCartCode()
     _ = codeEditor.onCodeChange(codeChanged)
     _ = document.getElementById("run").addEventListener("click", runClicked)

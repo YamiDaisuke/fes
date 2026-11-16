@@ -74,9 +74,10 @@ private func markShownCodeFileTab() {
         button.tabIndex = .number(isShown ? 0 : -1)
     }
     _ = tab(showing: shownCodeFile).scrollIntoView(["block": "nearest", "inline": "nearest"])
+    updateRenameAndDeleteButtons()
 }
 
 // Code file names are [a-z0-9_]+.lua (codeFileNameProblem), so they need no escaping in a selector.
-private func tab(showing name: String) -> JSValue {
+func tab(showing name: String) -> JSValue {
     codeFileTabs.querySelector("[data-file=\"\(name)\"]")
 }
