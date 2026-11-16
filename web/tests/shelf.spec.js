@@ -187,6 +187,7 @@ test("Right, Right, Z with the keyboard plays the third entry", async ({ page })
   await expect(entry("Bb")).toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(entry("Aa")).toHaveAttribute("aria-pressed", "true");
+  await waitTwoAnimationFrames(page);
   await page.keyboard.press("ArrowRight");
   await expect(entry("Bb")).toHaveAttribute("aria-pressed", "true");
   await expect(entry("Bb")).toBeFocused();
