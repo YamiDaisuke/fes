@@ -131,6 +131,7 @@ canvas { image-rendering: pixelated; }
   content: ""; position: absolute; top: calc(10 * var(--u)); left: calc(10 * var(--u)); width: calc(8 * var(--u)); height: calc(8 * var(--u));
   background: var(--shell-deep); box-shadow: inset var(--u) var(--u) 0 0 var(--ink);
 }
+/* Layers bottom to top: ::after skirt, ::before ink, span highlight, span::before shade, span::after face (docs/decisions/047-the-screen-bezel-and-the-controller.md). */
 .shaped-key {
   --press: 0px;
   position: relative; isolation: isolate; box-sizing: border-box;
