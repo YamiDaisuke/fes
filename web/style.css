@@ -165,7 +165,20 @@ canvas { image-rendering: pixelated; }
   border: var(--u) solid var(--ink);
   background: var(--shell);
   box-shadow: var(--raised);
-  clip-path: polygon(var(--u) 0, calc(100% - var(--u)) 0, calc(100% - var(--u)) var(--u), 100% var(--u), 100% calc(100% - var(--u)), calc(100% - var(--u)) calc(100% - var(--u)), calc(100% - var(--u)) 100%, var(--u) 100%, var(--u) calc(100% - var(--u)), 0 calc(100% - var(--u)), 0 var(--u), var(--u) var(--u));
+  clip-path: polygon(
+    var(--u) 0,
+    calc(100% - var(--u)) 0,
+    calc(100% - var(--u)) var(--u),
+    100% var(--u),
+    100% calc(100% - var(--u)),
+    calc(100% - var(--u)) calc(100% - var(--u)),
+    calc(100% - var(--u)) 100%,
+    var(--u) 100%,
+    var(--u) calc(100% - var(--u)),
+    0 calc(100% - var(--u)),
+    0 var(--u),
+    var(--u) var(--u)
+  );
 }
 .plate.screws { position: relative; }
 .plate.screws::before, .plate.screws::after {
@@ -269,7 +282,22 @@ canvas { image-rendering: pixelated; }
   color: var(--ink);
   background: var(--paper);
   font: var(--type-ui);
-  clip-path: polygon(var(--u) 0, calc(100% - 2 * var(--u)) 0, calc(100% - 2 * var(--u)) calc(3 * var(--u)), 100% calc(3 * var(--u)), 100% calc(6 * var(--u)), calc(100% - var(--u)) calc(6 * var(--u)), calc(100% - var(--u)) calc(9 * var(--u)), 100% calc(9 * var(--u)), 100% 100%, var(--u) 100%, var(--u) calc(100% - var(--u)), 0 calc(100% - var(--u)), 0 var(--u), var(--u) var(--u));
+  clip-path: polygon(
+    var(--u) 0,
+    calc(100% - 2 * var(--u)) 0,
+    calc(100% - 2 * var(--u)) calc(3 * var(--u)),
+    100% calc(3 * var(--u)),
+    100% calc(6 * var(--u)),
+    calc(100% - var(--u)) calc(6 * var(--u)),
+    calc(100% - var(--u)) calc(9 * var(--u)),
+    100% calc(9 * var(--u)),
+    100% 100%,
+    var(--u) 100%,
+    var(--u) calc(100% - var(--u)),
+    0 calc(100% - var(--u)),
+    0 var(--u),
+    var(--u) var(--u)
+  );
 }
 
 .dialog { color: var(--ink); font: var(--type-ui); }
