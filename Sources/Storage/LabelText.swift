@@ -13,7 +13,7 @@ func labelText(_ label: CartLabel) -> String {
     return String(decoding: bytes, as: UTF8.self)
 }
 
-func parseLabel(_ text: String, file: String) throws(CartFileError) -> CartLabel {
+public func parseLabel(_ text: String, file: String) throws(CartFileError) -> CartLabel {
     var indices: [UInt8] = []
     indices.reserveCapacity(Screen.width * Screen.height)
     for (row, line) in try textLines(text, count: Screen.height, file: file).enumerated() {
