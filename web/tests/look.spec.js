@@ -16,6 +16,19 @@ function rgb(cssColor) {
   return cssColor.match(/\d+/g).slice(0, 3).map(Number);
 }
 
+async function pixelColors(page, png) {
+  return page.evaluate(async (base64) => {
+    const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${base64}`)).blob());
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext("2d");
+    context.drawImage(bitmap, 0, 0);
+    const pixels = context.getImageData(0, 0, bitmap.width, bitmap.height).data;
+    const colors = [];
+    for (let i = 0; i < pixels.length; i += 4) colors.push(`${pixels[i]},${pixels[i + 1]},${pixels[i + 2]}`);
+    return colors;
+  }, png.toString("base64"));
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto("/look.html");
   await page.evaluate(() => document.fonts.ready);
@@ -59,6 +72,29 @@ test("both pixel fonts load", async ({ page }) => {
   expect(fonts.loaded).toEqual(expect.arrayContaining(["Pixel Operator 8", "Departure Mono"]));
 });
 
+async function tabTo(page, name) {
+  const control = page.getByRole("button", { name, exact: true });
+  for (let presses = 0; presses < 40 && !(await control.evaluate((element) => element === document.activeElement)); presses += 1) {
+    await page.keyboard.press("Tab");
+  }
+  await expect(control).toBeFocused();
+  return control;
+}
+
+async function screenshotAround(page, control, margin) {
+  const box = await control.boundingBox();
+  return page.screenshot({ clip: { x: box.x - margin, y: box.y - margin, width: box.width + 2 * margin, height: box.height + 2 * margin } });
+}
+
+test("the focus ring shows on the selected swatch", async ({ page }) => {
+  const swatch = await tabTo(page, "Color 2");
+  const focused = await screenshotAround(page, swatch, 4);
+  await swatch.blur();
+  const unfocused = await screenshotAround(page, swatch, 4);
+
+  expect(focused.equals(unfocused)).toBe(false);
+});
+
 for (const [orientation, viewport] of [["landscape", { width: 1194, height: 834 }], ["portrait", { width: 834, height: 1194 }]]) {
   test(`pixel-font text is drawn only in ink and surface colour, with no grey edges, in ${orientation}`, async ({ page }) => {
     await page.setViewportSize(viewport);
@@ -71,28 +107,12 @@ for (const [orientation, viewport] of [["landscape", { width: 1194, height: 834 
       }));
       expect(fit, `${id} holds every line inside the screenshot`).toEqual({ overflowX: 0, overflowY: 0 });
 
-      const png = (await sample.screenshot()).toString("base64");
-      const counts = await sample.evaluate(async (element, png) => {
-        const style = getComputedStyle(element);
-        const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${png}`)).blob());
-        const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-        const context = canvas.getContext("2d");
-        context.drawImage(bitmap, 0, 0);
-        const pixels = context.getImageData(0, 0, bitmap.width, bitmap.height).data;
-        const ink = style.color.match(/\d+/g).slice(0, 3).join();
-        const surface = style.backgroundColor.match(/\d+/g).slice(0, 3).join();
-        let inkCount = 0;
-        let otherCount = 0;
-        for (let i = 0; i < pixels.length; i += 4) {
-          const pixel = `${pixels[i]},${pixels[i + 1]},${pixels[i + 2]}`;
-          if (pixel === ink) inkCount += 1;
-          else if (pixel !== surface) otherCount += 1;
-        }
-        return { inkCount, otherCount };
-      }, png);
-
-      expect(counts.inkCount, id).toBeGreaterThan(0);
-      expect(counts.otherCount, id).toBe(0);
+      const style = await sample.evaluate((element) => ({ color: getComputedStyle(element).color, background: getComputedStyle(element).backgroundColor }));
+      const ink = rgb(style.color).join();
+      const surface = rgb(style.background).join();
+      const colors = await pixelColors(page, await sample.screenshot());
+      expect(colors.filter((color) => color === ink).length, id).toBeGreaterThan(0);
+      expect(colors.filter((color) => color !== ink && color !== surface).length, id).toBe(0);
     }
   });
 
