@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 test("the token list shows every colour token's value", async ({ page }) => {
   const items = await page.locator("#tokens li").allTextContents();
 
-  expect(items).toHaveLength(35);
+  expect(items).toHaveLength(36);
   for (const item of items) expect(item).toMatch(/^--[a-z-]+ #[0-9a-f]{6}$/);
 });
 
