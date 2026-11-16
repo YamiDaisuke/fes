@@ -33,6 +33,12 @@ function button(page, name) {
   return page.getByRole("button", { name, exact: true });
 }
 
+async function refreshShelfByDuplicating(page, name) {
+  await selectOnShelf(page, name);
+  await button(page, "Duplicate").click();
+  await expect(page.locator("#cart-status")).toHaveText(`Duplicated ${name} as ${name} copy.`);
+}
+
 function cartFiles(page) {
   return page.evaluate(async () => {
     const carts = {};
@@ -185,6 +191,23 @@ test("a failed delete keeps the open cart and its folder, so Save rewrites it", 
   expect(await page.evaluate(() => fesStorage.listCartFolders())).toHaveLength(1);
 });
 
+test("a delete that fails because the folder is already gone drops the entry and moves focus to Built-in demo", async ({ page }) => {
+  await openBooted(page);
+  await saveAs(page, "Mine");
+
+  await openShelf(page);
+  await selectOnShelf(page, "Mine");
+  await page.evaluate(async () => {
+    const [folder] = await fesStorage.listCartFolders();
+    await fesStorage.removeCartFolder(folder);
+  });
+  answerNextDialog(page, "accept");
+  await button(page, "Delete").click();
+  await expect(page.locator("#cart-status")).toHaveText(/^Can't delete Mine: /);
+  await expect(savedCartEntries(page)).toHaveText([]);
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeFocused();
+});
+
 test("a folder without cart.json is listed as damaged, offers only Delete, and can be deleted", async ({ page }) => {
   await openBooted(page);
   await page.evaluate(() => fesStorage.writeCartFile("0123456789abcdef", "main.lua", ""));
@@ -220,7 +243,7 @@ test("deleting the open cart's damaged folder warns about its unsaved changes", 
       }
     }
   });
-  await button(page, "Duplicate").click();
+  await refreshShelfByDuplicating(page, "Mine copy");
   await expect(savedCartEntries(page)).toHaveText(["Damaged cart", "Mine copy", "Mine copy copy"]);
 
   await selectOnShelf(page, "Damaged cart");
