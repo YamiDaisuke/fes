@@ -10,8 +10,8 @@ func show(_ view: ShownView) {
     let previousView = shownView
     shownView = view
     JSObject.global.document.body.dataset.view = .string(view.rawValue)
-    for each in ShownView.allCases {
-        _ = JSObject.global.document.getElementById("show-\(each.rawValue)").setAttribute("aria-pressed", each == view ? "true" : "false")
+    for switchView in ShownView.allCases {
+        _ = JSObject.global.document.getElementById("show-\(switchView.rawValue)").setAttribute("aria-pressed", switchView == view ? "true" : "false")
     }
     if view != .art {
         dropArtStroke()
