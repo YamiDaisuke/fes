@@ -10,7 +10,7 @@ func mainPaletteText(_ palette: MainPalette) -> String {
     return text
 }
 
-func parseMainPalette(_ text: String, file: String) throws(CartFileError) -> MainPalette {
+public func parseMainPalette(_ text: String, file: String) throws(CartFileError) -> MainPalette {
     var palette = MainPalette()
     for (index, line) in try textLines(text, count: MainPalette.colorCount, file: file).enumerated() {
         guard line.count == 6, let rgb = hexValue(line) else {

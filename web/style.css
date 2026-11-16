@@ -78,9 +78,10 @@ canvas { image-rendering: pixelated; }
   font: 16px system-ui, sans-serif;
 }
 #shelf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-#shelf-list { margin: 0; padding: 0; list-style: none; overflow: auto; }
+#shelf-list { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; margin: 0; padding: 0; list-style: none; overflow: auto; }
 #shelf-view button { min-width: 88px; min-height: 44px; font: inherit; touch-action: manipulation; }
-#shelf-list button { width: 100%; margin-bottom: 4px; text-align: left; }
+#shelf-list button { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+#shelf-list canvas { display: block; width: 192px; height: 144px; image-rendering: pixelated; background: #333; }
 #shelf-list button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
 #cart-status { margin: 0; color: #fff; font: 16px system-ui, sans-serif; }
 #art-view {
