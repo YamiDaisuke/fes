@@ -1,17 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { pixelColors, rgb } from "./pixels.js";
-
-function contrastRatio(foreground, background) {
-  const luminance = ([r, g, b]) => {
-    const linear = (channel) => {
-      const c = channel / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    };
-    return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
-  };
-  const [lighter, darker] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
-  return (lighter + 0.05) / (darker + 0.05);
-}
+import { contrastRatio } from "./contrast.js";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/look.html");
@@ -21,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 test("the token list shows every colour token's value", async ({ page }) => {
   const items = await page.locator("#tokens li").allTextContents();
 
-  expect(items).toHaveLength(23);
+  expect(items).toHaveLength(35);
   for (const item of items) expect(item).toMatch(/^--[a-z-]+ #[0-9a-f]{6}$/);
 });
 
