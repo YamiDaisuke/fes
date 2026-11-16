@@ -47,5 +47,5 @@ test("the screen comes back at the largest whole scale after the code view", asy
   await openBooted(page);
   await page.getByRole("button", { name: "Code" }).click();
   await page.getByRole("button", { name: "Run" }).click();
-  await expect(page.locator("#screen")).toHaveCSS("width", "960px");
+  await expect(page.locator("#screen")).toHaveCSS("width", "768px");
 });

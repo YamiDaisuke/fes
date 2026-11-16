@@ -23,6 +23,16 @@ nonisolated(unsafe) private let setLabelClicked = JSClosure { _ in
     return .undefined
 }
 
+nonisolated(unsafe) private let gameClicked = JSClosure { _ in
+    if runningCartIsOpenedCart {
+        show(.game)
+        _ = document.getElementById("screen").focus()
+    } else {
+        runCart()
+    }
+    return .undefined
+}
+
 nonisolated(unsafe) private let codeClicked = JSClosure { _ in
     showCodeView()
     return .undefined
@@ -36,6 +46,7 @@ func startCodeAndGameViews() {
     _ = document.getElementById("run").addEventListener("click", runClicked)
     _ = document.getElementById("set-label").addEventListener("click", setLabelClicked)
     _ = document.getElementById("show-code").addEventListener("click", codeClicked)
+    _ = document.getElementById("show-game").addEventListener("click", gameClicked)
 }
 
 func runCart() {
@@ -46,6 +57,7 @@ func runCart() {
         modules: Dictionary(uniqueKeysWithValues: cart.codeFiles.dropFirst().map { ($0.name, $0.text) }),
         ppu: cart.ppu
     )
+    runningCartIsOpenedCart = true
     isErrorShown = false
     document.getElementById("cart-error").textContent = ""
     show(.game)

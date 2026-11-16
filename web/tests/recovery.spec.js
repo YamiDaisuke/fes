@@ -139,6 +139,23 @@ test("an edited cart that was never saved is restored under its name", async ({ 
   expect(await page.evaluate(() => fesStorage.listCartFolders())).toHaveLength(1);
 });
 
+test("a restored cart that was never saved doesn't run until Game, which runs it instead of the boot cart", async ({ page }) => {
+  await openBooted(page);
+  await page.getByRole("button", { name: "Carts" }).click();
+  await page.getByRole("button", { name: "New cart" }).click();
+  await typeCode(page, 'error("top level ran", 0)');
+  recordDialogs(page, "accept");
+
+  await page.reload();
+  await expect(page.locator("#cart-status")).toHaveText("Restored unsaved changes to New cart.");
+  await expect(page.locator("body")).toHaveAttribute("data-led", "off");
+  await expect(page.locator("#cart-error")).toBeEmpty();
+
+  await page.getByRole("button", { name: "Game" }).click();
+  await expect(page.locator("#cart-error")).toContainText("top level ran");
+  await expect(page.locator("body")).toHaveAttribute("data-led", "error");
+});
+
 test("undoing back to the saved code removes the copy", async ({ page }) => {
   await openBooted(page);
   await saveAs(page, "Mine");

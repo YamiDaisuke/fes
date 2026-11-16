@@ -9,24 +9,28 @@
   <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-view="shelf">
-  <div id="toolbar">
-    <button type="button" id="show-shelf">Carts</button>
-    <button type="button" id="run">Run</button>
-    <button type="button" id="set-label">Set label</button>
-    <button type="button" id="show-code">Code</button>
-    <button type="button" id="show-art">Art</button>
-    <button type="button" id="cart-save">Save</button>
-    <p id="cart-status" role="status"></p>
+<body data-view="shelf" data-led="off">
+  <div id="toolbar" class="plate">
+    <span class="led power-led" aria-hidden="true"></span>
+    <div class="switches" role="group" aria-label="View">
+      <button type="button" id="show-shelf" class="key key-nav" aria-pressed="true">Carts</button>
+      <button type="button" id="show-code" class="key key-nav" aria-pressed="false">Code</button>
+      <button type="button" id="show-art" class="key key-nav" aria-pressed="false">Art</button>
+      <button type="button" id="show-game" class="key key-nav" aria-pressed="false">Game</button>
+    </div>
+    <button type="button" id="run" class="key key-go">Run</button>
+    <button type="button" id="cart-save" class="key key-go">Save</button>
+    <button type="button" id="set-label" class="key">Set label</button>
+    <p id="cart-status" class="readout" role="status"></p>
   </div>
   <div id="notices">
-    <p id="install-hint" hidden>
+    <p id="install-hint" class="tape" hidden>
       <span>Safari can delete carts saved in a browser tab after 7 days without a visit. To keep them, add FES to your Home Screen: open Safari's Share menu, then choose Add to Home Screen. You can also export carts to Files as a backup.</span>
-      <button type="button" id="install-hint-dismiss">Not now</button>
+      <button type="button" id="install-hint-dismiss" class="key">Not now</button>
     </p>
-    <p id="update-notice">
+    <p id="update-notice" class="tape">
       <span id="update-status" role="status"></span>
-      <button type="button" id="update-reload" hidden>Reload</button>
+      <button type="button" id="update-reload" class="key" hidden>Reload</button>
     </p>
   </div>
   <div id="code-view">

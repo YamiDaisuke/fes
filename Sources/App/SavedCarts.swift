@@ -148,6 +148,7 @@ func readSavedCart(folder: String) async -> Cart? {
 func openCart(_ opened: Cart, folder: String?) {
     dropArtStroke()
     cart = opened
+    runningCartIsOpenedCart = false
     clearArtHistory()
     lastSavedCart = opened
     cartFolder = folder
@@ -155,6 +156,7 @@ func openCart(_ opened: Cart, folder: String?) {
     showCartName()
     keepRecoveryCopy()
     redrawArtView()
+    showPowerLED()
 }
 
 func showCartName() {
@@ -215,4 +217,5 @@ func newFolderName() -> String {
 
 func showStatus(_ message: String) {
     cartStatus.textContent = .string(message)
+    cartStatus.title = .string(message)
 }

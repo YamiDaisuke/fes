@@ -9,7 +9,8 @@ nonisolated(unsafe) private var input = Input()
 nonisolated(unsafe) var cart = demoCart()
 nonisolated(unsafe) var lastSavedCart = cart
 nonisolated(unsafe) var cartFolder: String?
-nonisolated(unsafe) var runningCart = RunningCart(mainLua: cart.codeFiles[0].text, ppu: cart.ppu)
+nonisolated(unsafe) var runningCart = RunningCart(mainLua: "")
+nonisolated(unsafe) var runningCartIsOpenedCart = false
 nonisolated(unsafe) var isErrorShown = false
 
 @_expose(wasm, "frame")
@@ -21,6 +22,7 @@ func frame(heldButtons: UInt32) -> UnsafeRawPointer {
         if let error = runningCart.error, !isErrorShown {
             JSObject.global.document.getElementById("cart-error").textContent = .string(error)
             isErrorShown = true
+            showPowerLED()
         }
         runningCart.ppu.render(into: &framebuffer)
     } else if shownView == .shelf {
