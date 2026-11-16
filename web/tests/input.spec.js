@@ -106,6 +106,42 @@ test("a finger sliding across the D-pad moves the press", async ({ page }) => {
   expect(await litNames(page)).toEqual(["right", "down"]);
 });
 
+test("a click with no finger on A presses it: btnp on the first frame only, and held for six frames", async ({ page }) => {
+  await page.locator('[data-buttons="a"]').dispatchEvent("click");
+  await runFrames(page, 1);
+  const pressedBox = (await litIndicators(page)).a;
+  expect(pressedBox).toBeDefined();
+  for (let frame = 2; frame <= 6; frame++) {
+    await runFrames(page, 1);
+    const heldBox = (await litIndicators(page)).a;
+    expect(heldBox, `frame ${frame}`).toBeDefined();
+    expect(heldBox, `frame ${frame}`).not.toBe(pressedBox);
+  }
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual([]);
+});
+
+test("a finger's tap followed by its click presses the button for one frame, not six", async ({ page }) => {
+  await touch(page, "pointerdown", "a", 1);
+  await touch(page, "pointerup", "a", 1);
+  await page.locator('[data-buttons="a"]').dispatchEvent("click");
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual(["a"]);
+  await runFrames(page, 1);
+  expect(await litNames(page)).toEqual([]);
+});
+
+test("the pad marks held keys: holding the down-right corner marks Down and Right, and lifting clears them", async ({ page }) => {
+  const heldButtons = () => page.locator("#pad [data-held]").evaluateAll((keys) => keys.map((key) => key.dataset.buttons));
+  await touch(page, "pointerdown", "down right", 1);
+  await runFrames(page, 1);
+  expect(await heldButtons()).toEqual(["right", "down"]);
+
+  await touch(page, "pointerup", "down right", 1);
+  await runFrames(page, 1);
+  expect(await heldButtons()).toEqual([]);
+});
+
 const KEY_BUTTONS = {
   ArrowLeft: "left",
   ArrowRight: "right",

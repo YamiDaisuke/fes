@@ -1,6 +1,6 @@
 import { instantiate } from "../.build/js/instantiate.js";
 import { defaultBrowserSetup } from "../.build/js/platforms/browser.js";
-import { listenForInput, buttonsForFrame } from "./input.js";
+import { listenForInput, buttonsForFrame, showHeldButtons } from "./input.js";
 import * as storage from "./storage.js";
 import * as files from "./files.js";
 import { createCodeEditor } from "./code-editor.js";
@@ -54,7 +54,11 @@ function drawFrame(now) {
   if (framesToRun > 0) {
     let address;
     try {
-      for (let i = 0; i < framesToRun; i++) address = instance.exports.frame(buttonsForFrame());
+      for (let i = 0; i < framesToRun; i++) {
+        const buttons = buttonsForFrame();
+        showHeldButtons(buttons);
+        address = instance.exports.frame(buttons);
+      }
     } catch (error) {
       document.getElementById("cart-error").textContent = `FES stopped: ${error}\nReload the page to start again.`;
       throw error;
