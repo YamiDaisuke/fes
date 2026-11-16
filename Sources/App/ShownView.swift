@@ -1,6 +1,6 @@
 import JavaScriptKit
 
-enum ShownView: String {
+enum ShownView: String, CaseIterable {
     case code, game, art, shelf
 }
 
@@ -10,10 +10,26 @@ func show(_ view: ShownView) {
     let previousView = shownView
     shownView = view
     JSObject.global.document.body.dataset.view = .string(view.rawValue)
+    for each in ShownView.allCases {
+        _ = JSObject.global.document.getElementById("show-\(each.rawValue)").setAttribute("aria-pressed", each == view ? "true" : "false")
+    }
     if view != .art {
         dropArtStroke()
     }
     if previousView == .game && view != .game, let error = runningCart.error {
         showRuntimeErrorInCode(error)
     }
+    showPowerLED()
+}
+
+func showPowerLED() {
+    let state: String
+    if shownView == .shelf || !runningCartIsOpenedCart {
+        state = "off"
+    } else if runningCart.error != nil {
+        state = "error"
+    } else {
+        state = "on"
+    }
+    JSObject.global.document.body.dataset.led = .string(state)
 }
