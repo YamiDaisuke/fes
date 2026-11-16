@@ -65,6 +65,12 @@ for (const [orientation, viewport] of [["landscape", { width: 1194, height: 834 
 
     for (const id of ["crisp-ui", "crisp-code"]) {
       const sample = page.locator(`#${id}`);
+      const fit = await sample.evaluate((element) => ({
+        overflowX: element.scrollWidth - element.clientWidth,
+        overflowY: element.scrollHeight - element.clientHeight,
+      }));
+      expect(fit, `${id} holds every line inside the screenshot`).toEqual({ overflowX: 0, overflowY: 0 });
+
       const png = (await sample.screenshot()).toString("base64");
       const counts = await sample.evaluate(async (element, png) => {
         const style = getComputedStyle(element);

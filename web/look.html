@@ -22,7 +22,7 @@
     .code-33 { font: 33px / 42px var(--font-code); }
     #crisp-ui, #crisp-code { box-sizing: border-box; width: calc(200 * var(--u)); padding: calc(2 * var(--u)); color: var(--ink); background: var(--shell); }
     #crisp-ui { height: calc(24 * var(--u)); font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui); }
-    #crisp-code { height: calc(32 * var(--u)); font: calc(11 * var(--u)) / calc(14 * var(--u)) var(--font-code); }
+    #crisp-code { height: calc(32 * var(--u)); white-space: pre; font: calc(11 * var(--u)) / calc(14 * var(--u)) var(--font-code); }
   </style>
 </head>
 <body>
@@ -58,7 +58,7 @@
 
   <h2>Crisp</h2>
   <p id="crisp-ui">The quick brown fox jumps over the lazy dog. 0123456789</p>
-  <p id="crisp-code">local hit = x == 0 and 1 or 0<br>NAME = "FES " .. 8 * 8 + 7</p>
+  <p id="crisp-code">local hit = x and 1 or 0<br>NAME = "FES " .. 8 * 8 + 7</p>
 
   <h2>Keys</h2>
   <div class="row">
