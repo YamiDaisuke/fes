@@ -2,10 +2,11 @@ import { test, expect } from "@playwright/test";
 import { openPaused } from "./frames.js";
 
 const VIEWPORTS = [
-  { width: 1194, height: 834, scale: 4 },
-  { width: 1133, height: 744, scale: 4 },
-  { width: 834, height: 1194, scale: 4 },
-  { width: 744, height: 1133, scale: 3 },
+  { width: 1194, height: 834, scale: 4, installHint: false },
+  { width: 1133, height: 744, scale: 4, installHint: false },
+  { width: 1133, height: 744, scale: 3, installHint: true },
+  { width: 834, height: 1194, scale: 4, installHint: false },
+  { width: 744, height: 1133, scale: 3, installHint: false },
 ];
 
 function intersects(a, b) {
@@ -16,14 +17,15 @@ function contains(outer, inner) {
   return inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.width <= outer.x + outer.width && inner.y + inner.height <= outer.y + outer.height;
 }
 
-for (const { width, height, scale } of VIEWPORTS) {
-  test(`at ${width}×${height} the screen keeps a whole ${scale}× scale on whole pixels and the controller stays off it`, async ({ page }) => {
+for (const { width, height, scale, installHint } of VIEWPORTS) {
+  test(`at ${width}×${height}${installHint ? " with the install hint" : ""} the screen keeps a whole ${scale}× scale on whole pixels and the controller stays off it`, async ({ page }) => {
     await page.setViewportSize({ width, height });
-    await page.addInitScript(() => {
-      localStorage.setItem("fes-install-hint-dismissed", String(Date.now()));
+    await page.addInitScript((installHint) => {
+      if (!installHint) localStorage.setItem("fes-install-hint-dismissed", String(Date.now()));
       window.testCartMainLua = "function _draw() cls() end";
-    });
+    }, installHint);
     await openPaused(page);
+    await expect(page.locator("#install-hint")).toBeVisible({ visible: installHint });
     await expect(page.locator("#screen")).toHaveCSS("width", `${192 * scale}px`);
 
     const boxes = await page.evaluate(() => {
