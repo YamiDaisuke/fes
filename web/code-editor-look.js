@@ -24,7 +24,7 @@ const screen = EditorView.theme(
     ".cm-gutter-lint": { width: "calc(11 * var(--u))" },
     ".cm-gutter-lint .cm-gutterElement": { display: "grid", placeItems: "center", padding: "0" },
     ".cm-lint-marker-error": { content: "none", width: "calc(5 * var(--u))", height: "calc(5 * var(--u))", backgroundColor: "var(--coral)" },
-    ".cm-lintRange-error": { backgroundImage: "none", boxShadow: "inset 0 calc(-1 * var(--u)) 0 0 var(--coral)" },
+    ".cm-lintRange-error": { paddingBottom: "0", backgroundImage: "none", boxShadow: "inset 0 calc(-1 * var(--u)) 0 0 var(--coral)" },
     ".cm-tooltip.cm-tooltip-lint": {
       color: "var(--ink)",
       backgroundColor: "var(--coral)",
