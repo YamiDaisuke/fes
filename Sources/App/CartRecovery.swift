@@ -52,6 +52,7 @@ func offerRecoveryCopy(_ text: String?) async {
         cart.name = name
         cart.replaceText(ofCodeFile: "main.lua", with: mainLua)
     }
+    runningCartIsOpenedCart = false
     clearArtHistory()
     showCodeView()
     showOpenedCartCode()

@@ -15,5 +15,5 @@ startExportAndImport()
 startCodeAndGameViews()
 startArtView()
 if string(from: JSObject.global.testCartMainLua) != nil {
-    show(.game)
+    runCart()
 }
