@@ -148,6 +148,22 @@ ephemeralTest("cancelling the confirm changes nothing and adds no undo step", as
   await expect(page.getByRole("button", { name: "Undo", exact: true })).toHaveAttribute("aria-disabled", "true");
 });
 
+ephemeralTest("⌘Z pressed in the Replace question doesn't undo the art behind it", async ({ page }) => {
+  await openArtView(page);
+  const colors = await previewColors(page);
+  const sheet = { name: "sheet.png", mimeType: "image/png", buffer: encodePNG(8, 8, imagePixels(8, 8, () => colors[1])) };
+  await page.locator("#art-import-file").setInputFiles(sheet);
+  await answerQuestion(page, "Replace");
+  const sheetAfterImport = await sheetImage(page);
+
+  await page.locator("#art-import-file").setInputFiles(sheet);
+  await expect(page.locator("#ask")).toBeVisible();
+  await page.keyboard.press("Meta+z");
+  await answerQuestion(page, "Cancel");
+
+  expect(await sheetImage(page)).toBe(sheetAfterImport);
+});
+
 ephemeralTest("a 9-color tile is refused with a report naming it, and Close returns focus to Import sheet", async ({ page }) => {
   await openArtView(page);
   await page.getByRole("button", { name: "Background" }).click();

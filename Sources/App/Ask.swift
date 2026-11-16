@@ -34,7 +34,6 @@ func ask(_ question: String, confirm: String, cancel: String = "Cancel", textFie
     field.hidden = .boolean(textField == nil)
     field.value = .string(textField ?? "")
     dialog.returnValue = .string("")
-    let opener: JSValue = document.activeElement
     await withCheckedContinuation { continuation in
         waitingForAnswer = continuation
         _ = dialog.showModal()
@@ -45,7 +44,6 @@ func ask(_ question: String, confirm: String, cancel: String = "Cancel", textFie
             _ = (destructive ? cancelButton : confirmButton).focus()
         }
     }
-    _ = opener.focus()
     guard string(from: dialog.returnValue) == "confirm" else {
         return nil
     }
