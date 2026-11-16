@@ -17,6 +17,9 @@ body[data-view="shelf"] #cart-save { display: none; }
   flex: 1 0 calc(120 * var(--u)); margin: 0; box-sizing: border-box; height: calc(24 * var(--u));
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
 }
+#toolbar .key:focus-visible {
+  box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink), inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--key-dark), 0 var(--key-skirt) 0 0 var(--key-dark);
+}
 body[data-led="on"] .power-led { background: var(--led-on); }
 body[data-led="error"] .power-led { background: var(--led-error); }
 #notices p {
