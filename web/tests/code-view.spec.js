@@ -1,7 +1,7 @@
 import { test, expect, devices } from "@playwright/test";
 import { typeCode } from "./code-editor.js";
 import { contrastRatio } from "./contrast.js";
-import { rgb } from "./pixels.js";
+import { pixelColors, rgb } from "./pixels.js";
 
 async function openCodeView(page) {
   await page.goto("/");
@@ -140,6 +140,24 @@ test.describe("on desktop WebKit, where CodeMirror draws the selection", () => {
     const firstLine = await codeTextColors(page, ".cm-line:first-child");
     expect(firstLine.filter((pair) => pair.isComment)).toHaveLength(1);
     expectReadable(firstLine.map((pair) => ({ ...pair, background: selection })));
+  });
+
+  test("a selection on the cursor's line shows over the current-line band, and the band returns when it collapses", async ({ page }) => {
+    await openCodeView(page);
+    await typeCode(page, `${sample}\n${sample}`);
+    await page.keyboard.press("Home");
+    await page.keyboard.press("Shift+End");
+    const backgroundOf = async (selector) => rgb(await page.locator(selector).first().evaluate((element) => getComputedStyle(element).backgroundColor)).join();
+    const selection = await backgroundOf(".cm-selectionBackground");
+    const activeLine = await backgroundOf(".cm-activeLineGutter");
+
+    const box = await page.locator(".cm-selectionBackground").first().boundingBox();
+    const shown = await pixelColors(page, await page.screenshot({ clip: box }));
+    expect(shown).toContain(selection);
+    expect(shown).not.toContain(activeLine);
+
+    await page.keyboard.press("End");
+    expect(await backgroundOf(".cm-activeLine")).toBe(activeLine);
   });
 });
 

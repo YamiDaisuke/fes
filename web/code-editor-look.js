@@ -15,6 +15,7 @@ const screen = EditorView.theme(
       mixBlendMode: "difference",
     },
     ".cm-activeLine": { backgroundColor: "var(--code-active-line)" },
+    "&:has(.cm-selectionBackground) .cm-activeLine": { backgroundColor: "transparent" },
     ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
       background: "var(--code-selection)",
     },
