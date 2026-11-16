@@ -9,6 +9,7 @@ public struct Cart: Equatable {
     public var backgroundPalettes = PaletteBank()
     public var spritePalettes = PaletteBank()
     public var background = Tilemap()
+    public var label: CartLabel?
 
     public init(name: String, mainLua: String) {
         self.name = name

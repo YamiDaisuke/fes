@@ -50,13 +50,13 @@ private func names(_ cart: Cart) -> [String] {
     #expect(try Cart(files: files).codeFiles[1].text == "a = 1\nb = 2\nc = 3\n")
 }
 
-@Test func formatTwoCartLoadsTheSameAndIsWrittenAsFormatThree() throws {
+@Test func formatTwoCartLoadsTheSameAndIsWrittenAsFormatFour() throws {
     let cart = sampleCart()
     var files = cart.files
-    files["cart.json"] = files["cart.json"]!.replacing("\"format\" : 3", with: "\"format\" : 2")
+    files["cart.json"] = files["cart.json"]!.replacing("\"format\" : 4", with: "\"format\" : 2")
     let loaded = try Cart(files: files)
     #expect(loaded == cart)
-    #expect(loaded.files["cart.json"]!.contains("\"format\" : 3"))
+    #expect(loaded.files["cart.json"]!.contains("\"format\" : 4"))
 }
 
 @Test func fileEndingInLuaWithABadNameIsRefusedNotIgnored() {
