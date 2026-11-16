@@ -20,7 +20,7 @@ These are the owner's to take. Each has a default so work is never blocked: the 
 |---|---|---|---|
 | 1 | Run Phase 2 before M4–M8? | Yes, in the order above | before T27 |
 | 2 | Boot into the shelf instead of the running demo | Yes | T41 |
-| 3 | Fonts: which two, and approving them as vendored dependencies | Chrome: Pixel Operator 8. Code: Print Char 21 (Apple II) | T42 |
+| 3 | Fonts: which two, and approving them as vendored dependencies | Chrome: Pixel Operator 8. Code: Departure Mono (decided on #111) | T42 |
 | 4 | The color tokens | The table in "The look" | T42 |
 | 5 | Code editor screen: C64 indigo, Apple II green or amber | C64 indigo | T46 |
 | 6 | CRT filter default | Off | T51 |
@@ -344,9 +344,9 @@ Fonts are vendored files, so each needs a decision record and the owner's yes (C
 | Role | Recommendation | Why | Alternatives | Check |
 |---|---|---|---|---|
 | Chrome (labels, buttons, status) | **Pixel Operator 8** by Jayvee Enaguas | Drawn on an 8 px grid, proportional, mixed case, clear at 16 px; reported CC0 | Silkscreen (OFL; caps only), Press Start 2P (OFL; wide, eats space), m5x7 by Daniel Linssen | The author's readme confirms CC0 for the `8` variants |
-| Code editor | **Print Char 21** by Kreative Korp (the Apple II 40-column character set) | It is the Apple II font, monospaced, 7×8 cells, mixed case | Pet Me 64 (the Commodore 64 set, same foundry), Departure Mono by Helena Zhang (OFL, confirmed; an 11 px grid, so 22 px text) | Whether the file is under the OFL in `kreativekorp/open-relay` or under Kreative's separate Free Use License, which has its own redistribution terms |
+| Code editor | **Departure Mono** by Helena Zhang | OFL 1.1, monospaced, mixed case, an official WOFF2; an 11 px grid, used at 22 px | Print Char 21 by Kreative Korp (Kreative Free Use License: no modification or conversion; not chosen), Pet Me 64 (the Commodore 64 set, same foundry and licence) | Done in T42: the licence file is vendored next to the font |
 
-Rules for using them: only sizes that are whole multiples of the design grid (8, 16, 24 px for 8 px fonts); `@font-face` with `font-display: block`; WOFF2 files in `web/fonts/` with their license files; precached (T30 makes that automatic); a system monospace fallback in the stack so text never disappears. `-webkit-font-smoothing` does nothing on iPadOS, so crispness depends on whole-pixel sizes and positions, which is what T42 proves.
+Rules for using them: only sizes that are whole multiples of each font's own grid (8 px for Pixel Operator 8, 11 px for Departure Mono), with line heights as in `docs/decisions/045-the-look-foundation.md`; `@font-face` with `font-display: block`; WOFF2 or TTF files as their authors distribute them, in `web/fonts/` with their license files; precached (T30 makes that automatic); a system monospace fallback in the stack so text never disappears. `-webkit-font-smoothing` does nothing on iPadOS, so crispness depends on whole-pixel sizes and positions, which is what T42 proves.
 
 ### Components
 
@@ -428,7 +428,7 @@ Depends: T43 · **Ask the owner** (decision 5)
 - A CodeMirror theme in `web/code-editor.js` with `EditorView.theme` and a `HighlightStyle` (from `@codemirror/language`; the tags come from `@lezer/highlight`, which CodeMirror already depends on: add it to `package.json` explicitly, same family as the approved CodeMirror dependency, and say so in the PR).
 - Default (C64 indigo): background `#2b2a5c`, text `#d6d4ff`, gutter `#232250` with `#a9a6ee` numbers, active line `#34337a`, selection `#5552b0`. Syntax, all pastel on indigo, each between 7.7:1 and 11:1 (text itself is 9.3:1): keyword `--pink`, string `--butter`, number `--coral`, comment `#9d99d9` (5.0:1, the one exception, and never below 4.5:1), function names and calls `--mint`, operators and punctuation the text color. Alternates to offer: Apple II green (`#0f1a12` / `#7dffb0`) and amber (`#1a1408` / `#ffcc66`), one fixed theme, not a setting.
 - A block cursor: `.cm-cursor` as a `1ch`-wide block in the text color with `mix-blend-mode: difference`, blinking with `steps(1)`; no blink under `prefers-reduced-motion`.
-- `--font-code` at 16 px, line height 20 px (whole pixels). The lint gutter's marker and tooltip restyled as a coral plate.
+- `--font-code` at 22 px, line height 28 px (Departure Mono's 11 px grid, decision record 045). The lint gutter's marker and tooltip restyled as a coral plate.
 - The editor sits in a monitor bezel like the game screen. The file tabs become the tab component, shaped like disk labels; the name field and the file buttons sit in the row above.
 - `#code-error` becomes a coral readout under the editor.
 
