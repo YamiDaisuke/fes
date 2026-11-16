@@ -131,3 +131,151 @@ canvas { image-rendering: pixelated; }
 #art-view .swatches button:disabled { opacity: 0.4; }
 #art-tools input[type="range"] { display: block; width: 100%; min-height: 44px; }
 #art-pixel { flex-direction: column; align-items: start; margin-top: 16px; }
+
+:root {
+  --u: 2px;
+  --ink: #2a2438;
+  --shell: #cfc6e0;
+  --shell-light: #ece7f5;
+  --shell-dark: #a79bc4;
+  --shell-deep: #7a6e9a;
+  --well: #3a3350;
+  --screen-off: #1c1a26;
+  --mint: #a8e6cf; --mint-dark: #6dba9b;
+  --coral: #ffb3a7; --coral-dark: #d6857a;
+  --butter: #ffe9a8; --butter-dark: #d6ba68;
+  --sky: #a9d8f5; --sky-dark: #74a8cc;
+  --pink: #f7b7d8; --pink-dark: #cc85aa;
+  --readout: #2e3b34; --readout-ink: #b9f0cf;
+  --led-on: #7dffb0; --led-error: #ff6b6b; --led-off: #5a5470;
+  --paper: #fff8e7;
+  --font-ui: "Pixel Operator 8", system-ui, sans-serif;
+  --font-code: "Departure Mono", ui-monospace, Menlo, monospace;
+  --raised: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-dark);
+  --recessed: inset var(--u) var(--u) 0 0 var(--shell-deep), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-light);
+  font-synthesis: none;
+}
+@font-face { font-family: "Pixel Operator 8"; src: url("fonts/PixelOperator8.ttf") format("truetype"); font-display: block; font-weight: normal; font-style: normal; }
+@font-face { font-family: "Departure Mono"; src: url("fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: block; font-weight: normal; font-style: normal; }
+
+.plate {
+  padding: calc(4 * var(--u));
+  border: var(--u) solid var(--ink);
+  background: var(--shell);
+  box-shadow: var(--raised);
+  clip-path: polygon(var(--u) 0, calc(100% - var(--u)) 0, calc(100% - var(--u)) var(--u), 100% var(--u), 100% calc(100% - var(--u)), calc(100% - var(--u)) calc(100% - var(--u)), calc(100% - var(--u)) 100%, var(--u) 100%, var(--u) calc(100% - var(--u)), 0 calc(100% - var(--u)), 0 var(--u), var(--u) var(--u));
+}
+.plate.screws { position: relative; }
+.plate.screws::before, .plate.screws::after {
+  content: ""; position: absolute; top: calc(2 * var(--u));
+  width: calc(3 * var(--u)); height: calc(3 * var(--u));
+  background: linear-gradient(var(--shell-dark) var(--u), var(--ink) var(--u) calc(2 * var(--u)), var(--shell-dark) calc(2 * var(--u)));
+}
+.plate.screws::before { left: calc(2 * var(--u)); }
+.plate.screws::after { right: calc(2 * var(--u)); }
+
+.key, .tab {
+  --key-face: var(--shell); --key-dark: var(--shell-dark); --key-skirt: calc(2 * var(--u));
+  box-sizing: border-box;
+  min-width: calc(22 * var(--u)); min-height: calc(22 * var(--u));
+  margin: 0; padding: 0 calc(4 * var(--u));
+  appearance: none; border: var(--u) solid var(--ink); border-radius: 0;
+  color: var(--ink); background: var(--key-face);
+  box-shadow: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--key-dark), 0 var(--key-skirt) 0 0 var(--key-dark);
+  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  touch-action: manipulation;
+}
+.key-go { --key-face: var(--mint); --key-dark: var(--mint-dark); }
+.key-stop { --key-face: var(--coral); --key-dark: var(--coral-dark); }
+.key-nav { --key-face: var(--sky); --key-dark: var(--sky-dark); }
+.key:active, .key[data-held], .key[aria-pressed="true"] { --key-skirt: var(--u); transform: translateY(var(--u)); }
+.key[aria-pressed] { position: relative; }
+.key[aria-pressed]::after {
+  content: ""; position: absolute; top: var(--u); right: var(--u);
+  width: calc(2 * var(--u)); height: calc(2 * var(--u));
+  background: var(--led-off);
+}
+.key[aria-pressed="true"] { --key-face: var(--butter); --key-dark: var(--butter-dark); }
+.key[aria-pressed="true"]::after { background: var(--led-on); }
+.key:disabled, .key[aria-disabled="true"] { border-color: var(--shell-deep); box-shadow: none; transform: none; }
+.key:focus-visible, .tab:focus-visible, .field:focus-visible, .fader:focus-visible, .swatch:focus-visible { outline: var(--u) solid var(--butter); outline-offset: 0; }
+
+.switches { display: flex; gap: 0; padding: var(--u) var(--u) calc(3 * var(--u)); background: var(--shell-dark); box-shadow: var(--recessed); }
+
+.readout {
+  padding: var(--u) calc(4 * var(--u));
+  border: var(--u) solid var(--ink);
+  color: var(--readout-ink);
+  background: var(--readout);
+  box-shadow: inset var(--u) var(--u) 0 0 var(--ink);
+  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+}
+
+.led { display: inline-block; width: calc(3 * var(--u)); height: calc(3 * var(--u)); border: var(--u) solid var(--ink); background: var(--led-off); }
+.led[data-state="on"] { background: var(--led-on); }
+.led[data-state="error"] { background: var(--led-error); }
+
+.field {
+  box-sizing: border-box;
+  min-height: calc(22 * var(--u));
+  margin: 0; padding: 0 calc(3 * var(--u));
+  appearance: none; border: var(--u) solid var(--ink); border-radius: 0;
+  color: var(--ink); background: var(--paper);
+  box-shadow: var(--recessed);
+  caret-color: var(--ink);
+  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+}
+
+.fader {
+  box-sizing: border-box;
+  min-height: calc(22 * var(--u));
+  margin: 0; padding: 0 calc(3 * var(--u));
+  appearance: none; border: var(--u) solid var(--ink);
+  background: var(--shell); box-shadow: var(--raised);
+}
+.fader::-webkit-slider-runnable-track {
+  height: calc(4 * var(--u));
+  background: var(--shell-deep);
+  box-shadow: inset var(--u) var(--u) 0 0 var(--ink);
+}
+.fader::-webkit-slider-thumb {
+  box-sizing: border-box;
+  width: calc(8 * var(--u)); height: calc(20 * var(--u));
+  margin-top: calc(-8 * var(--u));
+  appearance: none;
+  border: var(--u) solid var(--ink);
+  background: var(--shell);
+  box-shadow: var(--raised);
+}
+
+.swatch {
+  box-sizing: border-box;
+  width: calc(22 * var(--u)); height: calc(22 * var(--u));
+  margin: 0; padding: 0;
+  appearance: none; border: var(--u) solid var(--ink); border-radius: 0;
+  box-shadow: var(--recessed);
+  touch-action: manipulation;
+}
+.swatch[aria-pressed="true"] { outline: var(--u) solid var(--butter); outline-offset: 0; }
+.swatch.transparent { background: repeating-conic-gradient(var(--shell-light) 0 25%, var(--shell-dark) 0 50%) 0 0 / calc(8 * var(--u)) calc(8 * var(--u)); }
+
+.tab { --key-skirt: 0px; }
+.tab[aria-selected="true"] { border-bottom-color: var(--key-face); }
+
+.tape {
+  padding: var(--u) calc(6 * var(--u)) var(--u) calc(4 * var(--u));
+  color: var(--ink);
+  background: var(--paper);
+  font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui);
+  clip-path: polygon(var(--u) 0, calc(100% - 2 * var(--u)) 0, calc(100% - 2 * var(--u)) calc(3 * var(--u)), 100% calc(3 * var(--u)), 100% calc(6 * var(--u)), calc(100% - var(--u)) calc(6 * var(--u)), calc(100% - var(--u)) calc(9 * var(--u)), 100% calc(9 * var(--u)), 100% 100%, var(--u) 100%, var(--u) calc(100% - var(--u)), 0 calc(100% - var(--u)), 0 var(--u), var(--u) var(--u));
+}
+
+.dialog { color: var(--ink); font: calc(8 * var(--u)) / calc(10 * var(--u)) var(--font-ui); }
+.dialog h2 {
+  margin: calc(-4 * var(--u)) calc(-4 * var(--u)) calc(4 * var(--u));
+  padding: var(--u) calc(4 * var(--u));
+  border-bottom: var(--u) solid var(--ink);
+  background: var(--sky);
+  font: inherit;
+}
+.dialog::backdrop { background: color-mix(in srgb, var(--ink) 60%, transparent); }
