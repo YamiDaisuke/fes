@@ -57,6 +57,7 @@ func buildCodeFileTabs() {
     for file in cart.codeFiles {
         let tab = document.createElement("button")
         tab.type = "button"
+        tab.className = "tab"
         _ = tab.setAttribute("role", "tab")
         _ = tab.setAttribute("aria-controls", "code-editor")
         tab.dataset.file = .string(file.name)
