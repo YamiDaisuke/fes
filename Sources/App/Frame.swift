@@ -15,14 +15,16 @@ nonisolated(unsafe) var isErrorShown = false
 @_expose(wasm, "frame")
 @c
 func frame(heldButtons: UInt32) -> UnsafeRawPointer {
+    input.beginFrame(held: UInt8(truncatingIfNeeded: heldButtons))
     if shownView == .game {
-        input.beginFrame(held: UInt8(truncatingIfNeeded: heldButtons))
         runningCart.runFrame(input: input)
         if let error = runningCart.error, !isErrorShown {
             JSObject.global.document.getElementById("cart-error").textContent = .string(error)
             isErrorShown = true
         }
         runningCart.ppu.render(into: &framebuffer)
+    } else if shownView == .shelf {
+        respondToShelfButtons(input)
     }
     // Valid until the next frame(): only frame() writes this private global, so its storage can't move before JS blits it.
     return framebuffer.rgba.withUnsafeBytes { $0.baseAddress! }

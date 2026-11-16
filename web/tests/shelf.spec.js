@@ -9,6 +9,10 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+async function waitTwoAnimationFrames(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
 async function saveCodeAs(page, name, code) {
   await page.goto("/");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
@@ -171,4 +175,55 @@ test("a save finishing while focus is outside the shelf list leaves focus where 
   await page.locator("#cart-save").dispatchEvent("click");
   await expect(page.locator("#cart-status")).toHaveText("Saved Renamed.");
   await expect(page.getByRole("button", { name: "Import" })).toBeFocused();
+});
+
+test("Right, Right, Z with the keyboard plays the third entry", async ({ page }) => {
+  await saveCodeAs(page, "Aa", "-- a");
+  await saveCodeAs(page, "Bb", 'error("from b")');
+  await page.reload();
+
+  await openShelf(page);
+  const entry = (name) => page.locator("#shelf-list").getByRole("button", { name, exact: true });
+  await expect(entry("Bb")).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(entry("Aa")).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("ArrowRight");
+  await expect(entry("Bb")).toHaveAttribute("aria-pressed", "true");
+  await expect(entry("Bb")).toBeFocused();
+  await page.keyboard.press("z");
+  await expect(page.locator("body")).toHaveAttribute("data-view", "game");
+  await expect(page.locator("#cart-error")).toContainText("main.lua:1: from b");
+});
+
+test("Left at the first entry keeps it selected and focused, and X edits it", async ({ page }) => {
+  await saveCodeAs(page, "Aa", "-- a");
+  await page.reload();
+
+  await openShelf(page);
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Aa" })).toBeVisible();
+  const demo = page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" });
+  await page.keyboard.press("ArrowLeft");
+  await expect(demo).toHaveAttribute("aria-pressed", "true");
+  await expect(demo).toBeFocused();
+  await page.keyboard.press("x");
+  await expect(page.locator("body")).toHaveAttribute("data-view", "code");
+  await expect(page.locator(".cm-content")).toHaveText('error("from boot")');
+});
+
+test("Z held from the shelf into the game is not a new press for the cart", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.testCartMainLua = 'function _update() if btnp(4) then error("A pressed") end end';
+  });
+  await page.goto("/");
+  await openShelf(page);
+  await selectOnShelf(page, "Built-in demo");
+  await page.keyboard.down("z");
+  await expect(page.locator("body")).toHaveAttribute("data-view", "game");
+  await waitTwoAnimationFrames(page);
+  await page.keyboard.up("z");
+  await waitTwoAnimationFrames(page);
+  await expect(page.locator("#cart-error")).toBeEmpty();
+
+  await page.keyboard.press("z");
+  await expect(page.locator("#cart-error")).toContainText("A pressed");
 });
