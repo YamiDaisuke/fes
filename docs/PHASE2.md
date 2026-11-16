@@ -360,7 +360,7 @@ Each is a class in `style.css`, written once.
 - **LED** (`.led`): a 3u square with a 1u outline; on, off or error.
 - **Field** (`input[type="text"]`, `.field`): recessed, paper background, ink text, block caret color.
 - **Fader** (`input[type="range"]`): a recessed groove with a key-shaped thumb (`::-webkit-slider-thumb`, `appearance: none`).
-- **Swatch** (`.swatches button`): a recessed square of the color; selected is a `1u` ink + `1u` butter double outline; the transparent swatch keeps its checker, in tokens.
+- **Swatch** (`.swatches button`): a recessed square of the color; selected is a `1u` butter + `1u` ink ring inside its border, so the focus outline still shows on it; the transparent swatch keeps its checker, in tokens.
 - **Tab** (`[role="tab"]`): a key with no skirt whose selected state joins the surface below it.
 - **Label tape** (`.tape`): paper strip with a stepped torn end, for notices.
 - **Dialog** (`dialog`): a plate with a sky title strip, over a flat `--ink` at 60% backdrop (the one allowed translucency).
