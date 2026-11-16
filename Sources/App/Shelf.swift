@@ -46,13 +46,11 @@ func startShelf() {
     _ = playButton.addEventListener("click", playClicked)
     _ = editButton.addEventListener("click", editClicked)
     startShelfActions()
-    showShelfEntries([], labelImages: [:])
+    showShelfEntries([], labelImages: [demoFolder: demoLabelImage])
 }
 
 func showShelf() {
     show(.shelf)
-    // The boot-time list can't draw it: boot.js hands fesArtView the wasm memory only after main() returns.
-    blit(demoLabelImage, into: shelfList.querySelector("[data-folder=\"\"] canvas"))
     focusShelfSelection()
 }
 
