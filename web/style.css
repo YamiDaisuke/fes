@@ -268,7 +268,7 @@ canvas { image-rendering: pixelated; }
   --paper: #fff8e7;
   --code-screen: #2b2a5c; --code-text: #d6d4ff; --code-cursor: var(--code-text);
   --code-gutter: #232250; --code-line-number: #b4b1f2; --code-active-line: #232250;
-  --code-selection: #4a4799; --code-comment: #a29ee0;
+  --code-selection: #3f1f80; --code-match: #0e0c50; --code-comment: #a29ee0;
   --code-keyword: var(--pink); --code-string: var(--butter); --code-number: var(--coral); --code-builtin: var(--mint);
   --font-ui: "Pixel Operator 8", system-ui, sans-serif;
   --font-code: "Departure Mono", ui-monospace, Menlo, monospace;

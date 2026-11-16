@@ -18,6 +18,8 @@ const screen = EditorView.theme(
     ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
       background: "var(--code-selection)",
     },
+    ".cm-selectionMatch, &.cm-focused .cm-matchingBracket": { backgroundColor: "var(--code-match)" },
+    "&.cm-focused .cm-nonmatchingBracket": { color: "var(--ink)", backgroundColor: "var(--coral)" },
     ".cm-gutters": { color: "var(--code-line-number)", backgroundColor: "var(--code-gutter)", border: "none" },
     ".cm-activeLineGutter": { color: "var(--code-text)", backgroundColor: "var(--code-active-line)" },
     ".cm-foldGutter .cm-gutterElement": { width: "calc(7 * var(--u))" },

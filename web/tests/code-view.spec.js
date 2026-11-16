@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, devices } from "@playwright/test";
 import { typeCode } from "./code-editor.js";
 import { contrastRatio } from "./contrast.js";
 import { rgb } from "./pixels.js";
@@ -55,35 +55,92 @@ for (const viewport of viewports) {
   });
 }
 
-test("every kind of code text keeps 7:1 contrast on the screen and on the current line, comments 4.5:1", async ({ page }) => {
-  await openCodeView(page);
-  const sample = 'local s = "hi" .. 12 print(s) -- note';
-  await typeCode(page, `${sample}\n${sample}`);
-  await expect(page.locator(".cm-line").nth(1)).toHaveClass(/cm-activeLine/);
+const sample = 'local s = "hi" .. 12 print(s) -- note';
 
-  const pairs = await page.evaluate(() => {
+async function codeTextColors(page, within = ".cm-line, .cm-lineNumbers") {
+  return page.evaluate((within) => {
     const backgroundOf = (element) => {
       for (let current = element; current; current = current.parentElement) {
         const background = getComputedStyle(current).backgroundColor;
         if (background !== "rgba(0, 0, 0, 0)" && background !== "transparent") return background;
       }
     };
-    const lines = [...document.querySelectorAll(".cm-line")];
-    const texts = lines.flatMap((line) => [line, ...line.querySelectorAll("span:not(:has(span))")]);
-    const lineNumbers = [...document.querySelectorAll(".cm-lineNumbers .cm-gutterElement")].filter((element) => element.textContent);
-    return [...texts, ...lineNumbers].map((element) => ({
-      text: element.textContent,
-      isComment: element.textContent.startsWith("--"),
-      color: getComputedStyle(element).color,
-      background: backgroundOf(element),
-    }));
-  });
+    const walker = document.createTreeWalker(document.querySelector(".cm-editor"), NodeFilter.SHOW_TEXT);
+    const pairs = [];
+    while (walker.nextNode()) {
+      const element = walker.currentNode.parentElement;
+      if (!walker.currentNode.data.trim() || !element.closest(within)) continue;
+      pairs.push({
+        text: walker.currentNode.data,
+        isComment: element.textContent.startsWith("--"),
+        mark: element.closest(".cm-selectionMatch, .cm-matchingBracket, .cm-nonmatchingBracket")?.className ?? "",
+        color: getComputedStyle(element).color,
+        background: backgroundOf(element),
+      });
+    }
+    return pairs;
+  }, within);
+}
 
-  expect(pairs.filter((pair) => pair.isComment)).toHaveLength(2);
+function expectReadable(pairs) {
   for (const pair of pairs) {
+    expect(pair.background, `${pair.text} sits on a see-through band, so its contrast can't be read off one colour`).toMatch(/^rgb\(/);
     const minimum = pair.isComment ? 4.5 : 7;
     expect(contrastRatio(rgb(pair.color), rgb(pair.background)), `${pair.text} ${pair.color} on ${pair.background}`).toBeGreaterThanOrEqual(minimum);
   }
+}
+
+test("every kind of code text keeps 7:1 contrast on the screen and on the current line, comments 4.5:1", async ({ page }) => {
+  await openCodeView(page);
+  await typeCode(page, `${sample}\n${sample}`);
+  await expect(page.locator(".cm-line").nth(1)).toHaveClass(/cm-activeLine/);
+
+  const pairs = await codeTextColors(page);
+  expect(pairs.filter((pair) => pair.isComment)).toHaveLength(2);
+  expectReadable(pairs);
+});
+
+test("other copies of the selected text keep the same contrast as the screen", async ({ page }) => {
+  await openCodeView(page);
+  await typeCode(page, `${sample}\n${sample}`);
+  await page.locator(".cm-line").first().click();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Shift+End");
+
+  const pairs = await codeTextColors(page);
+  const onMatch = pairs.filter((pair) => pair.mark.includes("cm-selectionMatch"));
+  expect(onMatch.map((pair) => pair.text).join("").replaceAll(" ", "")).toBe(sample.replaceAll(" ", ""));
+  expectReadable(onMatch);
+});
+
+test("text on a matching or unmatched bracket keeps 7:1 contrast", async ({ page }) => {
+  await openCodeView(page);
+  await typeCode(page, "local t = {\n  1,\n}\nlocal u = {\n  2,\n]");
+  for (const [line, mark] of [[0, "cm-matchingBracket"], [3, "cm-nonmatchingBracket"]]) {
+    await page.locator(".cm-line").nth(line).click();
+    await page.keyboard.press("End");
+    const onBrackets = (await codeTextColors(page)).filter((pair) => pair.mark.includes(mark));
+    expect(onBrackets).toHaveLength(2);
+    expectReadable(onBrackets);
+  }
+});
+
+test.describe("on desktop WebKit, where CodeMirror draws the selection", () => {
+  const { defaultBrowserType, ...desktopSafari } = devices["Desktop Safari"];
+  test.use(desktopSafari);
+
+  test("every kind of code text keeps 7:1 contrast on the selection, comments 4.5:1", async ({ page }) => {
+    await openCodeView(page);
+    await typeCode(page, `${sample}\n${sample}`);
+    await page.locator(".cm-line").first().click();
+    await page.keyboard.press("Home");
+    await page.keyboard.press("Shift+ArrowDown");
+
+    const selection = await page.locator(".cm-selectionBackground").first().evaluate((element) => getComputedStyle(element).backgroundColor);
+    const firstLine = await codeTextColors(page, ".cm-line:first-child");
+    expect(firstLine.filter((pair) => pair.isComment)).toHaveLength(1);
+    expectReadable(firstLine.map((pair) => ({ ...pair, background: selection })));
+  });
 });
 
 test("the cursor stops blinking when reduced motion is asked for", async ({ page }) => {
