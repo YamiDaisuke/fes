@@ -22,7 +22,7 @@ These are the owner's to take. Each has a default so work is never blocked: the 
 | 2 | Boot into the shelf instead of the running demo | Yes | T41 |
 | 3 | Fonts: which two, and approving them as vendored dependencies | Chrome: Pixel Operator 8. Code: Departure Mono (decided on #111) | T42 |
 | 4 | The color tokens | The table in "The look" | T42 |
-| 5 | Code editor screen: C64 indigo, Apple II green or amber | C64 indigo | T46 |
+| 5 | Code editor screen: C64 indigo, Apple II green or amber | C64 indigo (decided on #115) | T46 |
 | 6 | CRT filter default | Off | T51 |
 | 7 | Manual body text in the pixel font or the system font | Pixel font at 16 px, system font as fallback token | T52 |
 | 8 | `docs/API.md` becomes a pointer to the manual | Yes | T53 |
@@ -426,7 +426,7 @@ Depends: T43 · **Ask the owner** (decision 5)
 
 **Do.**
 - A CodeMirror theme in `web/code-editor.js` with `EditorView.theme` and a `HighlightStyle` (from `@codemirror/language`; the tags come from `@lezer/highlight`, which CodeMirror already depends on: add it to `package.json` explicitly, same family as the approved CodeMirror dependency, and say so in the PR).
-- Default (C64 indigo): background `#2b2a5c`, text `#d6d4ff`, gutter `#232250` with `#a9a6ee` numbers, active line `#34337a`, selection `#5552b0`. Syntax, all pastel on indigo, each between 7.7:1 and 11:1 (text itself is 9.3:1): keyword `--pink`, string `--butter`, number `--coral`, comment `#9d99d9` (5.0:1, the one exception, and never below 4.5:1), function names and calls `--mint`, operators and punctuation the text color. Alternates to offer: Apple II green (`#0f1a12` / `#7dffb0`) and amber (`#1a1408` / `#ffcc66`), one fixed theme, not a setting.
+- Default (C64 indigo): background `#2b2a5c`, text `#d6d4ff`, gutter `#232250` with `#b4b1f2` numbers, active line `#232250`, selection `#4a4799`. Syntax, all pastel on indigo, each between 7.7:1 and 11:1 (text itself is 9.3:1): keyword `--pink`, string `--butter`, number `--coral`, comment `#a29ee0` (5.3:1, the one exception, and never below 4.5:1), Lua library names `--mint`, operators and punctuation the text color. Alternates to offer: Apple II green (`#0f1a12` / `#7dffb0`) and amber (`#1a1408` / `#ffcc66`), one fixed theme, not a setting.
 - A block cursor: `.cm-cursor` as a `1ch`-wide block in the text color with `mix-blend-mode: difference`, blinking with `steps(1)`; no blink under `prefers-reduced-motion`.
 - `--type-code`: Departure Mono at 22 px, line height 28 px (its 11 px grid, decision record 045). The lint gutter's marker and tooltip restyled as a coral plate.
 - The editor sits in a monitor bezel like the game screen. The file tabs become the tab component, shaped like disk labels; the name field and the file buttons sit in the row above.
