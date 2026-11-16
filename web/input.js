@@ -61,7 +61,8 @@ function pressForClick(event) {
 function isPageKey(event) {
   const isTextField = event.target.isContentEditable || event.target.matches("input, textarea");
   const isButtonPress = event.code === "Enter" && event.target.matches("button") && !event.target.closest("#pad");
-  return isTextField || isButtonPress;
+  const isInDialog = event.target.closest("dialog") !== null;
+  return isTextField || isButtonPress || isInDialog;
 }
 
 export function listenForInput(overlay) {
