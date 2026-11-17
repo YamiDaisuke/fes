@@ -65,79 +65,85 @@
   <div id="art-view">
     <div id="art-sheet-area"><canvas id="art-sheet" aria-hidden="true"></canvas></div>
     <div id="art-edit-area"><canvas id="art-edit" aria-hidden="true"></canvas></div>
-    <section id="art-tools" aria-label="Art tools">
-      <div id="art-history" role="group" aria-label="History">
-        <button type="button" id="art-undo" aria-disabled="true">Undo</button>
-        <button type="button" id="art-redo" aria-disabled="true">Redo</button>
+    <section id="art-tools" class="plate" aria-label="Art tools">
+      <div id="art-tool" class="switches" role="group" aria-label="Tool">
+        <button type="button" class="key" data-tool="pencil">Pencil</button>
+        <button type="button" class="key" data-tool="picker">Picker</button>
+        <button type="button" class="key" data-tool="fill">Fill</button>
       </div>
-      <button type="button" id="art-palettes-toggle" aria-pressed="false">Palettes</button>
-      <div id="art-bank" role="group" aria-label="Bank">
-        <button type="button" data-bank="background">Background</button>
-        <button type="button" data-bank="sprite">Sprites</button>
-      </div>
-      <button type="button" id="art-import">Import sheet</button>
-      <button type="button" id="art-import-colors">Import sheet and colors</button>
-      <input type="file" id="art-import-file" accept="image/png,image/jpeg" hidden>
-      <div id="art-palette" role="group" aria-label="Preview palette">
-        <button type="button" data-palette="0" aria-label="Palette 0">0</button>
-        <button type="button" data-palette="1" aria-label="Palette 1">1</button>
-        <button type="button" data-palette="2" aria-label="Palette 2">2</button>
-        <button type="button" data-palette="3" aria-label="Palette 3">3</button>
-        <button type="button" data-palette="4" aria-label="Palette 4">4</button>
-        <button type="button" data-palette="5" aria-label="Palette 5">5</button>
-        <button type="button" data-palette="6" aria-label="Palette 6">6</button>
-        <button type="button" data-palette="7" aria-label="Palette 7">7</button>
-      </div>
-      <div id="art-tool" role="group" aria-label="Tool">
-        <button type="button" data-tool="pencil">Pencil</button>
-        <button type="button" data-tool="picker">Picker</button>
-        <button type="button" data-tool="fill">Fill</button>
-      </div>
-      <div id="art-block-size" role="group" aria-label="Block size">
-        <button type="button" data-block-size="1" aria-label="1 by 1">1×1</button>
-        <button type="button" data-block-size="2" aria-label="2 by 2">2×2</button>
-        <button type="button" data-block-size="4" aria-label="4 by 4">4×4</button>
+      <div id="art-block-size" class="switches" role="group" aria-label="Block size">
+        <button type="button" class="key" data-block-size="1" aria-label="1 by 1">1×1</button>
+        <button type="button" class="key" data-block-size="2" aria-label="2 by 2">2×2</button>
+        <button type="button" class="key" data-block-size="4" aria-label="4 by 4">4×4</button>
       </div>
       <div id="art-block" role="group" aria-label="Block">
-        <button type="button" id="art-flip-horizontal" aria-label="Flip horizontally">Flip H</button>
-        <button type="button" id="art-flip-vertical" aria-label="Flip vertically">Flip V</button>
-        <button type="button" id="art-copy">Copy</button>
-        <button type="button" id="art-paste" disabled>Paste</button>
+        <button type="button" class="key" id="art-flip-horizontal" aria-label="Flip horizontally">Flip H</button>
+        <button type="button" class="key" id="art-flip-vertical" aria-label="Flip vertically">Flip V</button>
+        <button type="button" class="key" id="art-copy">Copy</button>
+        <button type="button" class="key" id="art-paste" disabled>Paste</button>
+      </div>
+      <div id="art-history" role="group" aria-label="History">
+        <button type="button" class="key" id="art-undo" aria-disabled="true">Undo</button>
+        <button type="button" class="key" id="art-redo" aria-disabled="true">Redo</button>
+      </div>
+      <div id="art-import-keys" role="group" aria-label="Import">
+        <button type="button" class="key" id="art-import">Import sheet</button>
+        <button type="button" class="key" id="art-import-colors">Import sheet and colors</button>
+      </div>
+      <input type="file" id="art-import-file" accept="image/png,image/jpeg" hidden>
+    </section>
+    <section id="art-selection" class="plate" aria-label="Art selection">
+      <div id="art-bank" class="switches" role="group" aria-label="Bank">
+        <button type="button" class="key" data-bank="background">Background</button>
+        <button type="button" class="key" data-bank="sprite">Sprites</button>
+      </div>
+      <button type="button" class="key" id="art-palettes-toggle" aria-pressed="false">Palettes</button>
+      <div id="art-palette" class="switches" role="group" aria-label="Preview palette">
+        <button type="button" class="key" data-palette="0" aria-label="Palette 0">0</button>
+        <button type="button" class="key" data-palette="1" aria-label="Palette 1">1</button>
+        <button type="button" class="key" data-palette="2" aria-label="Palette 2">2</button>
+        <button type="button" class="key" data-palette="3" aria-label="Palette 3">3</button>
+        <button type="button" class="key" data-palette="4" aria-label="Palette 4">4</button>
+        <button type="button" class="key" data-palette="5" aria-label="Palette 5">5</button>
+        <button type="button" class="key" data-palette="6" aria-label="Palette 6">6</button>
+        <button type="button" class="key" data-palette="7" aria-label="Palette 7">7</button>
       </div>
       <div id="art-colors" class="swatches" role="group" aria-label="Color">
-        <button type="button" data-color="0" aria-label="Color 0"></button>
-        <button type="button" data-color="1" aria-label="Color 1"></button>
-        <button type="button" data-color="2" aria-label="Color 2"></button>
-        <button type="button" data-color="3" aria-label="Color 3"></button>
-        <button type="button" data-color="4" aria-label="Color 4"></button>
-        <button type="button" data-color="5" aria-label="Color 5"></button>
-        <button type="button" data-color="6" aria-label="Color 6"></button>
-        <button type="button" data-color="7" aria-label="Color 7"></button>
+        <button type="button" class="swatch" data-color="0" aria-label="Color 0"></button>
+        <button type="button" class="swatch" data-color="1" aria-label="Color 1"></button>
+        <button type="button" class="swatch" data-color="2" aria-label="Color 2"></button>
+        <button type="button" class="swatch" data-color="3" aria-label="Color 3"></button>
+        <button type="button" class="swatch" data-color="4" aria-label="Color 4"></button>
+        <button type="button" class="swatch" data-color="5" aria-label="Color 5"></button>
+        <button type="button" class="swatch" data-color="6" aria-label="Color 6"></button>
+        <button type="button" class="swatch" data-color="7" aria-label="Color 7"></button>
       </div>
-      <label for="art-tile">Tile <span id="art-tile-number" aria-hidden="true">0</span></label>
-      <input type="range" id="art-tile" min="0" max="255" value="0">
+      <div id="art-tile-control">
+        <label for="art-tile">Tile <span id="art-tile-number" aria-hidden="true">0</span></label>
+        <input type="range" class="fader" id="art-tile" min="0" max="255" value="0">
+      </div>
       <div id="art-pixel" role="group" aria-label="Pixel">
         <label for="art-pixel-column">Pixel column</label>
-        <input type="range" id="art-pixel-column" min="0" max="7" value="0">
+        <input type="range" class="fader" id="art-pixel-column" min="0" max="7" value="0">
         <label for="art-pixel-row">Pixel row</label>
-        <input type="range" id="art-pixel-row" min="0" max="7" value="0">
-        <button type="button" id="art-pixel-apply">Paint pixel</button>
+        <input type="range" class="fader" id="art-pixel-row" min="0" max="7" value="0">
+        <button type="button" class="key" id="art-pixel-apply">Paint pixel</button>
       </div>
     </section>
-    <section id="art-palettes" aria-label="Palette editor">
-      <div>
+    <section id="art-palettes" class="plate" aria-label="Palette editor">
+      <div id="art-entries-part">
         <h2 id="art-palette-entries-heading">Background palettes</h2>
         <div id="art-palette-entries" class="swatches" role="group" aria-labelledby="art-palette-entries-heading"></div>
       </div>
-      <div>
+      <div id="art-main-edit">
+        <label for="art-main-color-picker" id="art-main-color-picker-label">Edit main color</label>
+        <input type="color" id="art-main-color-picker">
+        <button type="button" class="key" id="art-main-palette-reset">Reset main palette</button>
+      </div>
+      <div id="art-main-part">
         <h2 id="art-main-colors-heading">Main palette</h2>
         <p id="art-main-hint"></p>
-        <div id="art-main-edit">
-          <label for="art-main-color-picker" id="art-main-color-picker-label">Edit main color</label>
-          <input type="color" id="art-main-color-picker">
-        </div>
         <div id="art-main-colors" class="swatches" role="group" aria-labelledby="art-main-colors-heading" aria-describedby="art-main-hint"></div>
-        <button type="button" id="art-main-palette-reset">Reset main palette</button>
       </div>
     </section>
     <dialog id="art-import-report" aria-labelledby="art-import-report-heading">
