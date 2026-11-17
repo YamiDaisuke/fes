@@ -85,3 +85,19 @@ test("Undo with nothing to undo keeps its ink focus ring on the shell", async ({
 
   expect(new Set(await pixelColors(page, outsideTheButterOutline))).toEqual(new Set([ink]));
 });
+
+test("in a 700×500 window the open palette editor leaves the tools plate uncovered", async ({ page }) => {
+  await openArtView(page, { width: 700, height: 500 });
+  await page.getByRole("button", { name: "Palettes", exact: true }).click();
+  await expect(page.locator("#art-palettes")).toBeVisible();
+  const undo = page.getByRole("button", { name: "Undo", exact: true });
+  await undo.scrollIntoViewIfNeeded();
+  const box = await undo.boundingBox();
+
+  const isUndoOnTop = await page.evaluate(
+    ({ x, y }) => document.elementFromPoint(x, y)?.id === "art-undo",
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+
+  expect(isUndoOnTop).toBe(true);
+});
