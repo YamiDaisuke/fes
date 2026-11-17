@@ -204,6 +204,7 @@ canvas { image-rendering: pixelated; }
   color: var(--ink); font: var(--type-ui);
 }
 @media (orientation: portrait) {
+  /* 159u leaves the 1fr sheet column 201u at 744 px, the iPad mini's portrait width (050); the max-width: 743px query depends on it. */
   #art-view { grid-template: "edit tools" minmax(0, 1fr) "sheet selection" auto / minmax(0, 1fr) calc(159 * var(--u)); }
 }
 @media (max-width: 743px) {
@@ -234,7 +235,7 @@ canvas { image-rendering: pixelated; }
   display: grid; align-content: start; justify-content: start; gap: calc(4 * var(--u)) calc(8 * var(--u));
   grid-template: "entries main" auto "picker main" auto / min-content min-content;
 }
-@media (orientation: portrait) {
+@media (orientation: portrait), (max-width: 743px) {
   #art-palettes { grid-area: 1 / 1 / 3 / 2; grid-template: "entries" "picker" "main" / min-content; }
 }
 #art-entries-part { grid-area: entries; }

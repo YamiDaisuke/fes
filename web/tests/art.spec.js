@@ -3,6 +3,7 @@ import { test } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { loadCartFromShelf, savedCartEntries } from "./shelf.js";
 import { answerQuestion } from "./ask.js";
+import { tokenColor } from "./pixels.js";
 
 async function openArtView(page) {
   await page.goto("/");
@@ -18,34 +19,36 @@ function sheetTileCenter(page, tile) {
   }, tile);
 }
 
-function editAreaShowsSheetTile(page, tile) {
-  return page.evaluate((tile) => {
-    const pixelAt = (canvas, x, y) => canvas.getContext("2d").getImageData(x, y, 1, 1).data.join();
-    const sheet = document.getElementById("art-sheet");
-    const edit = document.getElementById("art-edit");
-    const sheetZoom = (sheet.width - 17) / 128;
-    const editZoom = (edit.width - 9) / 8;
-    const sheetLeft = 1 + (tile % 16) * (8 * sheetZoom + 1);
-    const sheetTop = 1 + Math.floor(tile / 16) * (8 * sheetZoom + 1);
-    for (let y = 0; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        const fromSheet = pixelAt(sheet, sheetLeft + x * sheetZoom, sheetTop + y * sheetZoom);
-        const fromEdit = pixelAt(edit, 1 + x * (editZoom + 1) + editZoom / 2, 1 + y * (editZoom + 1) + editZoom / 2);
-        if (fromSheet !== fromEdit) return false;
-      }
-    }
-    return true;
-  }, tile);
-}
-
 function sheetTilePixels(page, tile) {
   return page.evaluate((tile) => {
     const sheet = document.getElementById("art-sheet");
     const zoom = (sheet.width - 17) / 128;
-    const origin = (square) => 1 + square * (8 * zoom + 1);
-    const side = 8 * zoom;
-    return sheet.getContext("2d").getImageData(origin(tile % 16), origin(Math.floor(tile / 16)), side, side).data.join();
+    const center = (square, pixel) => 1 + square * (8 * zoom + 1) + pixel * zoom + Math.floor(zoom / 2);
+    const colors = [];
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        colors.push(sheet.getContext("2d").getImageData(center(tile % 16, x), center(Math.floor(tile / 16), y), 1, 1).data.join());
+      }
+    }
+    return colors.join(";");
   }, tile);
+}
+
+function editAreaTilePixels(page) {
+  return page.evaluate(() => {
+    const edit = document.getElementById("art-edit");
+    const zoom = (edit.width - 9) / 8;
+    const center = (pixel) => 1 + pixel * (zoom + 1) + Math.floor(zoom / 2);
+    const colors = [];
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) colors.push(edit.getContext("2d").getImageData(center(x), center(y), 1, 1).data.join());
+    }
+    return colors.join(";");
+  });
+}
+
+async function editAreaShowsSheetTile(page, tile) {
+  return (await sheetTilePixels(page, tile)) === (await editAreaTilePixels(page));
 }
 
 const sheetPixels = (page) => page.evaluate(() => document.getElementById("art-sheet").toDataURL());
@@ -184,13 +187,14 @@ async function showTile(page, bank, tile) {
   await expect(page.locator("#art-tile-number")).toHaveText(String(tile));
 }
 
-function editAreaRingsPixel(page, x, y) {
-  return page.evaluate(([x, y]) => {
+async function editAreaRingsPixel(page, x, y) {
+  const insideRing = await page.evaluate(([x, y]) => {
     const edit = document.getElementById("art-edit");
     const zoom = (edit.width - 9) / 8;
     const ringTop = y * (zoom + 1);
-    return edit.getContext("2d").getImageData(1 + x * (zoom + 1) + zoom / 2, ringTop, 1, 1).data.join() === "255,255,255,255";
+    return [...edit.getContext("2d").getImageData(1 + x * (zoom + 1) + Math.floor(zoom / 2), ringTop + 1, 1, 1).data.slice(0, 3)].join();
   }, [x, y]);
+  return insideRing === (await tokenColor(page, "--butter"));
 }
 
 const editTileColors = (page) => Promise.all([0, 1, 2, 3, 4, 5, 6, 7].map((y) => editRowColors(page, y)));

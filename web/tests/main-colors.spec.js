@@ -23,6 +23,8 @@ test("an edited main color recolors every entry using it, shows in Run, and is s
   await page.locator("#show-art").click();
   await button(page, "Sprites").click();
   await page.locator("#art-tile").fill("2");
+  await page.locator("#art-pixel-column").fill("3");
+  await page.locator("#art-pixel-row").fill("3");
   await button(page, "Color 3").click();
   await button(page, "Paint pixel").click();
   await button(page, "Palettes").click();
@@ -40,7 +42,7 @@ test("an edited main color recolors every entry using it, shows in Run, and is s
 
   await button(page, "Run").click();
   await expect
-    .poll(() => page.evaluate(() => document.getElementById("screen").getContext("2d").getImageData(0, 0, 1, 1).data.join()))
+    .poll(() => page.evaluate(() => document.getElementById("screen").getContext("2d").getImageData(3, 3, 1, 1).data.join()))
     .toBe("255,0,0,255");
 
   await button(page, "Code").click();
