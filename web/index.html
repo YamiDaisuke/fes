@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#cfc6e0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-view="shelf" data-led="off" data-booting>
+<body data-view="shelf" data-led="off" data-crt="off" data-booting>
   <div id="toolbar" class="plate">
     <span class="led power-led" aria-hidden="true"></span>
     <div class="switches" role="group" aria-label="View">
@@ -169,9 +169,12 @@
   <div id="game-view">
     <div id="screen-slot">
       <div id="bezel" class="plate">
-        <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
+        <div id="screen-glass">
+          <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
+          <div id="screen-crt" aria-hidden="true"></div>
+        </div>
         <pre id="cart-error" class="plate" role="alert"></pre>
-        <p id="bezel-strip" aria-hidden="true"><span class="led power-led"></span><span id="badge">FES</span></p>
+        <p id="bezel-strip"><span class="led power-led" aria-hidden="true"></span><button type="button" id="crt-toggle" class="key" aria-pressed="false" aria-label="CRT filter">CRT</button><span id="badge" aria-hidden="true">FES</span></p>
       </div>
     </div>
     <div id="pad" role="group" aria-label="Controller">
