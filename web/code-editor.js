@@ -5,6 +5,7 @@ import { indentWithTab } from "@codemirror/commands";
 import { StreamLanguage } from "@codemirror/language";
 import { lua } from "@codemirror/legacy-modes/mode/lua";
 import { lintGutter, setDiagnostics } from "@codemirror/lint";
+import { codeEditorLook } from "./code-editor-look.js";
 
 export function createCodeEditor(parent) {
   let codeChanged = () => {};
@@ -13,6 +14,7 @@ export function createCodeEditor(parent) {
     keymap.of([indentWithTab]),
     StreamLanguage.define(lua),
     lintGutter(),
+    codeEditorLook,
     EditorView.contentAttributes.of({ autocapitalize: "off", autocorrect: "off", spellcheck: "false", "aria-label": name }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) codeChanged(update.state.doc.toString());
