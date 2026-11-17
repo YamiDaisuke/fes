@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#cfc6e0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-view="shelf" data-led="off">
+<body data-view="shelf" data-led="off" data-booting>
   <div id="toolbar" class="plate">
     <span class="led power-led" aria-hidden="true"></span>
     <div class="switches" role="group" aria-label="View">
@@ -53,7 +53,10 @@
   </div>
   <section id="shelf-view" aria-label="Carts">
     <div id="shelf-preview" class="plate" aria-hidden="true">
-      <canvas id="shelf-preview-label" width="192" height="144"></canvas>
+      <div id="shelf-preview-screen">
+        <span id="boot-logo">FES</span>
+        <canvas id="shelf-preview-label" width="192" height="144"></canvas>
+      </div>
       <p id="shelf-preview-name" class="tape"></p>
     </div>
     <div id="shelf-actions" role="group" aria-label="Cart actions">
