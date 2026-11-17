@@ -14,3 +14,15 @@ export async function pixelColors(page, png) {
     return colors;
   }, png.toString("base64"));
 }
+
+export async function tokenColor(page, token) {
+  const color = await page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    document.body.append(probe);
+    const computed = getComputedStyle(probe).color;
+    probe.remove();
+    return computed;
+  }, token);
+  return rgb(color).join();
+}
