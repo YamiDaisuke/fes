@@ -166,6 +166,8 @@ function editRowColors(page, y) {
   }, y);
 }
 
+const nextFrame = (page) => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+
 async function drag(page, from, to, squares = 8) {
   const start = await editPixelPoint(page, ...from, squares);
   const end = await editPixelPoint(page, ...to, squares);
@@ -173,6 +175,7 @@ async function drag(page, from, to, squares = 8) {
   await page.mouse.down();
   await page.mouse.move(end.x, end.y, { steps: 1 });
   await page.mouse.up();
+  await nextFrame(page);
 }
 
 async function showTile(page, bank, tile) {
@@ -199,8 +202,6 @@ async function pressMouseOnPixel(page, x, y) {
 }
 
 const mousePointerId = 1;
-
-const nextFrame = (page) => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
 
 function cancelMouseStroke(page) {
   return page
@@ -675,11 +676,9 @@ ephemeralTest("Undo and Redo take back a stroke and bring it back, from the butt
   const status = page.locator("#cart-status");
   const blankTile = await editTileColors(page);
   await drag(page, [0, 2], [7, 2]);
-  await nextFrame(page);
   const firstStroke = await editTileColors(page);
   expect(firstStroke).not.toEqual(blankTile);
   await drag(page, [0, 5], [7, 5]);
-  await nextFrame(page);
   expect(await editTileColors(page)).not.toEqual(firstStroke);
 
   await page.getByRole("button", { name: "Undo stroke" }).click();
