@@ -470,6 +470,8 @@ Depends: T45, T40
 
 **Accept.** The shelf specs pass; at the four sizes the action keys are all visible without scrolling the page; the selected cartridge is scrolled into view after D-pad moves.
 
+As built, T49 departs from this sketch: the selected cartridge is raised with a butter tape and focus keeps the ring, the preview's name sits beside its picture, and an unlabelled entry has no canvas (decision 053).
+
 ### T50 App icon, boot animation and theme color
 Depends: T44 · Removes the DEBT line about the placeholder icon if the owner supplies or accepts the art
 
