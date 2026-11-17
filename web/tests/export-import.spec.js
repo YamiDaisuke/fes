@@ -1,7 +1,7 @@
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
 import { storedZip } from "./stored-zip.js";
-import { loadCartFromShelf, openShelf, savedCartEntries, selectOnShelf } from "./shelf.js";
+import { loadCartFromShelf, openShelf, savedCartTitles, selectOnShelf } from "./shelf.js";
 
 const cartFileNames = ["cart.json", "main.lua", "palettes.pal", "background.tiles", "sprites.tiles", "main-palette.hex", "map.map"];
 
@@ -39,7 +39,7 @@ test("an exported cart imports as a new cart with identical files, leaving the o
 
   await page.locator("#cart-import-file").setInputFiles(exported);
   await expect(page.locator("#cart-status")).toHaveText("Imported Ünï:a/b as a new cart.");
-  await expect(savedCartEntries(page)).toHaveText(["Ünï:a/b", "Ünï:a/b"]);
+  await expect(savedCartTitles(page)).toHaveText(["Ünï:a/b", "Ünï:a/b"]);
 
   const [original, imported] = await page.evaluate(async (fileNames) => {
     const folders = await fesStorage.listCartFolders();
