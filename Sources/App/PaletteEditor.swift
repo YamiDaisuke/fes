@@ -111,5 +111,6 @@ func redrawPaletteEditor() {
 private func newButton() -> JSValue {
     let button = document.createElement("button")
     _ = button.setAttribute("type", "button")
+    _ = button.classList.add("swatch")
     return button
 }
