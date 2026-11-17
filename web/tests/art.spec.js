@@ -675,10 +675,12 @@ ephemeralTest("Undo and Redo take back a stroke and bring it back, from the butt
   const status = page.locator("#cart-status");
   const blankTile = await editTileColors(page);
   await drag(page, [0, 2], [7, 2]);
-  await expect.poll(() => editTileColors(page)).not.toEqual(blankTile);
+  await nextFrame(page);
   const firstStroke = await editTileColors(page);
+  expect(firstStroke).not.toEqual(blankTile);
   await drag(page, [0, 5], [7, 5]);
-  await expect.poll(() => editTileColors(page)).not.toEqual(firstStroke);
+  await nextFrame(page);
+  expect(await editTileColors(page)).not.toEqual(firstStroke);
 
   await page.getByRole("button", { name: "Undo stroke" }).click();
   await expect(status).toHaveText("Undid stroke.");
