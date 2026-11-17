@@ -99,3 +99,43 @@ for (const palettes of ["closed", "open"]) {
     }
   });
 }
+
+const iconKeyNames = [
+  "Pencil", "Picker", "Fill", "Flip horizontally", "Flip vertically", "Copy", "Paste",
+  "Undo", "Redo", "Import sheet", "Import sheet and colors", "Palettes",
+];
+
+test("each icon key has its old name, no visible text and no description", async ({ page }) => {
+  const keys = page.locator("#art-view .icon-key");
+  await expect(keys).toHaveCount(iconKeyNames.length);
+
+  for (const [index, name] of iconKeyNames.entries()) {
+    const key = keys.nth(index);
+    await expect(key).toHaveAccessibleName(name);
+    await expect(key).toHaveText("");
+    await expect(key).toHaveAccessibleDescription("");
+  }
+
+  await page.getByRole("button", { name: "Flip horizontally" }).click();
+  await expect(page.locator("#art-undo")).not.toHaveAccessibleName("Undo");
+});
+
+test("every icon key draws its icon in only ink and its face colour at 2×", async ({ page }) => {
+  const ink = await tokenColor(page, "--ink");
+  const keys = await page.locator("#art-view .icon-key").all();
+  expect(keys).toHaveLength(iconKeyNames.length);
+
+  for (const key of keys) {
+    const name = await key.getAttribute("aria-label");
+    const face = rgb(await key.evaluate((element) => getComputedStyle(element).backgroundColor)).join();
+    const box = await key.boundingBox();
+    expect(box.height, `${name} is square`).toBe(box.width);
+    const inset = 8;
+    const iconArea = await page.screenshot({ clip: { x: box.x + inset, y: box.y + inset, width: box.width - 2 * inset, height: box.height - 2 * inset } });
+
+    const colors = new Set(await pixelColors(page, iconArea));
+
+    expect(colors.has(ink), `${name} shows ink`).toBe(true);
+    expect([...colors].filter((color) => color !== ink && color !== face), `${name} shows only ink and ${face}`).toEqual([]);
+  }
+});

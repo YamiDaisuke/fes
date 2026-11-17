@@ -458,6 +458,8 @@ Depends: T47
 
 **Accept.** The re-recorded goldens; `art.spec.js` passes (it finds buttons by role and name, so labels must not change); a check that each icon key has a non-empty accessible name.
 
+As built, T48 departs from this sketch: seven goldens and a two-colour ring inside the tile (decision 051); one ×4 PNG per icon, twelve icons, unprefixed `mask-image` and no `title` (decision 052).
+
 ### T49 Cartridges on the shelf
 Depends: T45, T40
 
