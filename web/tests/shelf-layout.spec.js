@@ -113,3 +113,21 @@ for (const size of [{ width: 593, height: 834 }, { width: 504, height: 744 }]) {
     expect(layout).toEqual({ cartridgesWholeInSlot: true, slotReachableInView: true });
   });
 }
+
+for (const size of [{ width: 375, height: 834 }, { width: 320, height: 834 }]) {
+  test(`at ${size.width}×${size.height} the shelf view doesn't scroll sideways and the preview stays on whole pixels`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await page.goto("/");
+    await openShelf(page);
+
+    const layout = await page.evaluate(() => {
+      const view = document.getElementById("shelf-view");
+      const { left, top, width, height } = document.getElementById("shelf-preview-label").getBoundingClientRect();
+      return {
+        viewScrollsSideways: view.scrollWidth > view.clientWidth,
+        preview: { width, height, onWholePixels: Number.isInteger(left) && Number.isInteger(top) },
+      };
+    });
+    expect(layout).toEqual({ viewScrollsSideways: false, preview: { width: 192, height: 144, onWholePixels: true } });
+  });
+}

@@ -194,6 +194,9 @@ canvas { image-rendering: pixelated; }
 }
 #shelf-preview { display: flex; align-items: start; gap: calc(4 * var(--u)); }
 #shelf-preview-label { flex: none; width: calc(192 * var(--u)); height: calc(144 * var(--u)); image-rendering: pixelated; background: var(--screen-off); }
+@media (max-width: 427px) {
+  #shelf-preview-label { width: calc(96 * var(--u)); height: calc(72 * var(--u)); }
+}
 #shelf-preview-name { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 #shelf-actions { display: flex; flex-wrap: wrap; gap: calc(4 * var(--u)); }
 #shelf-new { margin-left: auto; }
