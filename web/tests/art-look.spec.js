@@ -129,6 +129,7 @@ test("every icon key draws its icon in only ink and its face colour at 2×", asy
     const name = await key.getAttribute("aria-label");
     const face = rgb(await key.evaluate((element) => getComputedStyle(element).backgroundColor)).join();
     const box = await key.boundingBox();
+    expect(box.height, `${name} is square`).toBe(box.width);
     const inset = 8;
     const iconArea = await page.screenshot({ clip: { x: box.x + inset, y: box.y + inset, width: box.width - 2 * inset, height: box.height - 2 * inset } });
 
