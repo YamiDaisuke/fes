@@ -1,68 +1,66 @@
-import { deflateSync, crc32 } from "node:zlib";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { encodePNG } from "../web/tests/png.js";
 
 const art = [
   "................",
   "................",
+  "..############..",
+  "..#wwwwwwwwww#..",
+  "..#wssssssssw#..",
+  "..#wssssssbsw#..",
+  "..#wsmmsssssw#..",
+  "..#wsmmsssssw#..",
+  "..#wkkkkkkkkw#..",
+  "..#wwwwwwwwlw#..",
+  "..############..",
   "................",
-  "................",
-  ".####.####..###.",
-  ".#....#....#....",
-  ".###..###..#....",
-  ".#....#.....##..",
-  ".#....#.......#.",
-  ".#....####.###..",
-  "................",
-  "..============..",
-  "..============..",
-  "................",
-  "................",
+  "...#........aa..",
+  "..###....bb.aa..",
+  "...#.....bb.....",
   "................",
 ];
 
-const colors = {
-  ".": [0x14, 0x18, 0x2e],
-  "#": [0xf4, 0xf4, 0xf4],
-  "=": [0xe8, 0x3b, 0x3b],
+const tokenForSymbol = {
+  ".": "shell",
+  "#": "ink",
+  w: "well",
+  s: "screen-off",
+  m: "mint",
+  b: "butter",
+  k: "sky",
+  l: "led-on",
+  a: "coral",
 };
 
-function chunk(type, data) {
-  const typeAndData = Buffer.concat([Buffer.from(type, "ascii"), data]);
-  const length = Buffer.alloc(4);
-  length.writeUInt32BE(data.length);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(typeAndData));
-  return Buffer.concat([length, typeAndData, crc]);
+const style = readFileSync(new URL("../web/style.css", import.meta.url), "utf8");
+
+function tokenRGB(name) {
+  const match = style.match(new RegExp(`--${name}: #([0-9a-f]{6});`));
+  if (!match) throw new Error(`web/style.css has no --${name}: #rrggbb; token`);
+  return [0, 2, 4].map((start) => parseInt(match[1].slice(start, start + 2), 16));
 }
+
+const colorForSymbol = Object.fromEntries(Object.entries(tokenForSymbol).map(([symbol, token]) => [symbol, tokenRGB(token)]));
+
+const isSquare = art.every((row) => row.length === art.length);
+if (!isSquare) throw new Error(`every art row must be ${art.length} symbols long`);
 
 function iconPNG(size) {
-  const scale = Math.floor(size / 16);
-  const offset = Math.floor((size - 16 * scale) / 2);
-  const rowBytes = 1 + size * 3;
-  const pixels = Buffer.alloc(size * rowBytes);
+  const cell = Math.floor(size / art.length);
+  const edge = Math.floor((size - art.length * cell) / 2);
+  const rgba = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) {
-    pixels[y * rowBytes] = 0;
     for (let x = 0; x < size; x++) {
-      const artRow = art[Math.floor((y - offset) / scale)];
-      const symbol = artRow?.[Math.floor((x - offset) / scale)] ?? ".";
-      pixels.set(colors[symbol], y * rowBytes + 1 + x * 3);
+      const symbol = art[Math.floor((y - edge) / cell)]?.[Math.floor((x - edge) / cell)] ?? ".";
+      const color = colorForSymbol[symbol];
+      if (!color) throw new Error(`unknown art symbol "${symbol}"`);
+      rgba.set([...color, 255], (y * size + x) * 4);
     }
   }
-  const header = Buffer.alloc(13);
-  header.writeUInt32BE(size, 0);
-  header.writeUInt32BE(size, 4);
-  const bitDepth = 8;
-  const truecolorRGB = 2;
-  header[8] = bitDepth;
-  header[9] = truecolorRGB;
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk("IHDR", header),
-    chunk("IDAT", deflateSync(pixels)),
-    chunk("IEND", Buffer.alloc(0)),
-  ]);
+  return encodePNG(size, size, rgba);
 }
 
-for (const size of [180, 512]) {
+// 152 and 167 are the sizes iPads ask for; each is a whole number of pixels per cell, so iPadOS never resamples the pixel art.
+for (const size of [152, 167, 180, 512]) {
   writeFileSync(new URL(`../web/icons/icon-${size}.png`, import.meta.url), iconPNG(size));
 }
