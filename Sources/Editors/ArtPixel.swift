@@ -1,11 +1,14 @@
 import Console
 
-let gridLineColor = Color(rgb: 0x303030)
-let tileBorderColor = Color(rgb: 0x909090)
-let selectionColor = Color(rgb: 0xffffff)
 let problemColor = Color(rgb: 0xff3030)
-let checkerLightColor = Color(rgb: 0xb0b0b0)
-let checkerDarkColor = Color(rgb: 0x808080)
+
+// These mirror tokens in web/style.css by hand (decision 051).
+let gridLineColor = Color(rgb: 0x7a6e9a)
+let tileBorderColor = Color(rgb: 0x2a2438)
+let selectionOutsideColor = Color(rgb: 0x2a2438)
+let selectionInsideColor = Color(rgb: 0xffe9a8)
+let checkerLightColor = Color(rgb: 0xece7f5)
+let checkerDarkColor = Color(rgb: 0xa79bc4)
 
 extension RGBAImage {
     mutating func fillArtPixel(x: Int, y: Int, zoom: Int, color: Color?) {
@@ -17,9 +20,17 @@ extension RGBAImage {
     }
 
     mutating func ringSquares(column: Int, row: Int, count: Int, color: Color, in layout: GridLayout) {
-        let left = layout.origin(ofSquare: column) - 1
-        let top = layout.origin(ofSquare: row) - 1
-        let side = count * (layout.squareSide + 1) + 1
+        ring(left: layout.origin(ofSquare: column) - 1, top: layout.origin(ofSquare: row) - 1,
+             side: count * (layout.squareSide + 1) + 1, color: color)
+    }
+
+    mutating func ringSelection(column: Int, row: Int, count: Int, in layout: GridLayout) {
+        ringSquares(column: column, row: row, count: count, color: selectionOutsideColor, in: layout)
+        ring(left: layout.origin(ofSquare: column), top: layout.origin(ofSquare: row),
+             side: count * (layout.squareSide + 1) - 1, color: selectionInsideColor)
+    }
+
+    private mutating func ring(left: Int, top: Int, side: Int, color: Color) {
         fill(x: left, y: top, width: side, height: 1, color: color)
         fill(x: left, y: top + side - 1, width: side, height: 1, color: color)
         fill(x: left, y: top, width: 1, height: side, color: color)
