@@ -435,17 +435,18 @@ Depends: T43 · **Ask the owner** (decision 5)
 **Accept.** The diagnostics and editor specs pass; a spec asserts the editor's computed font family is the code font and its line height is a whole number of pixels; typing with a hardware keyboard still works on the iPad preview (QA).
 
 ### T47 Art view layout
-Depends: T45, and T26 merged · Removes the three DEBT lines about the Art view scrolling or cutting off (narrow windows, the Pixel group, the palette grids)
+Depends: T45, and T26 merged · Removes the DEBT lines about the Pixel group, the palette grids and the black background, and rewrites the narrow-window and install-hint lines (decision record 050)
 
 The Art view today is three columns with a tools column that scrolls on smaller iPads. Rebuild the layout so nothing scrolls at the sizes we support, then style it.
 
 **Do.**
-- Supported sizes, none of which may scroll or clip: 1194×834 and 1133×744 landscape, 834×1194 and 744×1133 portrait. Under 600 px wide (Slide Over) the tools may scroll, and the DEBT line is rewritten to say exactly that.
-- Landscape: sheet (left), edit area (center), and tools split into two plates: a narrow tool rail between sheet and edit area (tool, block size, flip, copy, paste, undo, redo, import: icon keys from T48, text keys until then) and a right plate (bank, preview palette, the color strip, the tile fader, the Pixel group). Portrait: edit area on top, sheet and tools below side by side.
-- The palette editor panel (`#art-palettes`) uses `16u` swatches with `1u` gaps where the 44 px grid doesn't fit, but each swatch keeps a 44 px hit area through padding on a wrapper or `::after`; verify with the target-size check.
+- Supported sizes, none of which may scroll or clip with the install hint dismissed: 1194×834 and 1133×744 landscape, 834×1194 and 744×1133 portrait. Under 744 px wide (Split View, Slide Over) the view switches to two equal columns, the sheet drops to zoom 2 or 1 and the plates scroll, and the DEBT line says exactly that.
+- The sheet area is fixed at 201u, which holds the sheet at zoom 3 on every iPad; the edit area takes the one `1fr` track, inside a width rounded to whole `--u` as in `#game-view`.
+- Two plates: `#art-tools` (tool, block size, flip, copy, paste, undo, redo, both imports: icon keys from T48, text keys until then) and `#art-selection` (bank, the Palettes toggle, preview palette, the color strip, the tile fader, the Pixel group). Landscape: sheet, edit area and the selection plate side by side, with the tools as a strip under the sheet and edit area. Portrait: edit area and tools on top, sheet and selection below. A vertical rail between sheet and edit doesn't fit: one 44 px column is about 690 px tall, over 1133×744's 652.
+- The palette editor panel (`#art-palettes`) keeps 44 px swatches and covers both canvases, with the entries grid, the picker and Reset on one side and the main palette on the other (stacked in portrait). 16u swatches don't fit the edit area alone at 1133×744 either, and overlapping hit areas aren't 44 px.
 - Sizes of the two canvases are chosen by Swift (`GridLayout`, `ArtView.swift` reads the areas' sizes); check what it reads still exists after the markup moves.
 
-**Accept.** Playwright at the four sizes: `scrollHeight <= clientHeight` for `#art-view`, `#art-tools` and `#art-palettes`; every button in the Art view is at least 44×44; `web/tests/art.spec.js`, `palette-editor.spec.js` and `main-colors.spec.js` pass.
+**Accept.** Playwright at the four sizes: no scrolling in `#art-view`, `#art-tools`, `#art-selection` or the page, and in `#art-palettes` when open; every button and fader in the Art view is at least 44×44 on whole pixels; `web/tests/art.spec.js`, `palette-editor.spec.js` and `main-colors.spec.js` pass.
 
 ### T48 Art view colors and tool icons
 Depends: T47
@@ -610,5 +611,5 @@ Put these to the owner when each milestone is broken into tasks; none is decided
 
 ## DEBT lines Phase 2 removes or changes
 
-- Removed: frame pacing (T29); both touch overlay lines (T44); both "Damaged cart" lines (T38); Art view narrow window, Pixel group and palette grid lines (T47, the first rewritten); Art view placeholder look (T48); native dialogs (added in T36, removed in T45).
-- Changed: the `window.testCartMainLua` line (T41); the partial-save line (T33); the app icon line (T50, kept unless the owner accepts the art); the Home Screen hint wording line stays, and T55's manual text should be read by the owner together with it.
+- Removed: frame pacing (T29); both touch overlay lines (T44); both "Damaged cart" lines (T38); Art view Pixel group, palette grid and black background lines (T47); Art view placeholder look (T48, narrowed by T47 to the pixel colors and text keys); native dialogs (added in T36, removed in T45).
+- Changed: the `window.testCartMainLua` line (T41); the partial-save line (T33); the app icon line (T50, kept unless the owner accepts the art); the Art view narrow-window line and the Art tools opening scrolled down line, now the install-hint line (T47); the Home Screen hint wording line stays, and T55's manual text should be read by the owner together with it.
