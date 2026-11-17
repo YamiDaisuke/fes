@@ -483,6 +483,7 @@ canvas { image-rendering: pixelated; }
   width: calc(48 * var(--u)); height: calc(36 * var(--u));
   padding: var(--u); border: var(--u) solid var(--ink);
   background: var(--paper);
+  /* WebKit's -webkit-line-clamp doesn't hide lines past the clamp in a fixed-height box, so 3 lines of 12u fill the 36u area. */
   line-height: calc(12 * var(--u));
   overflow: hidden; overflow-wrap: anywhere;
 }
