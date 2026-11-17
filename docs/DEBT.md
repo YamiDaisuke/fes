@@ -19,7 +19,6 @@ Deliberate shortcuts, one line each: what, why, when to revisit.
 - The Home Screen hint's wording and 7-day reminder are placeholders: revisit when the owner reviews them.
 - A .fes re-compressed in Files (Compress) uses deflate and is refused: only store-only zips are read; revisit with DecompressionStream('deflate-raw') if users edit carts in Files.
 - Files inside an exported .fes are dated 1980-01-01: no calendar without Foundation; revisit if anyone unzips carts and cares.
-- The Art view's tool keys are text placeholders: T48b draws them as icon keys; revisit with T48b.
 - In a window under 744 CSS px wide (Split View, Slide Over) the Art view uses two equal columns: the tile sheet drops to zoom 2 or 1 and the tools, selection and palette panels scroll, and with the install hint showing at 600×834 the whole page scrolls by about 23 px too: the 402 px sheet beside the 318 px selection plate needs 744 px; revisit if the editor is used in narrow windows.
 - In a window under about 676 CSS px wide (Split View, Slide Over) the import report's list wraps under the sticky sheet, which covers rows as they scroll (T25b QA-3): every row is still reachable; revisit if the editor is used in narrow windows, or when the owner restyles the editor.
 - A cart whose recovery copy is over WebKit's localStorage quota of about 2.5 million characters (a cart whose code files total near 2.4 MB) gets no copy, and the cart status says so on each edit: localStorage is the only synchronous store (decision 025); revisit with M6 history, or if carts grow that large.
