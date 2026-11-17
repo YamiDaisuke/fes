@@ -83,3 +83,33 @@ test("Right to the last of twelve carts scrolls the slot so the selected cartrid
   });
   expect(view).toEqual({ lastInsideSlot: true, slotScrolled: true, pageScroll: [0, 0] });
 });
+
+for (const size of [{ width: 593, height: 834 }, { width: 504, height: 744 }]) {
+  test(`at ${size.width}×${size.height} with the install hint the slot keeps whole cartridges and the shelf view scrolls to them`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await page.goto("/");
+    await expect(page.locator("#cart-name")).toHaveValue("Demo");
+    await page.evaluate(async () => {
+      for (const [folder, name] of [["10", "Alpha"], ["20", "Beta"], ["30", "Gamma"]]) {
+        await fesStorage.writeCartFile(folder, "cart.json", JSON.stringify({ format: 3, name }));
+      }
+    });
+    await page.reload();
+    await openShelf(page);
+    await expect(page.locator("#install-hint")).toBeVisible();
+    await expect(page.locator("#shelf-list [data-folder]")).toHaveCount(4);
+
+    const layout = await page.evaluate(() => {
+      const view = document.getElementById("shelf-view");
+      view.scrollTop = view.scrollHeight;
+      const viewBox = view.getBoundingClientRect();
+      const slot = document.getElementById("shelf-list").getBoundingClientRect();
+      const cartridges = [...document.querySelectorAll("#shelf-list .cartridge")].map((cartridge) => cartridge.getBoundingClientRect());
+      return {
+        cartridgesWholeInSlot: cartridges.every(({ top, bottom }) => top >= slot.top && bottom <= slot.bottom),
+        slotReachableInView: slot.top >= viewBox.top && slot.bottom <= viewBox.bottom,
+      };
+    });
+    expect(layout).toEqual({ cartridgesWholeInSlot: true, slotReachableInView: true });
+  });
+}
