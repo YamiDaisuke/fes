@@ -338,7 +338,7 @@ canvas { image-rendering: pixelated; }
 }
 .key[aria-pressed="true"] { --key-face: var(--butter); --key-dark: var(--butter-dark); }
 .key[aria-pressed="true"]::after { background: var(--led-on); }
-.key:disabled, .key[aria-disabled="true"] { border-color: var(--shell-deep); box-shadow: none; transform: none; }
+.key:disabled, .key[aria-disabled="true"] { border-color: var(--shell-deep); box-shadow: var(--key-ring); transform: none; }
 .key:focus-visible, .tab:focus-visible, .field:focus-visible, .fader:focus-visible, .swatch:focus-visible { position: relative; z-index: 1; outline: var(--u) solid var(--butter); outline-offset: 0; }
 
 .switches { display: flex; gap: 0; padding: var(--u) var(--u) calc(3 * var(--u)); background: var(--shell-dark); box-shadow: var(--recessed); }

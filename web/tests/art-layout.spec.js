@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pixelColors, rgb } from "./pixels.js";
 
 const SIZES = [
   { width: 1194, height: 834 },
@@ -68,4 +69,19 @@ test("in a 320 px wide window the whole tile sheet stays on screen, inside its o
   const sheetRight = await page.evaluate(() => document.getElementById("art-sheet").getBoundingClientRect().right);
   expect(sheetRight).toBeLessThanOrEqual(320);
   expect(await canvasOutsideItsArea(page)).toEqual([]);
+});
+
+test("Undo with nothing to undo keeps its ink focus ring on the shell", async ({ page }) => {
+  await openArtView(page, SIZES[0]);
+  await page.locator("#art-copy").focus();
+  await page.keyboard.press("Tab");
+  const undo = page.getByRole("button", { name: "Undo", exact: true });
+  await expect(undo).toBeFocused();
+  await expect(undo).toHaveAttribute("aria-disabled", "true");
+  const ink = rgb(await page.evaluate(() => getComputedStyle(document.getElementById("art-view")).color)).join();
+
+  const box = await undo.boundingBox();
+  const outsideTheButterOutline = await page.screenshot({ clip: { x: box.x - 4, y: box.y, width: 2, height: box.height } });
+
+  expect(new Set(await pixelColors(page, outsideTheButterOutline))).toEqual(new Set([ink]));
 });
