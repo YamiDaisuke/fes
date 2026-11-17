@@ -76,10 +76,23 @@
   <h2>Switch row</h2>
   <div class="row">
     <div class="switches" role="group" aria-label="Tool">
-      <button type="button" class="key" aria-pressed="false">Pencil</button>
-      <button type="button" class="key" aria-pressed="true">Picker</button>
-      <button type="button" class="key" aria-pressed="false">Fill</button>
+      <button type="button" class="key icon-key" data-icon="pencil" aria-label="Pencil" aria-pressed="false"></button>
+      <button type="button" class="key icon-key" data-icon="picker" aria-label="Picker" aria-pressed="true"></button>
+      <button type="button" class="key icon-key" data-icon="fill" aria-label="Fill" aria-pressed="false"></button>
     </div>
+  </div>
+
+  <h2>Icon keys</h2>
+  <div class="row">
+    <button type="button" class="key icon-key" data-icon="flip-horizontal" aria-label="Flip horizontally"></button>
+    <button type="button" class="key icon-key" data-icon="flip-vertical" aria-label="Flip vertically"></button>
+    <button type="button" class="key icon-key" data-icon="copy" aria-label="Copy"></button>
+    <button type="button" class="key icon-key" data-icon="paste" aria-label="Paste" disabled></button>
+    <button type="button" class="key icon-key" data-icon="undo" aria-label="Undo" aria-disabled="true"></button>
+    <button type="button" class="key icon-key" data-icon="redo" aria-label="Redo"></button>
+    <button type="button" class="key icon-key" data-icon="import" aria-label="Import sheet"></button>
+    <button type="button" class="key icon-key" data-icon="import-colors" aria-label="Import sheet and colors"></button>
+    <button type="button" class="key icon-key" data-icon="palettes" aria-label="Palettes" aria-pressed="true"></button>
   </div>
 
   <h2>Readout and LEDs</h2>

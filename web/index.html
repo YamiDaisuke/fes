@@ -67,9 +67,9 @@
     <div id="art-edit-area"><canvas id="art-edit" aria-hidden="true"></canvas></div>
     <section id="art-tools" class="plate" aria-label="Art tools">
       <div id="art-tool" class="switches" role="group" aria-label="Tool">
-        <button type="button" class="key" data-tool="pencil">Pencil</button>
-        <button type="button" class="key" data-tool="picker">Picker</button>
-        <button type="button" class="key" data-tool="fill">Fill</button>
+        <button type="button" class="key icon-key" data-tool="pencil" data-icon="pencil" aria-label="Pencil"></button>
+        <button type="button" class="key icon-key" data-tool="picker" data-icon="picker" aria-label="Picker"></button>
+        <button type="button" class="key icon-key" data-tool="fill" data-icon="fill" aria-label="Fill"></button>
       </div>
       <div id="art-block-size" class="switches" role="group" aria-label="Block size">
         <button type="button" class="key" data-block-size="1" aria-label="1 by 1">1×1</button>
@@ -77,18 +77,18 @@
         <button type="button" class="key" data-block-size="4" aria-label="4 by 4">4×4</button>
       </div>
       <div id="art-block" role="group" aria-label="Block">
-        <button type="button" class="key" id="art-flip-horizontal" aria-label="Flip horizontally">Flip H</button>
-        <button type="button" class="key" id="art-flip-vertical" aria-label="Flip vertically">Flip V</button>
-        <button type="button" class="key" id="art-copy">Copy</button>
-        <button type="button" class="key" id="art-paste" disabled>Paste</button>
+        <button type="button" class="key icon-key" id="art-flip-horizontal" data-icon="flip-horizontal" aria-label="Flip horizontally"></button>
+        <button type="button" class="key icon-key" id="art-flip-vertical" data-icon="flip-vertical" aria-label="Flip vertically"></button>
+        <button type="button" class="key icon-key" id="art-copy" data-icon="copy" aria-label="Copy"></button>
+        <button type="button" class="key icon-key" id="art-paste" data-icon="paste" aria-label="Paste" disabled></button>
       </div>
       <div id="art-history" role="group" aria-label="History">
-        <button type="button" class="key" id="art-undo" aria-disabled="true">Undo</button>
-        <button type="button" class="key" id="art-redo" aria-disabled="true">Redo</button>
+        <button type="button" class="key icon-key" id="art-undo" data-icon="undo" aria-label="Undo" aria-disabled="true"></button>
+        <button type="button" class="key icon-key" id="art-redo" data-icon="redo" aria-label="Redo" aria-disabled="true"></button>
       </div>
       <div id="art-import-keys" role="group" aria-label="Import">
-        <button type="button" class="key" id="art-import">Import sheet</button>
-        <button type="button" class="key" id="art-import-colors">Import sheet and colors</button>
+        <button type="button" class="key icon-key" id="art-import" data-icon="import" aria-label="Import sheet"></button>
+        <button type="button" class="key icon-key" id="art-import-colors" data-icon="import-colors" aria-label="Import sheet and colors"></button>
       </div>
       <input type="file" id="art-import-file" accept="image/png,image/jpeg" hidden>
     </section>
@@ -97,7 +97,7 @@
         <button type="button" class="key" data-bank="background">Background</button>
         <button type="button" class="key" data-bank="sprite">Sprites</button>
       </div>
-      <button type="button" class="key" id="art-palettes-toggle" aria-pressed="false">Palettes</button>
+      <button type="button" class="key icon-key" id="art-palettes-toggle" data-icon="palettes" aria-label="Palettes" aria-pressed="false"></button>
       <div id="art-palette" class="switches" role="group" aria-label="Preview palette">
         <button type="button" class="key" data-palette="0" aria-label="Palette 0">0</button>
         <button type="button" class="key" data-palette="1" aria-label="Palette 1">1</button>
