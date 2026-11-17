@@ -167,6 +167,18 @@ test("a save finishing while focus is outside the shelf list leaves focus where 
   await expect(page.getByRole("button", { name: "Import" })).toBeFocused();
 });
 
+test("No carts yet shows only after a listing with no saved carts", async ({ page }) => {
+  await page.goto("/");
+  await openShelf(page);
+  await expect(page.locator("#shelf-empty")).toHaveText("No carts yet. Play the demo or make a New cart.");
+  await expect(page.locator("#shelf-empty")).toBeVisible();
+
+  await saveCodeAs(page, "Mine", "-- mine");
+  await openShelf(page);
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Mine" })).toBeVisible();
+  await expect(page.locator("#shelf-empty")).toBeHidden();
+});
+
 test("Right, Right, Z with the keyboard plays the third entry", async ({ page }) => {
   await saveCodeAs(page, "Aa", "-- a");
   await saveCodeAs(page, "Bb", 'error("from b")');

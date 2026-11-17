@@ -48,9 +48,13 @@ test("a saved label shows on the shelf with the game's colors", async ({ page })
       .locator("canvas")
       .evaluate((canvas) => [...canvas.getContext("2d").getImageData(96, 72, 1, 1).data]);
   await expect.poll(labelCenter).toEqual(gameCenter);
+
+  await selectOnShelf(page, "Demo");
+  const previewCenter = await page.locator("#shelf-preview-label").evaluate((canvas) => [...canvas.getContext("2d").getImageData(96, 72, 1, 1).data]);
+  expect(previewCenter).toEqual(gameCenter);
 });
 
-test("a malformed label leaves the entry named with a blank picture", async ({ page }) => {
+test("a malformed label leaves the entry named, with its name in place of the picture", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
   await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -64,8 +68,8 @@ test("a malformed label leaves the entry named with a blank picture", async ({ p
   await openShelf(page);
   const entry = savedCartEntries(page);
   await expect(entry).toHaveAccessibleName("Demo");
-  const center = await entry.locator("canvas").evaluate((canvas) => [...canvas.getContext("2d").getImageData(96, 72, 1, 1).data]);
-  expect(center).toEqual([0, 0, 0, 0]);
+  await expect(entry.locator("canvas")).toHaveCount(0);
+  await expect(entry.locator(".cartridge-label")).toHaveText("Demo");
   await selectOnShelf(page, "Demo");
   await page.getByRole("button", { name: "Play" }).click();
   await expect(page.locator("#cart-status")).toContainText("Can't load: label.hex");
@@ -85,4 +89,5 @@ test("the demo's picture shows on the shelf when saved carts can't be listed", a
     .locator("canvas")
     .evaluate((canvas) => [...canvas.getContext("2d").getImageData(96, 72, 1, 1).data]);
   expect(demoCenter).not.toEqual([0, 0, 0, 0]);
+  await expect(page.locator("#shelf-empty")).toBeHidden();
 });
