@@ -483,6 +483,8 @@ Depends: T44 · Removes the DEBT line about the placeholder icon if the owner su
 
 **Accept.** The smoke spec still passes with the animation in place (it must not delay the first frame by more than the 1 second, and never blocks input); a spec asserts the manifest's two colors equal the `--shell` token.
 
+As built, T50 departs from this sketch: the boot logo plays on the shelf's preview screen, since FES boots into the shelf, and needs no testCartMainLua branch (decision 054).
+
 ---
 
 # M13 — CRT filter

@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>FES</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/icon-180.png">
-  <meta name="theme-color" content="#000000">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+  <meta name="theme-color" content="#cfc6e0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-view="shelf" data-led="off">
+<body data-view="shelf" data-led="off" data-booting>
   <div id="toolbar" class="plate">
     <span class="led power-led" aria-hidden="true"></span>
     <div class="switches" role="group" aria-label="View">
@@ -51,7 +53,10 @@
   </div>
   <section id="shelf-view" aria-label="Carts">
     <div id="shelf-preview" class="plate" aria-hidden="true">
-      <canvas id="shelf-preview-label" width="192" height="144"></canvas>
+      <div id="shelf-preview-screen">
+        <span id="boot-logo">FES</span>
+        <canvas id="shelf-preview-label" width="192" height="144"></canvas>
+      </div>
       <p id="shelf-preview-name" class="tape"></p>
     </div>
     <div id="shelf-actions" role="group" aria-label="Cart actions">
@@ -151,14 +156,14 @@
         <div id="art-main-colors" class="swatches" role="group" aria-labelledby="art-main-colors-heading" aria-describedby="art-main-hint"></div>
       </div>
     </section>
-    <dialog id="art-import-report" aria-labelledby="art-import-report-heading">
+    <dialog id="art-import-report" class="plate dialog" aria-labelledby="art-import-report-heading">
       <h2 id="art-import-report-heading"></h2>
       <p id="art-import-report-hint" hidden>JPEG changes colors slightly when it saves. Export the sheet from your art app as PNG and import that.</p>
       <div id="art-import-report-body">
         <canvas id="art-import-report-image" aria-hidden="true"></canvas>
         <ul id="art-import-report-problems"></ul>
       </div>
-      <form method="dialog"><button autofocus>Close</button></form>
+      <form method="dialog"><button class="key" autofocus>Close</button></form>
     </dialog>
   </div>
   <div id="game-view">

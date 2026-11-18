@@ -71,3 +71,7 @@ function drawFrame(now) {
   requestAnimationFrame(drawFrame);
 }
 requestAnimationFrame(drawFrame);
+
+const bootLogo = document.getElementById("boot-logo");
+// A view switch cancels a CSS animation, which rejects its finished promise.
+Promise.allSettled(bootLogo.getAnimations().map((animation) => animation.finished)).then(() => document.body.removeAttribute("data-booting"));
