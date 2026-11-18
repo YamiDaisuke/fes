@@ -535,7 +535,7 @@ Depends: T50, T30 · **Ask the owner** (decision 7)
 
 **Accept.** Playwright: Help shows the manual; the iframe has no `src` before the first visit; with the network off (the offline spec's method) the manual still loads; switching Help → Code → Help keeps the code and the manual's scroll position; every `href="#…"` in the manual points at an id that exists.
 
-As built, T52 departs from this sketch: **Your first cart** draws tile 0 in Art before typing the program, because a new cart's art is blank and an empty sprite is invisible; the Help key is the fifth View switch, after Game; and the contents column is 140u wide so most entries fit on one line (decision 056).
+As built, T52 departs from this sketch: **Your first cart** draws tile 0 in Art before typing the program, because a new cart's art is blank and an empty sprite is invisible, and the contents column is 140u wide so most entries fit on one line.
 
 ### T53 The API reference moves to the manual
 Depends: T52
