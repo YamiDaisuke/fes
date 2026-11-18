@@ -141,7 +141,7 @@ x = 92</code></pre>
 
       <h3>Variables</h3>
       <p>A variable is a name for a value. Give it a value with <code>=</code>. A variable you never gave a value is <code>nil</code>, which means "nothing".</p>
-      <p>A variable made without <code>local</code> is <dfn>global</dfn>: every function in every file of the cart can see and change it. A variable made with <code>local</code> exists only inside the function, loop or file where you made it. Prefer <code>local</code>: no other part of the cart can change it by accident, and two files can use the same name without clashing.</p>
+      <p>A variable made without <code>local</code> is <dfn>global</dfn>: every function in every file of the cart can see and change it. A variable made with <code>local</code> exists only inside the block (function, loop, <code>if</code> or file) where you made it. Prefer <code>local</code>: no other part of the cart can change it by accident, and two files can use the same name without clashing.</p>
 <pre tabindex="0" role="region" aria-label="Global and local variables"><code>score = 0        -- global
 local speed = 2  -- local to this file
 local x, y = 92, 68</code></pre>
@@ -187,7 +187,11 @@ end</code></pre>
 
       <h3>Loops</h3>
       <p>A numeric <code>for</code> counts from the first number to the last, both included. <code>for … in ipairs</code> goes through a list in order, and <code>for … in pairs</code> goes through every field of a table in no particular order. <code>while</code> repeats as long as its question is true.</p>
-<pre tabindex="0" role="region" aria-label="Loops"><code>for column = 0, 31 do
+<pre tabindex="0" role="region" aria-label="Loops"><code>local tiles = {0, 1, 1, 0}
+local p = { x = 92, y = 68 }
+local total = 0
+local x = 40
+for column = 0, 31 do
   mset(column, 0, 1)
 end
 for i, tile in ipairs(tiles) do
@@ -261,7 +265,7 @@ end</code></pre>
           <li>The console keeps its sprites in a <dfn>sprite table</dfn> of 64 entries. Each <code>spr</code> fills the next free entry, in the order you call it, and the first <code>spr</code> of a frame is in front of the others. Once all 64 are used, more <code>spr</code> calls do nothing until <code>cls()</code>.</li>
           <li>A sprite drawn <code>behind</code> is behind the map and behind every sprite that isn't, whichever <code>spr</code> came first. The map hides it everywhere except where the map shows color 0 of its palette. In every sprite, color 0 is see-through.</li>
           <li>Sprites stay in the table from frame to frame until <code>cls()</code>. Call <code>cls()</code> at the start of <code>_draw</code> and place every sprite again each frame, or place sprites once in <code>_init</code> and leave them.</li>
-          <li>At most 16 sprites show on any one scanline; on that row, the ones later in the table are left out. Only sprites with at least one pixel on screen count, so sprites waiting off the left or right edge don't use up the row.</li>
+          <li>At most 16 sprites show on any one scanline; on that row, the ones later in the table are left out. Only sprites with at least one column on screen count, even if that column is see-through, so sprites waiting fully off the left or right edge don't use up the row.</li>
           <li><code>camera(x, y)</code> scrolls the map and shifts every <em>later</em> <code>spr</code>. The map uses the camera as it is when the frame is drawn; each sprite uses the camera as it was when its <code>spr</code> ran.</li>
           <li>So <code>camera()</code> in the middle of <code>_draw</code> also scrolls the map back to 0, 0. Until FES gets a layer for scores and menus, draw those sprites with the camera still set, at <code>cx + x, cy + y</code>, where <code>cx, cy</code> is the camera position.</li>
           <li>The map repeats every 256 pixels in both directions. Sprites don't repeat.</li>
