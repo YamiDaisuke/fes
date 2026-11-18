@@ -563,6 +563,8 @@ The spec: for each `pre[data-example]`, boot with `window.testCartMainLua` set t
 
 **Accept.** That spec, and the PR preview: QA types example 1 from the manual by hand on the iPad and it works.
 
+As built, T54 adds a second walking tile to the demo's sprites so the animation example runs on the demo's art (a new cart's art is blank). Examples with more than one file mark each pre with data-file and are tested by importing them, so T56 must open every file of an example.
+
 ### T55 Guides: editors, carts and files
 Depends: T53
 
