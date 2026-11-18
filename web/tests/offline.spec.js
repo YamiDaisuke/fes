@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { test, expect } from "@playwright/test";
 
-test("FES boots from the service worker cache with the network off", async ({ page, context }) => {
+async function reloadOffline(page, context) {
   await page.goto("/");
   await page.evaluate(() => navigator.serviceWorker.ready);
   if (await page.evaluate(() => navigator.serviceWorker.controller === null)) await page.reload();
@@ -9,16 +9,29 @@ test("FES boots from the service worker cache with the network off", async ({ pa
 
   await context.setOffline(true);
   await page.reload();
+}
+
+test("FES boots from the service worker cache with the network off", async ({ page, context }) => {
+  await reloadOffline(page, context);
 
   await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeVisible();
   expect(await page.evaluate(() => getComputedStyle(document.body).display)).toBe("grid");
 });
 
+test("the manual opens in Help with the network off", async ({ page, context }) => {
+  await reloadOffline(page, context);
+  await page.getByRole("button", { name: "Help" }).click();
+
+  const manual = page.frameLocator("#help-frame");
+  await expect(manual.getByRole("heading", { level: 1, name: "FES manual" })).toBeVisible();
+  await expect(manual.locator("main")).toHaveCSS("background-color", "rgb(255, 248, 231)");
+});
+
 test("the service worker precaches every built file", async ({ page }) => {
   const builtFiles = readdirSync("web/dist", { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
-    .map((entry) => `${entry.parentPath}/${entry.name}`.replace(/^web\/dist/, ""))
-    .filter((path) => path !== "/sw.js" && path !== "/index.html");
+    .map((entry) => `${entry.parentPath}/${entry.name}`.replace(/^web\/dist/, "").replace(/index\.html$/, ""))
+    .filter((path) => path !== "/sw.js");
 
   await page.goto("/");
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -28,5 +41,5 @@ test("the service worker precaches every built file", async ({ page }) => {
     return requests.map((request) => new URL(request.url).pathname);
   });
 
-  expect(precached.sort()).toEqual(["/", ...builtFiles].sort());
+  expect(precached.sort()).toEqual(builtFiles.sort());
 });

@@ -24,7 +24,7 @@ test("each view switch shows its view and is the only pressed switch", async ({ 
   await openApp(page);
   const switches = page.getByRole("group", { name: "View", exact: true });
 
-  for (const [name, view] of [["Code", "code"], ["Art", "art"], ["Game", "game"], ["Carts", "shelf"]]) {
+  for (const [name, view] of [["Code", "code"], ["Art", "art"], ["Game", "game"], ["Help", "help"], ["Carts", "shelf"]]) {
     await switches.getByRole("button", { name, exact: true }).click();
     await expect(page.locator("body")).toHaveAttribute("data-view", view);
     await expect(switches.getByRole("button", { pressed: true })).toHaveCount(1);
@@ -71,15 +71,15 @@ test("the power LED is off on the shelf and on in the game", async ({ page }) =>
 });
 
 const deckLayouts = [
-  { width: 1194, height: 834, readoutBesideKeys: true },
-  { width: 1133, height: 744, readoutBesideKeys: true },
-  { width: 834, height: 1194, readoutBesideKeys: false },
-  { width: 744, height: 1133, readoutBesideKeys: false },
-  { width: 678, height: 1024, readoutBesideKeys: false },
+  { width: 1194, height: 834, readoutBesideKeys: true, setLabelBesideKeys: true },
+  { width: 1133, height: 744, readoutBesideKeys: true, setLabelBesideKeys: true },
+  { width: 834, height: 1194, readoutBesideKeys: false, setLabelBesideKeys: true },
+  { width: 744, height: 1133, readoutBesideKeys: false, setLabelBesideKeys: true },
+  { width: 678, height: 1024, readoutBesideKeys: false, setLabelBesideKeys: false },
 ];
 
-for (const { readoutBesideKeys, ...viewport } of deckLayouts) {
-  test(`at ${viewport.width}×${viewport.height} the deck's keys are one row that fits, with the readout ${readoutBesideKeys ? "beside them" : "under them"}, keys of at least 44 px and everything on whole pixels`, async ({ page }) => {
+for (const { readoutBesideKeys, setLabelBesideKeys, ...viewport } of deckLayouts) {
+  test(`at ${viewport.width}×${viewport.height} the deck's keys fit in one row${setLabelBesideKeys ? "" : " except Set label, which joins the readout's row"}, with the readout ${readoutBesideKeys ? "beside them" : "under them"}, keys of at least 44 px and everything on whole pixels`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await openApp(page);
     await page.getByRole("button", { name: "Game" }).click();
@@ -104,9 +104,11 @@ for (const { readoutBesideKeys, ...viewport } of deckLayouts) {
     });
 
     const carts = deck.buttons.find((button) => button.name === "show-shelf");
-    expect(deck.buttons.map((button) => button.name)).toEqual(["show-shelf", "show-code", "show-art", "show-game", "run", "cart-save", "set-label"]);
+    expect(deck.buttons.map((button) => button.name)).toEqual(["show-shelf", "show-code", "show-art", "show-game", "show-help", "run", "cart-save", "set-label"]);
+    const sharesRow = (box, other) => box.y < other.y + other.height && other.y < box.y + box.height;
     for (const button of deck.buttons) {
-      expect(button.y < carts.y + carts.height && carts.y < button.y + button.height, `${button.name} shares the row`).toBe(true);
+      const row = button.name === "set-label" && !setLabelBesideKeys ? deck.readout : carts;
+      expect(sharesRow(button, row), `${button.name} shares the ${row === carts ? "keys'" : "readout's"} row`).toBe(true);
       expect(button.width, button.name).toBeGreaterThanOrEqual(44);
       expect(button.height, button.name).toBeGreaterThanOrEqual(44);
     }
