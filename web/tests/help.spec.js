@@ -105,3 +105,13 @@ test("Tab reaches the Buttons table's box at a phone width, and the arrow keys s
 
   await expect.poll(() => box.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
 });
+
+test("every link to another site opens outside the manual", async ({ page }) => {
+  await page.goto("/manual/");
+  const links = await page.evaluate(() =>
+    [...document.querySelectorAll('a[href^="http"]')].map((link) => ({ href: link.href, target: link.target, rel: link.rel })),
+  );
+
+  expect(links.length).toBeGreaterThan(0);
+  for (const link of links) expect(link, link.href).toMatchObject({ target: "_blank", rel: expect.stringMatching(/\bnoopener\b/) });
+});
