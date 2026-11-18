@@ -45,6 +45,7 @@ pre {
   padding: calc(4 * var(--u)); border: var(--u) solid var(--ink); overflow-x: auto;
   color: var(--code-text); background: var(--code-screen); font: var(--type-code);
 }
+main code { overflow-wrap: break-word; }
 pre code { padding: 0; font: inherit; }
 .table-scroll { overflow-x: auto; }
 table { border-collapse: collapse; background: var(--shell); }
