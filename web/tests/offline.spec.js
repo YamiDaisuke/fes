@@ -9,12 +9,12 @@ async function reloadOffline(page, context) {
 
   await context.setOffline(true);
   await page.reload();
+  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeVisible();
 }
 
 test("FES boots from the service worker cache with the network off", async ({ page, context }) => {
   await reloadOffline(page, context);
 
-  await expect(page.locator("#shelf-list").getByRole("button", { name: "Built-in demo" })).toBeVisible();
   expect(await page.evaluate(() => getComputedStyle(document.body).display)).toBe("grid");
 });
 
