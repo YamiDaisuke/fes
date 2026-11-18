@@ -44,6 +44,7 @@ pre {
   color: var(--code-text); background: var(--code-screen); font: var(--type-code);
 }
 pre code { padding: 0; font: inherit; }
+.table-scroll { overflow-x: auto; }
 table { border-collapse: collapse; background: var(--shell); }
 th, td { padding: var(--u) calc(4 * var(--u)); border: var(--u) solid var(--ink); text-align: left; vertical-align: top; }
 th { background: var(--shell-light); font: inherit; }
