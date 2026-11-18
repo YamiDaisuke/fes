@@ -50,17 +50,22 @@
     <p id="code-error" role="status"></p>
   </div>
   <section id="shelf-view" aria-label="Carts">
+    <div id="shelf-preview" class="plate" aria-hidden="true">
+      <canvas id="shelf-preview-label" width="192" height="144"></canvas>
+      <p id="shelf-preview-name" class="tape"></p>
+    </div>
     <div id="shelf-actions" role="group" aria-label="Cart actions">
-      <button type="button" id="shelf-play" disabled>Play</button>
-      <button type="button" id="shelf-edit" disabled>Edit</button>
-      <button type="button" id="shelf-duplicate" disabled>Duplicate</button>
-      <button type="button" id="shelf-export" disabled>Export</button>
-      <button type="button" id="shelf-delete" disabled>Delete</button>
-      <button type="button" id="shelf-new">New cart</button>
-      <button type="button" id="shelf-import">Import</button>
+      <button type="button" id="shelf-play" class="key key-go" disabled>Play</button>
+      <button type="button" id="shelf-edit" class="key key-nav" disabled>Edit</button>
+      <button type="button" id="shelf-duplicate" class="key" disabled>Duplicate</button>
+      <button type="button" id="shelf-export" class="key" disabled>Export</button>
+      <button type="button" id="shelf-delete" class="key key-stop" disabled>Delete</button>
+      <button type="button" id="shelf-new" class="key">New cart</button>
+      <button type="button" id="shelf-import" class="key">Import</button>
       <input type="file" id="cart-import-file" hidden>
     </div>
     <ul id="shelf-list" role="list" aria-label="Saved carts"></ul>
+    <p id="shelf-empty" class="tape" hidden>No carts yet. Play the demo or make a New cart.</p>
   </section>
   <div id="art-view">
     <div id="art-sheet-area"><canvas id="art-sheet" aria-hidden="true"></canvas></div>

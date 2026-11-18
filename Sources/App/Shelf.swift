@@ -11,12 +11,20 @@ nonisolated(unsafe) private let editButton = document.getElementById("shelf-edit
 nonisolated(unsafe) private let duplicateButton = document.getElementById("shelf-duplicate")
 nonisolated(unsafe) private let exportButton = document.getElementById("shelf-export")
 nonisolated(unsafe) private let deleteButton = document.getElementById("shelf-delete")
+nonisolated(unsafe) private let emptyShelfTape = document.getElementById("shelf-empty")
+nonisolated(unsafe) private let previewLabel = document.getElementById("shelf-preview-label")
+nonisolated(unsafe) private let previewName = document.getElementById("shelf-preview-name")
 
 let demoFolder = ""
 let damagedCartTitle = "Damaged cart"
 nonisolated(unsafe) var selectedShelfFolder: String?
 nonisolated(unsafe) private(set) var savedCartsOnShelf: [(folder: String, name: String?)] = []
 nonisolated(unsafe) private let demoLabelImage = labelImageOfDemoStart()
+
+private var shelfEntries: [(folder: String, title: String, isDamaged: Bool)] {
+    [(folder: demoFolder, title: "Built-in demo", isDamaged: false)]
+        + savedCartsOnShelf.map { (folder: $0.folder, title: $0.name ?? damagedCartTitle, isDamaged: $0.name == nil) }
+}
 
 nonisolated(unsafe) private let showShelfClicked = JSClosure { _ in
     showShelf()
@@ -66,32 +74,38 @@ func refreshShelf() async throws(JSException) {
         labelImages[savedCart.folder] = await savedCartLabelImage(folder: savedCart.folder)
     }
     showShelfEntries(savedCarts, labelImages: labelImages)
+    emptyShelfTape.hidden = .boolean(!savedCarts.isEmpty)
 }
 
 private func showShelfEntries(_ savedCarts: [(folder: String, name: String?)], labelImages: [String: RGBAImage]) {
     savedCartsOnShelf = savedCarts
-    let entries = [(folder: demoFolder, name: "Built-in demo")] + savedCarts.map { (folder: $0.folder, name: $0.name ?? damagedCartTitle) }
-    if !entries.contains(where: { $0.folder == selectedShelfFolder }) {
+    if !shelfEntries.contains(where: { $0.folder == selectedShelfFolder }) {
         selectedShelfFolder = nil
     }
     let listHadFocus = shelfList.contains(document.activeElement).boolean == true
     let focusedFolder = listHadFocus ? string(from: document.activeElement.dataset.folder) : nil
     var buttonToFocus: JSValue?
     shelfList.textContent = ""
-    for entry in entries {
+    for entry in shelfEntries {
+        let labelArea = document.createElement("span")
+        labelArea.className = "cartridge-label"
+        _ = labelArea.setAttribute("aria-hidden", "true")
+        if let image = labelImages[entry.folder] {
+            let label = document.createElement("canvas")
+            blit(image, into: label)
+            _ = labelArea.append(label)
+        } else {
+            labelArea.textContent = .string(entry.title)
+        }
+        let tape = document.createElement("span")
+        tape.className = "tape cartridge-tape"
+        tape.textContent = .string(entry.title)
         let button = document.createElement("button")
         button.type = "button"
+        button.className = "cartridge"
         button.dataset.folder = .string(entry.folder)
-        let label = document.createElement("canvas")
-        label.width = .number(Double(Screen.width))
-        label.height = .number(Double(Screen.height))
-        _ = label.setAttribute("aria-hidden", "true")
-        if let image = labelImages[entry.folder] {
-            blit(image, into: label)
-        }
-        let name = document.createElement("span")
-        name.textContent = .string(entry.name)
-        _ = button.append(label, name)
+        button.dataset.tone = .string(entry.isDamaged ? "shell" : cartridgeTone(folder: entry.folder))
+        _ = button.append(labelArea, tape)
         if entry.folder == focusedFolder {
             buttonToFocus = button
         }
@@ -127,6 +141,21 @@ private func showShelfSelection() {
     duplicateButton.disabled = .boolean(!isNamedCartSelected)
     exportButton.disabled = .boolean(!isNamedCartSelected)
     deleteButton.disabled = .boolean(!savedCartsOnShelf.contains { $0.folder == selectedShelfFolder })
+    showShelfPreview()
+}
+
+private func showShelfPreview() {
+    let context = previewLabel.getContext("2d")
+    _ = context.clearRect(0, 0, Screen.width, Screen.height)
+    let selectedLabel = shelfList.querySelector("[aria-pressed=\"true\"] canvas")
+    if !selectedLabel.isNull {
+        _ = context.drawImage(selectedLabel, 0, 0)
+    }
+    previewName.textContent = .string(shelfEntries.first { $0.folder == selectedShelfFolder }?.title ?? "Choose a cart")
+}
+
+private func cartridgeTone(folder: String) -> String {
+    ["mint", "sky", "pink", "butter", "coral"][(folder.first?.hexDigitValue ?? 0) % 5]
 }
 
 private var isNamedCartSelected: Bool {
@@ -175,7 +204,7 @@ func respondToShelfButtons(_ input: Input) {
 }
 
 private func moveShelfSelection(by step: Int) {
-    let folders = [demoFolder] + savedCartsOnShelf.map(\.folder)
+    let folders = shelfEntries.map(\.folder)
     let current = folders.firstIndex { $0 == selectedShelfFolder } ?? 0
     let target = min(max(current + step, 0), folders.count - 1)
     selectShelfEntry(folder: folders[target])

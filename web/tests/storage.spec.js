@@ -1,7 +1,7 @@
 import { test as ephemeralTest } from "@playwright/test";
 import { test, expect } from "./persistent-context.js";
 import { typeCode } from "./code-editor.js";
-import { loadCartFromShelf, openShelf, savedCartEntries, selectOnShelf } from "./shelf.js";
+import { loadCartFromShelf, openShelf, savedCartEntries, savedCartTitles, selectOnShelf } from "./shelf.js";
 import { answerQuestion } from "./ask.js";
 
 async function openBooted(page) {
@@ -143,10 +143,10 @@ test("a second Save tapped while the first is still writing is the one that stay
   await save.click();
   await page.waitForFunction(() => window.firstCartJSONWritten);
   await expect(page.locator("#cart-status")).toHaveText("Saved Second.");
-  await expect(savedCartEntries(page)).toHaveText(["Second"]);
+  await expect(savedCartTitles(page)).toHaveText(["Second"]);
 
   await openBooted(page);
-  await expect(savedCartEntries(page)).toHaveText(["Second"]);
+  await expect(savedCartTitles(page)).toHaveText(["Second"]);
   await loadCartFromShelf(page, "Second");
   await expect(page.locator("#cart-status")).toHaveText("Loaded Second.");
   await expect(page.locator("#cart-name")).toHaveValue("Second");
@@ -184,7 +184,7 @@ test("Save still saves when the request for persistent storage never answers", a
   });
   await openBooted(page);
   await saveAs(page, "Hang");
-  await expect(savedCartEntries(page)).toHaveText(["Hang"]);
+  await expect(savedCartTitles(page)).toHaveText(["Hang"]);
 });
 
 test("a cart whose cart.json can't be read is listed as damaged, and selecting it says it can only be deleted", async ({ page }) => {

@@ -9,6 +9,10 @@ export function savedCartEntries(page) {
   return page.locator('#shelf-list button:not([data-folder=""])');
 }
 
+export function savedCartTitles(page) {
+  return savedCartEntries(page).locator(".cartridge-tape");
+}
+
 export async function selectOnShelf(page, name) {
   await page.locator("#shelf-list").getByRole("button", { name, exact: true }).click();
 }

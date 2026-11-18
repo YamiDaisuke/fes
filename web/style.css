@@ -16,7 +16,7 @@ body[data-view="shelf"] #cart-save { display: none; }
   flex: 1 0 calc(120 * var(--u)); margin: 0; box-sizing: border-box; height: calc(24 * var(--u));
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
 }
-#toolbar .key:focus-visible, .tape .key:focus-visible, #code-view .key:focus-visible, #code-files .tab:focus-visible, #art-view .key:focus-visible { --key-ring: 0 0 0 calc(2 * var(--u)) var(--ink); }
+#toolbar .key:focus-visible, .tape .key:focus-visible, #code-view .key:focus-visible, #code-files .tab:focus-visible, #art-view .key:focus-visible, #shelf-view .key:focus-visible { --key-ring: 0 0 0 calc(2 * var(--u)) var(--ink); }
 body[data-led="on"] .power-led { background: var(--led-on); }
 body[data-led="error"] .power-led { background: var(--led-error); }
 #notices p {
@@ -188,16 +188,27 @@ canvas { image-rendering: pixelated; }
   [data-buttons="select"], [data-buttons="start"] { align-self: end; }
 }
 #shelf-view {
-  display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); gap: 8px;
-  padding: 8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
-  font: 16px system-ui, sans-serif;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; align-content: start; gap: calc(4 * var(--u));
+  overflow-y: auto;
+  padding: calc(2 * var(--u)) calc(2 * var(--u) + env(safe-area-inset-right)) calc(2 * var(--u) + env(safe-area-inset-bottom)) calc(2 * var(--u) + env(safe-area-inset-left));
 }
-#shelf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-#shelf-list { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; margin: 0; padding: 0; list-style: none; overflow: auto; }
-#shelf-view button { min-width: 88px; min-height: 44px; font: inherit; touch-action: manipulation; }
-#shelf-list button { display: flex; flex-direction: column; gap: 4px; text-align: left; }
-#shelf-list canvas { display: block; width: 192px; height: 144px; image-rendering: pixelated; background: #333; }
-#shelf-list button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
+#shelf-preview { display: flex; align-items: start; gap: calc(4 * var(--u)); }
+#shelf-preview-label { flex: none; width: calc(192 * var(--u)); height: calc(144 * var(--u)); image-rendering: pixelated; background: var(--screen-off); }
+@media (max-width: 427px) {
+  #shelf-preview-label { width: calc(96 * var(--u)); height: calc(72 * var(--u)); }
+}
+#shelf-preview-name { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+#shelf-actions { display: flex; flex-wrap: wrap; gap: calc(4 * var(--u)); }
+#shelf-new { margin-left: auto; }
+#shelf-list {
+  display: flex; gap: calc(4 * var(--u));
+  margin: 0; padding: calc(6 * var(--u)) calc(3 * var(--u)) calc(3 * var(--u));
+  overflow-x: auto; overflow-y: hidden; scroll-padding-inline: calc(3 * var(--u));
+  list-style: none;
+  border: var(--u) solid var(--ink); background: var(--shell-dark); box-shadow: var(--recessed);
+}
+#shelf-list li { flex: none; }
+#shelf-empty { justify-self: start; margin: 0; }
 #art-view {
   /* The sheet column is 201u: 16 tiles × 8 px at zoom 3, plus 17 grid lines, is 401 px. */
   grid-template: "sheet edit selection" minmax(0, 1fr) "tools tools selection" auto / calc(201 * var(--u)) minmax(0, 1fr) calc(104 * var(--u));
@@ -300,17 +311,7 @@ canvas { image-rendering: pixelated; }
   --type-code: calc(11 * var(--u)) / calc(14 * var(--u)) var(--font-code);
   --raised: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-dark);
   --recessed: inset var(--u) var(--u) 0 0 var(--shell-deep), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--shell-light);
-  font-synthesis: none;
-}
-@font-face { font-family: "Pixel Operator 8"; src: url("fonts/PixelOperator8.ttf") format("truetype"); font-display: block; font-weight: normal; font-style: normal; }
-@font-face { font-family: "Departure Mono"; src: url("fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: block; font-weight: normal; font-style: normal; }
-
-.plate {
-  padding: calc(4 * var(--u));
-  border: var(--u) solid var(--ink);
-  background: var(--shell);
-  box-shadow: var(--raised);
-  clip-path: polygon(
+  --notched-corners: polygon(
     var(--u) 0,
     calc(100% - var(--u)) 0,
     calc(100% - var(--u)) var(--u),
@@ -324,6 +325,17 @@ canvas { image-rendering: pixelated; }
     0 var(--u),
     var(--u) var(--u)
   );
+  font-synthesis: none;
+}
+@font-face { font-family: "Pixel Operator 8"; src: url("fonts/PixelOperator8.ttf") format("truetype"); font-display: block; font-weight: normal; font-style: normal; }
+@font-face { font-family: "Departure Mono"; src: url("fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: block; font-weight: normal; font-style: normal; }
+
+.plate {
+  padding: calc(4 * var(--u));
+  border: var(--u) solid var(--ink);
+  background: var(--shell);
+  box-shadow: var(--raised);
+  clip-path: var(--notched-corners);
 }
 .plate.screws { position: relative; }
 .plate.screws::before, .plate.screws::after {
@@ -444,6 +456,48 @@ canvas { image-rendering: pixelated; }
     var(--u) var(--u)
   );
 }
+
+.cartridge {
+  position: relative; z-index: 0;
+  box-sizing: border-box; width: calc(60 * var(--u));
+  display: flex; flex-direction: column; gap: calc(2 * var(--u));
+  margin: 0; padding: calc(4 * var(--u));
+  appearance: none; border: 0; border-radius: 0; background: none;
+  color: var(--ink); font: var(--type-ui); text-align: left;
+  touch-action: manipulation;
+}
+/* The body is a layer of its own: a clip-path on the button would clip its focus outline. */
+.cartridge::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  border: var(--u) solid var(--ink);
+  background: var(--cart-face);
+  box-shadow: inset var(--u) var(--u) 0 0 var(--shell-light), inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 0 var(--cart-dark);
+  clip-path: var(--notched-corners);
+}
+.cartridge::after {
+  content: ""; order: 1; height: calc(5 * var(--u)); margin: 0 calc(4 * var(--u));
+  background: repeating-linear-gradient(var(--cart-dark) 0 var(--u), transparent var(--u) calc(2 * var(--u)));
+}
+.cartridge-label {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+  width: calc(48 * var(--u)); height: calc(36 * var(--u));
+  padding: var(--u); border: var(--u) solid var(--ink);
+  background: var(--paper);
+  /* WebKit's -webkit-line-clamp doesn't hide lines past the clamp in a fixed-height box, so 3 lines of 12u fill the 36u area. */
+  line-height: calc(12 * var(--u));
+  overflow: hidden; overflow-wrap: anywhere;
+}
+.cartridge-label canvas { display: block; width: calc(48 * var(--u)); height: calc(36 * var(--u)); image-rendering: pixelated; }
+.cartridge-tape { order: 2; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cartridge[aria-pressed="true"] { transform: translateY(calc(-4 * var(--u))); }
+.cartridge[aria-pressed="true"] .cartridge-tape { background: var(--butter); }
+.cartridge:focus-visible { outline: var(--u) solid var(--butter); outline-offset: 0; box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink); }
+.cartridge[data-tone="mint"] { --cart-face: var(--mint); --cart-dark: var(--mint-dark); }
+.cartridge[data-tone="sky"] { --cart-face: var(--sky); --cart-dark: var(--sky-dark); }
+.cartridge[data-tone="pink"] { --cart-face: var(--pink); --cart-dark: var(--pink-dark); }
+.cartridge[data-tone="butter"] { --cart-face: var(--butter); --cart-dark: var(--butter-dark); }
+.cartridge[data-tone="coral"] { --cart-face: var(--coral); --cart-dark: var(--coral-dark); }
+.cartridge[data-tone="shell"] { --cart-face: var(--shell); --cart-dark: var(--shell-dark); }
 
 .dialog { color: var(--ink); font: var(--type-ui); }
 .dialog h2 {
