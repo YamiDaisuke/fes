@@ -32,6 +32,8 @@ h2 {
   font: inherit;
 }
 h3 { margin: 0 0 calc(6 * var(--u)); font: inherit; text-transform: uppercase; }
+h3 code { text-transform: none; }
+h4 { margin: 0 0 calc(6 * var(--u)); font: inherit; }
 p, ol, ul, .table-scroll, pre { margin: 0 0 calc(6 * var(--u)); }
 main ol, main ul { padding-left: calc(12 * var(--u)); }
 main li { margin-bottom: calc(3 * var(--u)); }
