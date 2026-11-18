@@ -47,7 +47,7 @@
         <li>Press <kbd>Art</kbd>, then <kbd>Sprites</kbd>. The big square shows the tile picked on the sheet. Tap the first tile, top left on the sheet: that is tile 0. It is empty.</li>
         <li>Pick any color except the first one, and draw on tile 0 with your finger. The first color is see-through for sprites, so a tile drawn only in it can't be seen.</li>
         <li>Press <kbd>Code</kbd>. Replace everything in the editor with this program:
-<pre><code>x, y = 92, 68
+<pre tabindex="0" role="region" aria-label="Your first program"><code>x, y = 92, 68
 function _update()
   if btn(0) then x = x - 1 end
   if btn(1) then x = x + 1 end
@@ -68,7 +68,7 @@ end</code></pre>
     <section id="console">
       <h2>The console</h2>
       <p>FES is a pretend console, and like a real one it has fixed limits. Working inside them is part of the fun.</p>
-      <div class="table-scroll">
+      <div class="table-scroll" tabindex="0" role="region" aria-label="The console's parts">
         <table>
           <thead>
             <tr><th scope="col">Part</th><th scope="col">What it does</th></tr>
@@ -90,7 +90,7 @@ end</code></pre>
     <section id="buttons">
       <h2>Buttons</h2>
       <p>A program asks about a button by its number, as in <code>btn(4)</code> for A.</p>
-      <div class="table-scroll">
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Button numbers">
         <table>
           <thead>
             <tr><th scope="col">Number</th><th scope="col">Button</th><th scope="col">Keyboard</th><th scope="col">On screen</th></tr>

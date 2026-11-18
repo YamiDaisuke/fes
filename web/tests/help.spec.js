@@ -93,3 +93,15 @@ test("the manual on its own doesn't scroll sideways at a phone width", async ({ 
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
 });
+
+test("Tab reaches the Buttons table's box at a phone width, and the arrow keys scroll it", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/manual/");
+  const box = page.getByRole("region", { name: "Button numbers" });
+  const boxHasFocus = () => box.evaluate((element) => element === document.activeElement);
+  for (let presses = 0; presses < 20 && !(await boxHasFocus()); presses++) await page.keyboard.press("Tab");
+
+  await page.keyboard.press("ArrowRight");
+
+  await expect.poll(() => box.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+});

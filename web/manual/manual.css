@@ -32,7 +32,7 @@ h2 {
   font: inherit;
 }
 h3 { margin: 0 0 calc(6 * var(--u)); font: inherit; text-transform: uppercase; }
-p, ol, ul, table, pre { margin: 0 0 calc(6 * var(--u)); }
+p, ol, ul, .table-scroll, pre { margin: 0 0 calc(6 * var(--u)); }
 main ol, main ul { padding-left: calc(12 * var(--u)); }
 main li { margin-bottom: calc(3 * var(--u)); }
 a { color: var(--ink); text-decoration: underline; }
@@ -48,5 +48,5 @@ pre code { padding: 0; font: inherit; }
 table { border-collapse: collapse; background: var(--shell); }
 th, td { padding: var(--u) calc(4 * var(--u)); border: var(--u) solid var(--ink); text-align: left; vertical-align: top; }
 th { background: var(--shell-light); font: inherit; }
-a:focus-visible, summary:focus-visible { outline: var(--u) solid var(--butter); outline-offset: 0; box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink); }
+a:focus-visible, summary:focus-visible, pre:focus-visible, .table-scroll:focus-visible { outline: var(--u) solid var(--butter); outline-offset: 0; box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink); }
 .key:focus-visible { --key-ring: 0 0 0 calc(2 * var(--u)) var(--ink); }
