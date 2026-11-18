@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FES manual</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="manual.css">
+  <script type="module" src="manual.js"></script>
+</head>
+<body>
+  <header>
+    <h1>FES manual</h1>
+    <a id="back-to-fes" class="key key-nav" href="../" hidden>Back to FES</a>
+  </header>
+  <nav aria-label="Contents" class="plate">
+    <details id="contents">
+      <summary>Contents</summary>
+      <ol>
+        <li><a href="#welcome">Welcome</a></li>
+        <li><a href="#first-cart">Your first cart</a></li>
+        <li><a href="#console">The console</a></li>
+        <li><a href="#buttons">Buttons</a></li>
+        <li><a href="#code-editor">The code editor</a></li>
+        <li><a href="#drawing">Drawing</a></li>
+        <li><a href="#carts">Carts</a></li>
+        <li><a href="#keeping-carts-safe">Keeping your carts safe</a></li>
+        <li><a href="#lua">Lua in ten minutes</a></li>
+        <li><a href="#api">API reference</a></li>
+        <li><a href="#examples">Examples</a></li>
+        <li><a href="#troubleshooting">When something goes wrong</a></li>
+        <li><a href="#coming">What's coming</a></li>
+      </ol>
+    </details>
+  </nav>
+  <main>
+    <section id="welcome">
+      <h2>Welcome</h2>
+      <p>FES is a small game console that lives on your iPad. You make games for it, called carts, right here: you draw the pictures and write the program that moves them. The programs are written in Lua, a small language that is easy to start with. FES works without a network once it is on your Home Screen, and your carts stay on your iPad. This manual starts with a game you can make in ten minutes, then explains each part in turn.</p>
+    </section>
+
+    <section id="first-cart">
+      <h2>Your first cart</h2>
+      <p>You will draw a small picture and move it around the screen with the arrow keys. A picture the console can move is called a <dfn>sprite</dfn>. Its picture is a <dfn>tile</dfn>: a square of 8 by 8 pixels.</p>
+      <ol>
+        <li>Press <kbd>Carts</kbd>, then <kbd>New cart</kbd>. FES opens the new cart's code.</li>
+        <li>Press <kbd>Art</kbd>, then <kbd>Sprites</kbd>. The big square shows the tile picked on the sheet. Tap the first tile, top left on the sheet: that is tile 0. It is empty.</li>
+        <li>Pick any color except the first one, and draw on tile 0 with your finger. The first color is see-through for sprites, so a tile drawn only in it can't be seen.</li>
+        <li>Press <kbd>Code</kbd>. Replace everything in the editor with this program:
+<pre><code>x, y = 92, 68
+function _update()
+  if btn(0) then x = x - 1 end
+  if btn(1) then x = x + 1 end
+  if btn(2) then y = y - 1 end
+  if btn(3) then y = y + 1 end
+end
+function _draw()
+  cls()
+  spr(0, x, y)
+end</code></pre>
+        </li>
+        <li>Press <kbd>Run</kbd>. Your drawing sits in the middle of the screen. Move it with the D-pad or the arrow keys.</li>
+        <li>Press <kbd>Save</kbd>. The cart now waits for you on the shelf, under <kbd>Carts</kbd>.</li>
+      </ol>
+      <p>Here is what the program says. The first line makes two variables, <code>x</code> and <code>y</code>, for where the sprite is. FES calls <code>_update</code> 60 times a second: each <code>btn(n)</code> asks whether button <code>n</code> is held, and the sprite moves one pixel that way. Then FES calls <code>_draw</code>: <code>cls()</code> clears the screen and <code>spr(0, x, y)</code> puts tile 0 at <code>x, y</code>. The button numbers are in <a href="#buttons">Buttons</a>.</p>
+    </section>
+
+    <section id="console">
+      <h2>The console</h2>
+      <p>FES is a pretend console, and like a real one it has fixed limits. Working inside them is part of the fun.</p>
+      <table>
+        <thead>
+          <tr><th scope="col">Part</th><th scope="col">What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Screen</td><td>192 pixels wide and 144 high. It is drawn 60 times a second; each drawing is a <dfn>frame</dfn>.</td></tr>
+          <tr><td>Tiles</td><td>Every picture is made of tiles of 8 by 8 pixels. A tile can use 8 colors.</td></tr>
+          <tr><td>Tile memory</td><td>256 tiles for the background and 256 more for sprites.</td></tr>
+          <tr><td>Main palette</td><td>A <dfn>palette</dfn> is a set of colors. The main palette has 64 colors to choose from, and each cart keeps its own copy, so you can change them.</td></tr>
+          <tr><td>Palettes</td><td>8 background palettes and 8 sprite palettes, each 8 colors picked from the main palette. A tile is drawn in one of them. In a sprite, color 0 is see-through.</td></tr>
+          <tr><td>Background</td><td>One map, 32 by 32 tiles, that can scroll. It repeats every 256 pixels in each direction.</td></tr>
+          <tr><td>Sprites</td><td>Up to 64 sprites on screen. Each can be flipped sideways or upside down, and drawn behind the map. A <dfn>scanline</dfn> is one row of pixels on the screen, and at most 16 sprites show on any one of them.</td></tr>
+          <tr><td>Buttons</td><td>A D-pad, A, B, Start and Select.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="buttons">
+      <h2>Buttons</h2>
+      <p>A program asks about a button by its number, as in <code>btn(4)</code> for A.</p>
+      <table>
+        <thead>
+          <tr><th scope="col">Number</th><th scope="col">Button</th><th scope="col">Keyboard</th><th scope="col">On screen</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>Left</td><td>←</td><td>D-pad left</td></tr>
+          <tr><td>1</td><td>Right</td><td>→</td><td>D-pad right</td></tr>
+          <tr><td>2</td><td>Up</td><td>↑</td><td>D-pad up</td></tr>
+          <tr><td>3</td><td>Down</td><td>↓</td><td>D-pad down</td></tr>
+          <tr><td>4</td><td>A</td><td>Z</td><td>A, the right face button</td></tr>
+          <tr><td>5</td><td>B</td><td>X</td><td>B, the left face button</td></tr>
+          <tr><td>6</td><td>Start</td><td>Enter</td><td>Start</td></tr>
+          <tr><td>7</td><td>Select</td><td>Shift</td><td>Select</td></tr>
+        </tbody>
+      </table>
+      <p>Numbers 0 to 5 are the same as PICO-8's, and A and B are on PICO-8's keys, Z and X. The D-pad's corners press two directions at once.</p>
+    </section>
+
+    <section id="code-editor">
+      <h2>The code editor</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="drawing">
+      <h2>Drawing</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="carts">
+      <h2>Carts</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="keeping-carts-safe">
+      <h2>Keeping your carts safe</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="lua">
+      <h2>Lua in ten minutes</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="api">
+      <h2>API reference</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="examples">
+      <h2>Examples</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>When something goes wrong</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+
+    <section id="coming">
+      <h2>What's coming</h2>
+      <p>Coming in this manual soon.</p>
+    </section>
+  </main>
+</body>
+</html>
