@@ -1,7 +1,7 @@
 import JavaScriptKit
 
 enum ShownView: String, CaseIterable {
-    case code, game, art, shelf
+    case code, game, art, shelf, help
 }
 
 nonisolated(unsafe) var shownView = ShownView.shelf
