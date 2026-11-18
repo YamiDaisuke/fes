@@ -9,6 +9,10 @@ async function openApp(page) {
 const manual = (page) => page.frameLocator("#help-frame");
 
 test("the manual loads only on the first visit to Help, and Help focuses it", async ({ page }) => {
+  const manualLoads = [];
+  page.on("request", (request) => {
+    if (request.url().endsWith("/manual/")) manualLoads.push(request.url());
+  });
   await openApp(page);
   await expect(page.locator("#help-frame")).not.toHaveAttribute("src");
 
@@ -17,6 +21,11 @@ test("the manual loads only on the first visit to Help, and Help focuses it", as
   await expect(page.locator("body")).toHaveAttribute("data-view", "help");
   await expect(manual(page).getByRole("heading", { level: 1, name: "FES manual" })).toBeVisible();
   expect(await page.evaluate(() => document.activeElement.id)).toBe("help-frame");
+
+  await page.getByRole("button", { name: "Code" }).click();
+  await page.getByRole("button", { name: "Help" }).click();
+  await expect(manual(page).getByRole("heading", { level: 1, name: "FES manual" })).toBeVisible();
+  expect(manualLoads).toHaveLength(1);
 });
 
 test("switching Help → Code → Help keeps the code and the manual's scroll position", async ({ page }) => {
@@ -57,7 +66,8 @@ test("the Back to FES link shows only when the manual is opened on its own", asy
 
   await openApp(page);
   await page.getByRole("button", { name: "Help" }).click();
-  await expect(manual(page).locator("#contents")).toHaveJSProperty("open", true);
+  const manualScriptRan = () => expect(manual(page).locator("#contents")).toHaveJSProperty("open", true);
+  await manualScriptRan();
   await expect(manual(page).locator("#back-to-fes")).toBeHidden();
 });
 
@@ -74,4 +84,12 @@ test("the contents are open beside the text in landscape and closed above it in 
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto("/manual/");
   expect(await layout()).toEqual({ open: false, beside: false, above: true });
+});
+
+test("the manual on its own doesn't scroll sideways at a phone width", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/manual/");
+  await expect(page.locator("#buttons table")).toBeVisible();
+
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
 });
