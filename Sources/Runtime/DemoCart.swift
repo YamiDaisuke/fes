@@ -66,6 +66,7 @@ public enum DemoCart {
         setTile(0, to: floorTile, in: &ppu.backgroundTiles)
         setTile(1, to: wallTile, in: &ppu.backgroundTiles)
         setTile(0, to: playerFacingRightTile, in: &ppu.spriteTiles)
+        setTile(1, to: playerStepTile, in: &ppu.spriteTiles)
         return ppu
     }
 
@@ -100,6 +101,17 @@ public enum DemoCart {
         "00777700",
         "00700700",
         "07700770",
+    ]
+
+    private static let playerStepTile = [
+        "00777700",
+        "07777770",
+        "07777171",
+        "07777777",
+        "07777770",
+        "00777700",
+        "00077000",
+        "00077700",
     ]
 
     private static func setTile(_ tile: Int, to rows: [String], in bank: inout TileBank) {
