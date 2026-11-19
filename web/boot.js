@@ -43,6 +43,17 @@ const { instance } = await instantiate({
 });
 new ResizeObserver(fitCanvas).observe(screenSlot);
 
+const helpFrame = document.getElementById("help-frame");
+window.addEventListener("message", (event) => {
+  const name = event.data?.fesExample;
+  // No event.source check: WebKit gives the parent window as the source of a message posted from a module script.
+  if (event.origin !== location.origin || typeof name !== "string") return;
+  const pres = [...helpFrame.contentDocument.querySelectorAll("pre[data-example]")].filter((pre) => pre.dataset.example === name);
+  if (pres.length === 0) return;
+  const heading = pres[0].closest("section").querySelector("h3").textContent;
+  globalThis.fesOpenExample(heading, pres.map((pre) => ({ file: pre.dataset.file ?? "main.lua", text: pre.textContent })));
+});
+
 const context = canvas.getContext("2d");
 listenForInput(document.getElementById("pad"));
 
