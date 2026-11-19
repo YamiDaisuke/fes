@@ -585,6 +585,8 @@ Depends: T54
 
 **Accept.** Playwright: open example 1 from the manual, Run, the sprite moves on input; with unsaved edits the dialog appears first and Cancel leaves the cart alone; a message from another origin is ignored.
 
+As built, T56 keys every data-example group, API entries included, and `web/boot.js` checks only the message's origin, not its source: WebKit names the parent window as the source of a message posted from a module script (decision 060).
+
 ---
 
 # Review of what exists
