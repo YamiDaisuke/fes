@@ -81,7 +81,7 @@ Accept: a cart with a deliberate runtime error shows the correct line; the sandb
 
 ### T10 Console API v0
 Depends: T07, T08, T09
-- `cls`, `spr`, `btn`, `btnp`, `mset`, `mget`, `camera` bound to Lua. Document them in `docs/API.md`.
+- `cls`, `spr`, `btn`, `btnp`, `mset`, `mget`, `camera` bound to Lua. Document them in `docs/API.md`. (Later: the reference moved to the manual's API reference, T53, decision 057.)
 - Demo cart: walk a sprite around a tile room with the D-pad.
 
 Accept: the demo works on iPad via the PR preview. **PoC reached.**

@@ -81,7 +81,7 @@ A small built-in version history, not git. Files are stored by content hash. A s
 
 ## Console API (initial, grows per milestone)
 
-`cls`, `spr`, `btn`, `btnp`, `mget`, `mset`, `map`, `camera`, `pal`, `print`, `sfx`, `music`. Exact signatures are decided in the task that introduces each call and recorded in `docs/API.md`.
+`cls`, `spr`, `btn`, `btnp`, `mget`, `mset`, `map`, `camera`, `pal`, `print`, `sfx`, `music`. Exact signatures are decided in the task that introduces each call and recorded in the manual's API reference, `web/manual/index.html#api` (decision 057).
 
 ## Open decisions
 

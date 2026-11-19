@@ -132,12 +132,409 @@ end</code></pre>
 
     <section id="lua">
       <h2>Lua in ten minutes</h2>
-      <p>Coming in this manual soon.</p>
+      <p>This is the part of Lua you need to start. Try each piece in a cart: the screen shows nothing, but a mistake stops the cart with a message that says what went wrong.</p>
+
+      <h3>Comments</h3>
+      <p>Two dashes start a comment. Lua skips everything after them to the end of the line.</p>
+<pre tabindex="0" role="region" aria-label="A comment"><code>-- the player starts in the middle
+x = 92</code></pre>
+
+      <h3>Variables</h3>
+      <p>A variable is a name for a value. Give it a value with <code>=</code>. A variable you never gave a value is <code>nil</code>, which means "nothing".</p>
+      <p>A variable made without <code>local</code> is <dfn>global</dfn>: every function in every file of the cart can see and change it. A variable made with <code>local</code> exists only inside the block (function, loop, <code>if</code> or file) where you made it. Prefer <code>local</code>: no other part of the cart can change it by accident, and two files can use the same name without clashing.</p>
+<pre tabindex="0" role="region" aria-label="Global and local variables"><code>score = 0        -- global
+local speed = 2  -- local to this file
+local x, y = 92, 68</code></pre>
+
+      <h3>Numbers</h3>
+      <p><code>+</code>, <code>-</code> and <code>*</code> work as you expect. Division needs care:</p>
+      <ul>
+        <li><code>/</code> always gives a number with a fraction: <code>7 / 2</code> is <code>3.5</code>, and <code>6 / 2</code> is <code>3.0</code>.</li>
+        <li><code>//</code> divides and rounds down to a whole number: <code>7 // 2</code> is <code>3</code>, and <code>-7 // 2</code> is <code>-4</code>. Use it to turn a pixel position into a map cell, as in <code>x // 8</code>.</li>
+        <li><code>%</code> is what is left over: <code>7 % 2</code> is <code>1</code>. <code>(i + 1) % 8</code> counts 0 to 7 and starts again.</li>
+      </ul>
+
+      <h3>Strings</h3>
+      <p>Text goes in quotes, <code>"like this"</code>. Join two strings with <code>..</code>: <code>"score: " .. score</code>. A number joins as its digits.</p>
+
+      <h3>Tables</h3>
+      <p>A <dfn>table</dfn> holds many values. Used as a list, it counts from 1, not 0, and <code>#</code> gives its length.</p>
+<pre tabindex="0" role="region" aria-label="A table as a list"><code>local tiles = {0, 1, 1, 0}
+local first = tiles[1]  -- 0
+local count = #tiles    -- 4
+tiles[#tiles + 1] = 1   -- adds a fifth</code></pre>
+      <p>Used as a record, it holds named fields. <code>p.x</code> is the field <code>x</code> of <code>p</code>.</p>
+<pre tabindex="0" role="region" aria-label="A table as a record"><code>local p = { x = 92, y = 68 }
+p.x = p.x + 1</code></pre>
+
+      <h3>Functions</h3>
+      <p>A function is a piece of code with a name, which runs when you call it. <code>return</code> hands a value back to the caller.</p>
+<pre tabindex="0" role="region" aria-label="A function"><code>local function middle(a, b)
+  return (a + b) // 2
+end
+local x = middle(0, 184)  -- 92</code></pre>
+
+      <h3>If</h3>
+      <p><code>==</code> asks "is equal", <code>~=</code> asks "is not equal". <code>and</code>, <code>or</code> and <code>not</code> combine questions.</p>
+<pre tabindex="0" role="region" aria-label="An if"><code>if lives == 0 then
+  over = true
+elseif lives ~= 3 then
+  hurt = true
+else
+  hurt = false
+end</code></pre>
+      <p>Only <code>nil</code> and <code>false</code> count as false. Everything else is true, even <code>0</code>, which surprises people who know other languages. See <a href="#rules-for-every-call">Rules for every call</a>.</p>
+
+      <h3>Loops</h3>
+      <p>A numeric <code>for</code> counts from the first number to the last, both included. <code>for … in ipairs</code> goes through a list in order, and <code>for … in pairs</code> goes through every field of a table in no particular order. <code>while</code> repeats as long as its question is true.</p>
+<pre tabindex="0" role="region" aria-label="Loops"><code>local tiles = {0, 1, 1, 0}
+local p = { x = 92, y = 68 }
+local total = 0
+local x = 40
+for column = 0, 31 do
+  mset(column, 0, 1)
+end
+for i, tile in ipairs(tiles) do
+  mset(i, 1, tile)
+end
+for name, value in pairs(p) do
+  total = total + value
+end
+while x &gt; 0 do
+  x = x - 8
+end</code></pre>
+
+      <h3>What FES leaves out</h3>
+      <p>Carts run in a <dfn>sandbox</dfn>: the part of Lua that can't harm your iPad or freeze FES.</p>
+      <ul>
+        <li>Available: Lua's basic functions, such as <code>pairs</code>, <code>tostring</code> and <code>pcall</code>, and the libraries <code>string</code>, <code>table</code>, <code>math</code>, <code>utf8</code> and <code>coroutine</code>.</li>
+        <li>Not available: <code>print</code>, <code>io</code>, <code>os</code>, <code>debug</code>, <code>package</code>, <code>dofile</code>, <code>loadfile</code>, <code>warn</code> and <code>string.dump</code>.</li>
+        <li><code>load</code> takes Lua text only, not compiled code, and <code>setmetatable</code> refuses a <code>__gc</code> field (<a href="#budgets-and-errors">Budgets and errors</a>).</li>
+      </ul>
+      <p>There is no <code>print</code> yet. To see a value while you work, stop the cart with it: <code>error("x is " .. tostring(x))</code> stops the cart with a message that includes <code>x is 92</code>.</p>
+      <p>The rest of Lua is in its <a href="https://www.lua.org/manual/5.4/" target="_blank" rel="noopener">reference manual</a>, and every function is listed in its <a href="https://www.lua.org/manual/5.4/contents.html#index" target="_blank" rel="noopener">index</a>.</p>
     </section>
 
     <section id="api">
       <h2>API reference</h2>
-      <p>Coming in this manual soon.</p>
+      <p>The API is the set of functions your cart calls to work the console: to place sprites, read the buttons, change the map and move the camera. It works the other way too: FES calls your cart's <code>_init</code> once when the cart starts, then <code>_update</code> and <code>_draw</code> every frame.</p>
+      <p>The examples show sprite tile 0 and background tiles 0 and 1. A new cart's tiles are empty, so draw on those three first, as in <a href="#first-cart">Your first cart</a>: sprite tile 0 under <kbd>Art</kbd>, <kbd>Sprites</kbd>, and background tiles 0 and 1 under <kbd>Art</kbd>, <kbd>Background</kbd>.</p>
+      <ul>
+        <li><a href="#api-cls"><code>cls</code></a> takes away the sprites.</li>
+        <li><a href="#api-spr"><code>spr</code></a> places a sprite.</li>
+        <li><a href="#api-btn"><code>btn</code></a> asks whether a button is held.</li>
+        <li><a href="#api-btnp"><code>btnp</code></a> asks whether a button was just pressed.</li>
+        <li><a href="#api-mset"><code>mset</code></a> puts a tile on the map.</li>
+        <li><a href="#api-mget"><code>mget</code></a> reads a tile from the map.</li>
+        <li><a href="#api-camera"><code>camera</code></a> scrolls the view.</li>
+        <li><a href="#api-require"><code>require</code></a> runs another file of the cart.</li>
+      </ul>
+
+      <section id="rules-for-every-call">
+        <h3>Rules for every call</h3>
+        <ul>
+          <li>Where a call wants a number, it takes a Lua number or a string of digits, such as <code>"5"</code>. Anything else stops the cart: <code>main.lua:12: bad argument #1 to 'spr' (number expected, got string)</code>. A missing number says <code>got no value</code>.</li>
+          <li>NaN and infinity, which you get from <code>0 / 0</code> and <code>1 / 0</code>, stop the cart too: <code>bad argument #2 to 'spr' (finite number expected)</code>. Only <code>btn</code> and <code>btnp</code> answer <code>false</code> for them instead.</li>
+          <li>Numbers are rounded down to a whole number: <code>1.9</code> is 1 and <code>-0.5</code> is -1. Keep fractions in your own variables, and they add up: <code>x = x + 0.5</code> moves a sprite one pixel every other frame.</li>
+          <li>Every number passes through a float on its way in, so whole numbers bigger than 2<sup>53</sup> or smaller than -2<sup>53</sup> aren't exact: <code>spr(math.maxinteger, 0, 0)</code> shows tile 0, not tile 255.</li>
+          <li>A number outside its range wraps around instead of stopping the cart, the way a car's odometer goes from 999999 back to 0. Tile 256 is tile 0, and tile -1 is tile 255.
+            <div class="table-scroll" tabindex="0" role="region" aria-label="How numbers wrap">
+              <table>
+                <thead>
+                  <tr><th scope="col">What the number is</th><th scope="col">Range</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Sprite position</td><td>-32768 to 32767</td></tr>
+                  <tr><td>Tile</td><td>0 to 255</td></tr>
+                  <tr><td>Palette</td><td>0 to 7</td></tr>
+                  <tr><td>Map cell, column or row</td><td>0 to 31</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </li>
+          <li>Flips and <code>behind</code> take <code>true</code>, <code>false</code> or <code>nil</code>, and nothing else. In Lua <code>0</code> counts as true, so <code>spr(n, x, y, 0, 1)</code> stops the cart instead of flipping the sprite when you didn't mean it.</li>
+          <li>An argument shown in [brackets] is optional: leave it out, or pass <code>nil</code> to skip it and give the next one. Extra arguments are ignored.</li>
+          <li>A mistake in a call stops the cart like any Lua error, unless you catch it with <code>pcall</code>.</li>
+        </ul>
+      </section>
+
+      <section id="when-things-show">
+        <h3>When things show</h3>
+        <p>The calls don't draw anything themselves. They change the console's parts, and FES draws the picture from them after <code>_draw</code> returns.</p>
+        <ul>
+          <li>The console keeps its sprites in a <dfn>sprite table</dfn> of 64 entries. Each <code>spr</code> fills the next free entry, in the order you call it, and the first <code>spr</code> of a frame is in front of the others. Once all 64 are used, more <code>spr</code> calls do nothing until <code>cls()</code>.</li>
+          <li>A sprite drawn <code>behind</code> is behind the map and behind every sprite that isn't, whichever <code>spr</code> came first. The map hides it everywhere except where the map shows color 0 of its palette. In every sprite, color 0 is see-through.</li>
+          <li>Sprites stay in the table from frame to frame until <code>cls()</code>. Call <code>cls()</code> at the start of <code>_draw</code> and place every sprite again each frame, or place sprites once in <code>_init</code> and leave them.</li>
+          <li>At most 16 sprites show on any one scanline; on that row, the ones later in the table are left out. Only sprites with at least one column on screen count, even if that column is see-through, so sprites waiting fully off the left or right edge don't use up the row.</li>
+          <li><code>camera(x, y)</code> scrolls the map and shifts every <em>later</em> <code>spr</code>. The map uses the camera as it is when the frame is drawn; each sprite uses the camera as it was when its <code>spr</code> ran.</li>
+          <li>So <code>camera()</code> in the middle of <code>_draw</code> also scrolls the map back to 0, 0. Until FES gets a layer for scores and menus, draw those sprites with the camera still set, at <code>cx + x, cy + y</code>, where <code>cx, cy</code> is the camera position.</li>
+          <li>The map repeats every 256 pixels in both directions. Sprites don't repeat.</li>
+        </ul>
+      </section>
+
+      <section id="budgets-and-errors">
+        <h3>Budgets and errors</h3>
+        <p>So that one cart can't freeze FES, each cart gets a budget. These numbers may still change.</p>
+        <ul>
+          <li>Each frame, <code>_update</code> and <code>_draw</code> together may run 500,000 Lua instructions. When the cart starts, the top level of <code>main.lua</code>, the files it requires, and <code>_init</code> together get the same again. Going over stops the cart with <code>main.lua:N: CPU budget exceeded</code>, where <code>N</code> is the line it got to.</li>
+          <li>The cart's Lua values may take up to 8 MiB of memory. Going over stops the cart with <code>memory budget exceeded</code>.</li>
+          <li>A function that calls itself too deep, usually one that never stops, stops the cart with <code>stack overflow</code>.</li>
+        </ul>
+        <details>
+          <summary>For the curious: how the budget can't be dodged</summary>
+          <ul>
+            <li><code>pcall</code> can't catch <code>CPU budget exceeded</code>: the next function call, or the next 1,000 instructions, raise it again. If <code>_update</code>, <code>_draw</code>, <code>_init</code> or the top of <code>main.lua</code> finishes with the budget spent, for example through <code>return pcall(f)</code> or a <code>coroutine.resume</code> whose coroutine ran out, the cart stops with <code>CPU budget exceeded</code> and no line.</li>
+            <li>Once the budget is spent, <code>xpcall</code> doesn't call its message handler. It returns <code>false</code> and the budget error unchanged, and the cart stops at its next function call, within 1,000 instructions, or when its callback returns.</li>
+            <li>A frame that takes longer than 250 milliseconds counts as over budget, even if it ran few instructions, so library calls on large data in a loop can't freeze the console.</li>
+            <li>When memory runs out, <code>pcall</code> sees <code>not enough memory</code>. If nothing catches it, the cart stops with <code>memory budget exceeded</code> and no line.</li>
+            <li>Lua stops counting instructions while a <code>__gc</code> metamethod runs, so a loop in one could freeze the console. <code>setmetatable</code> stops the cart with <code>main.lua:N: __gc metamethods are not allowed</code> for a metatable with a <code>__gc</code> field. Adding <code>__gc</code> to a metatable after <code>setmetatable</code> does nothing, as in standard Lua.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section id="api-cls">
+        <h3><code>cls</code></h3>
+        <p><code>cls()</code></p>
+        <p>Takes away every sprite, so the next <code>spr</code> fills the first entry of the sprite table again.</p>
+        <p>Takes no arguments. The map stays as it is. Returns nothing.</p>
+<pre tabindex="0" role="region" aria-label="cls example" data-example="api-cls"><code>local x = 0
+function _update() x = (x + 1) % 192 end
+function _draw()
+  cls()
+  spr(0, x, 68)
+end</code></pre>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Leaving <code>cls()</code> out of <code>_draw</code>. The sprites of earlier frames stay, so a moving sprite leaves a trail of copies, and after 64 frames the table is full and it stops moving.</li>
+          <li>Passing a color, as in PICO-8's <code>cls(1)</code>. FES ignores it, so <code>cls(1)</code> does the same as <code>cls()</code>. The map is always behind the sprites; change it with <a href="#api-mset"><code>mset</code></a>.</li>
+        </ul>
+      </section>
+
+      <section id="api-spr">
+        <h3><code>spr</code></h3>
+        <p><code>spr(n, x, y, [palette], [flip_x], [flip_y], [behind])</code></p>
+        <p>Places sprite tile <code>n</code> on the screen with its top-left corner at <code>x, y</code>.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="spr's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>n</code></td><td>Which sprite tile to show, from <kbd>Art</kbd>, <kbd>Sprites</kbd></td><td>0 to 255</td><td>required</td></tr>
+              <tr><td><code>x</code></td><td>Left edge in pixels. The camera's <code>x</code> is taken off it.</td><td>-32768 to 32767, after the camera is taken off</td><td>required</td></tr>
+              <tr><td><code>y</code></td><td>Top edge in pixels. The camera's <code>y</code> is taken off it.</td><td>-32768 to 32767, after the camera is taken off</td><td>required</td></tr>
+              <tr><td><code>palette</code></td><td>Which of the 8 sprite palettes colors it</td><td>0 to 7</td><td>0</td></tr>
+              <tr><td><code>flip_x</code></td><td>Mirror it left to right</td><td><code>true</code>, <code>false</code> or <code>nil</code></td><td><code>false</code></td></tr>
+              <tr><td><code>flip_y</code></td><td>Mirror it top to bottom</td><td><code>true</code>, <code>false</code> or <code>nil</code></td><td><code>false</code></td></tr>
+              <tr><td><code>behind</code></td><td>Put it behind the map, and behind every sprite without <code>behind</code></td><td><code>true</code>, <code>false</code> or <code>nil</code></td><td><code>false</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns nothing. Numbers out of range wrap around (<a href="#rules-for-every-call">Rules for every call</a>). Color 0 of the tile is see-through. The sprite shows when the frame is drawn, as <a href="#when-things-show">When things show</a> explains.</p>
+<pre tabindex="0" role="region" aria-label="spr example" data-example="api-spr"><code>local x = 0
+function _update() x = (x + 1) % 192 end
+function _draw()
+  cls()
+  spr(0, x, 60)
+  spr(0, 184 - x, 76, 0, true)
+end</code></pre>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Flipping with numbers: <code>spr(n, x, y, 0, 1)</code> stops the cart with <code>bad argument #5 to 'spr' (boolean expected, got number)</code>. Write <code>spr(n, x, y, 0, true)</code>.</li>
+          <li>Using a background tile's number. <code>n</code> picks from the sprite tiles, which are separate from the background tiles that <a href="#api-mset"><code>mset</code></a> uses: sprite tile 3 and background tile 3 are different pictures.</li>
+        </ul>
+      </section>
+
+      <section id="api-btn">
+        <h3><code>btn</code></h3>
+        <p><code>btn(i)</code></p>
+        <p>Tells whether button <code>i</code> is held down.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="btn's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>i</code></td><td>The button's number, from <a href="#buttons">Buttons</a></td><td>0 to 7; any other number gives <code>false</code></td><td>required</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns <code>true</code> while the button is held, and <code>false</code> otherwise. <code>i</code> is rounded down like every number, so <code>btn(4.7)</code> asks about A and <code>btn(-0.5)</code> is <code>false</code>. A string of digits such as <code>"4"</code> works too.</p>
+<pre tabindex="0" role="region" aria-label="btn example" data-example="api-btn"><code>local x = 92
+function _update()
+  if btn(0) then x = x - 1 end
+  if btn(1) then x = x + 1 end
+end
+function _draw() cls() spr(0, x, 68) end</code></pre>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Leaving out the number: <code>btn()</code> stops the cart with <code>bad argument #1 to 'btn' (number expected, got no value)</code>. Something that isn't a number stops it too: <code>btn(true)</code> gives <code>bad argument #1 to 'btn' (number expected, got boolean)</code>.</li>
+          <li>Using <code>btn</code> for something that should happen once per press, such as a jump. <code>btn</code> stays true every frame the button is held; use <a href="#api-btnp"><code>btnp</code></a>.</li>
+        </ul>
+      </section>
+
+      <section id="api-btnp">
+        <h3><code>btnp</code></h3>
+        <p><code>btnp(i)</code></p>
+        <p>Tells whether button <code>i</code> went down this frame.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="btnp's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>i</code></td><td>The button's number, from <a href="#buttons">Buttons</a></td><td>0 to 7; any other number gives <code>false</code></td><td>required</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns <code>true</code> only on the first frame the button is held, and <code>false</code> otherwise. <code>i</code> works as in <a href="#api-btn"><code>btn</code></a>.</p>
+<pre tabindex="0" role="region" aria-label="btnp example" data-example="api-btnp"><code>local palette = 0
+function _update()
+  if btnp(4) then palette = (palette + 1) % 8 end
+end
+function _draw() cls() spr(0, 92, 68, palette) end</code></pre>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Expecting it to repeat while the button stays down, as PICO-8's <code>btnp</code> does after a moment. In FES it is true once per press; to repeat, count frames yourself while <a href="#api-btn"><code>btn</code></a> is true.</li>
+        </ul>
+      </section>
+
+      <section id="api-mset">
+        <h3><code>mset</code></h3>
+        <p><code>mset(x, y, tile, [palette])</code></p>
+        <p>Puts a background tile in one cell of the map.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="mset's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>x</code></td><td>The cell's column. A cell is 8 by 8 pixels.</td><td>0 to 31</td><td>required</td></tr>
+              <tr><td><code>y</code></td><td>The cell's row</td><td>0 to 31</td><td>required</td></tr>
+              <tr><td><code>tile</code></td><td>Which background tile to put there, from <kbd>Art</kbd>, <kbd>Background</kbd></td><td>0 to 255</td><td>required</td></tr>
+              <tr><td><code>palette</code></td><td>Which of the 8 background palettes colors it</td><td>0 to 7</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns nothing. Numbers out of range wrap around, so <code>mset(32, 0, 1)</code> sets cell 0, 0.</p>
+<pre tabindex="0" role="region" aria-label="mset example" data-example="api-mset"><code>function _init()
+  for x = 0, 31 do
+    for y = 0, 31 do
+      mset(x, y, (x + y) % 2)
+    end
+  end
+end</code></pre>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Passing a position in pixels. <code>x</code> and <code>y</code> count cells, so divide pixels by 8: <code>mset(px // 8, py // 8, 1)</code>.</li>
+          <li>Using a sprite tile's number. <code>tile</code> picks from the background tiles, which are separate from the sprite tiles that <a href="#api-spr"><code>spr</code></a> uses.</li>
+        </ul>
+      </section>
+
+      <section id="api-mget">
+        <h3><code>mget</code></h3>
+        <p><code>mget(x, y)</code></p>
+        <p>Tells which tile and palette are in one cell of the map.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="mget's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>x</code></td><td>The cell's column. A cell is 8 by 8 pixels.</td><td>0 to 31</td><td>required</td></tr>
+              <tr><td><code>y</code></td><td>The cell's row</td><td>0 to 31</td><td>required</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns two whole numbers: the background tile (0 to 255) and its palette (0 to 7). <code>local t = mget(x, y)</code> keeps only the tile. The cells wrap around like the map on screen, so <code>mget(32, 0)</code> reads cell 0, 0.</p>
+<pre tabindex="0" role="region" aria-label="mget example" data-example="api-mget"><code>local x, y = 40, 64
+function _init() mset(12, 8, 1) end
+function _update()
+  if btn(1) and mget((x + 8) // 8, y // 8) ~= 1 then x = x + 1 end
+  if btn(0) then x = x - 1 end
+end
+function _draw() cls() spr(0, x, y) end</code></pre>
+        <p>The sprite walks right until background tile 1 is in its way.</p>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Passing a position in pixels. Divide by 8 first: <code>mget(px // 8, py // 8)</code>.</li>
+        </ul>
+      </section>
+
+      <section id="api-camera">
+        <h3><code>camera</code></h3>
+        <p><code>camera([x], [y])</code></p>
+        <p>Scrolls the view so that the point <code>x, y</code> of the map is at the top-left corner of the screen.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="camera's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>x</code></td><td>How far right to scroll, in pixels</td><td>Any number; it wraps around every 65536, and the map repeats every 256</td><td>0</td></tr>
+              <tr><td><code>y</code></td><td>How far down to scroll, in pixels</td><td>Any number; it wraps around every 65536, and the map repeats every 256</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns nothing. <code>camera()</code> goes back to 0, 0. Every <code>spr</code> after it is shifted too, so sprites and the map stay together. <a href="#when-things-show">When things show</a> explains when each one uses the camera.</p>
+<pre tabindex="0" role="region" aria-label="camera example" data-example="api-camera"><code>local x = 92
+function _init() mset(16, 9, 1) end
+function _update() if btn(1) then x = x + 1 end end
+function _draw()
+  cls()
+  camera(x - 92, 0)
+  spr(0, x, 68)
+end</code></pre>
+        <p>The sprite stays in the middle of the screen while the map moves past it.</p>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Calling <code>camera()</code> in the middle of <code>_draw</code> to place a score. It scrolls the map back to 0, 0 too; see <a href="#when-things-show">When things show</a>.</li>
+          <li>Calling <code>camera</code> after <code>spr</code>. Only the sprites placed after it are shifted.</li>
+        </ul>
+      </section>
+
+      <section id="api-require">
+        <h3><code>require</code></h3>
+        <p><code>require(name)</code></p>
+        <p>Runs another code file of the cart and gives back what that file returns.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="require's parameters">
+          <table>
+            <thead>
+              <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>name</code></td><td>The file's name without <code>.lua</code>: <code>"player"</code> runs <code>player.lua</code></td><td>A string; a number is turned into one</td><td>required</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Returns what the file returns, or <code>true</code> if it returns nothing. Only the first <code>require</code> of a name runs the file; later ones give back the same value without running it again. The file receives <code>name</code> as <code>...</code>.</p>
+        <p>A cart starts from <code>main.lua</code>. Its other code files run only when something requires them.</p>
+        <ul>
+          <li>Globals are shared between files, and a file's <code>local</code> variables are its own. To share functions without making globals, return a table of them.</li>
+          <li>Errors name the file they happen in: <code>player.lua:12: attempt to index a nil value</code>.</li>
+          <li>A required file runs inside the budget of whatever called <code>require</code>, usually the top of <code>main.lua</code> and <code>_init</code>.</li>
+          <li>Renaming a file doesn't change the <code>require</code> calls that name it. Change them yourself.</li>
+        </ul>
+<pre tabindex="0" role="region" aria-label="main.lua for the require example"><code>-- main.lua
+local player = require("player")
+function _update() player.update() end
+function _draw() cls() player.draw() end</code></pre>
+<pre tabindex="0" role="region" aria-label="player.lua for the require example"><code>-- player.lua
+local player = { x = 92, y = 68 }
+function player.update()
+  if btn(1) then player.x = player.x + 1 end
+end
+function player.draw() spr(0, player.x, player.y) end
+return player</code></pre>
+        <h4>Common mistakes</h4>
+        <ul>
+          <li>Adding <code>.lua</code>: <code>require("player.lua")</code> looks for <code>player.lua.lua</code> and stops the cart with <code>module 'player.lua' not found: this cart has no file player.lua.lua</code>. A misspelled name stops it the same way: <code>main.lua:3: module 'plyer' not found: this cart has no file plyer.lua</code>.</li>
+          <li>Requiring <code>main</code>: <code>module 'main' can't be required: the cart starts from main.lua</code>.</li>
+          <li>Leaving out the name: <code>require()</code> stops the cart with <code>bad argument #1 to 'require' (string expected, got no value)</code>.</li>
+          <li>Two files that require each other while they load: the cart stops with <code>module 'enemy' is still loading (circular require)</code>. Move what they share to a third file, or call <code>require</code> inside a function that runs later.</li>
+        </ul>
+        <p>One quirk: if a file's top level stops with an error that the cart catches with <code>pcall</code>, requiring that file again says <code>still loading (circular require)</code> instead of running it again.</p>
+      </section>
     </section>
 
     <section id="examples">
