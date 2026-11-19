@@ -53,3 +53,7 @@ th, td { padding: var(--u) calc(4 * var(--u)); border: var(--u) solid var(--ink)
 th { background: var(--shell-light); font: inherit; }
 a:focus-visible, summary:focus-visible, pre:focus-visible, .table-scroll:focus-visible { outline: var(--u) solid var(--butter); outline-offset: 0; box-shadow: 0 0 0 calc(2 * var(--u)) var(--ink); }
 .key:focus-visible { --key-ring: 0 0 0 calc(2 * var(--u)) var(--ink); }
+figure { margin: 0 0 calc(6 * var(--u)); }
+.palette-diagram { display: grid; grid-template-columns: calc(16 * var(--u)) repeat(8, calc(12 * var(--u))); gap: var(--u); align-items: center; width: max-content; margin-bottom: calc(4 * var(--u)); }
+.palette-diagram .swatch { width: calc(12 * var(--u)); height: calc(12 * var(--u)); box-shadow: none; }
+td > .icon-key { display: block; }

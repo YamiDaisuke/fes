@@ -27,3 +27,21 @@ test("every key the manual names exists in the app under that name", async ({ pa
 
   expect(missing).toEqual([]);
 });
+
+test("the manual's palette diagram shows a new cart's main colors", async ({ page }) => {
+  const swatchColors = (selector) => page.locator(selector).evaluateAll((swatches) =>
+    swatches.map((swatch) => [Number(swatch.dataset.mainColor), getComputedStyle(swatch).backgroundColor]),
+  );
+  await page.goto("/manual/");
+  const manualSwatches = await swatchColors("[data-main-color]");
+
+  await openShelf(page);
+  await page.getByRole("button", { name: "New cart", exact: true }).click();
+  await page.getByRole("button", { name: "Art", exact: true }).click();
+  await page.getByRole("button", { name: "Palettes", exact: true }).click();
+  const appColors = new Map(await swatchColors("#art-main-colors [data-main-color]"));
+
+  expect(appColors.size).toBe(64);
+  expect(new Set(manualSwatches.map(([index]) => index))).toEqual(new Set(appColors.keys()));
+  for (const [index, color] of manualSwatches) expect(color, `main color ${index}`).toBe(appColors.get(index));
+});
