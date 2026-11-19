@@ -43,10 +43,10 @@
       <h2>Your first cart</h2>
       <p>You will draw a small picture and move it around the screen with the arrow keys. A picture the console can move is called a <dfn>sprite</dfn>. Its picture is a <dfn>tile</dfn>: a square of 8 by 8 pixels.</p>
       <ol>
-        <li>Press <kbd>Carts</kbd>, then <kbd>New cart</kbd>. FES opens the new cart's code.</li>
-        <li>Press <kbd>Art</kbd>, then <kbd>Sprites</kbd>. The big square shows the tile picked on the sheet. Tap the first tile, top left on the sheet: that is tile 0. It is empty.</li>
+        <li>Press <kbd data-control>Carts</kbd>, then <kbd data-control>New cart</kbd>. FES opens the new cart's code.</li>
+        <li>Press <kbd data-control>Art</kbd>, then <kbd data-control>Sprites</kbd>. The big square shows the tile picked on the sheet. Tap the first tile, top left on the sheet: that is tile 0. It is empty.</li>
         <li>Pick any color except the first one, and draw on tile 0 with your finger. The first color is see-through for sprites, so a tile drawn only in it can't be seen.</li>
-        <li>Press <kbd>Code</kbd>. Replace everything in the editor with this program:
+        <li>Press <kbd data-control>Code</kbd>. Replace everything in the editor with this program:
 <pre tabindex="0" role="region" aria-label="Your first program"><code>x, y = 92, 68
 function _update()
   if btn(0) then x = x - 1 end
@@ -59,8 +59,8 @@ function _draw()
   spr(0, x, y)
 end</code></pre>
         </li>
-        <li>Press <kbd>Run</kbd>. Your drawing sits in the middle of the screen. Move it with the D-pad or the arrow keys.</li>
-        <li>Press <kbd>Save</kbd>. The cart now waits for you on the shelf, under <kbd>Carts</kbd>.</li>
+        <li>Press <kbd data-control>Run</kbd>. Your drawing sits in the middle of the screen. Move it with the D-pad or the arrow keys.</li>
+        <li>Press <kbd data-control>Save</kbd>. The cart now waits for you on the shelf, under <kbd data-control>Carts</kbd>.</li>
       </ol>
       <p>Here is what the program says. The first line makes two variables, <code>x</code> and <code>y</code>, for where the sprite is. FES calls <code>_update</code> 60 times a second: each <code>btn(n)</code> asks whether button <code>n</code> is held, and the sprite moves one pixel that way. Then FES calls <code>_draw</code>: <code>cls()</code> takes away the sprites placed in the last frame, so the sprite doesn't leave copies of itself behind, and <code>spr(0, x, y)</code> puts tile 0 at <code>x, y</code>. The button numbers are in <a href="#buttons">Buttons</a>.</p>
     </section>
@@ -218,7 +218,7 @@ end</code></pre>
     <section id="api">
       <h2>API reference</h2>
       <p>The API is the set of functions your cart calls to work the console: to place sprites, read the buttons, change the map and move the camera. It works the other way too: FES calls your cart's <code>_init</code> once when the cart starts, then <code>_update</code> and <code>_draw</code> every frame.</p>
-      <p>The examples show sprite tile 0 and background tiles 0 and 1. A new cart's tiles are empty, so draw on those three first, as in <a href="#first-cart">Your first cart</a>: sprite tile 0 under <kbd>Art</kbd>, <kbd>Sprites</kbd>, and background tiles 0 and 1 under <kbd>Art</kbd>, <kbd>Background</kbd>.</p>
+      <p>The examples show sprite tile 0 and background tiles 0 and 1. A new cart's tiles are empty, so draw on those three first, as in <a href="#first-cart">Your first cart</a>: sprite tile 0 under <kbd data-control>Art</kbd>, <kbd data-control>Sprites</kbd>, and background tiles 0 and 1 under <kbd data-control>Art</kbd>, <kbd data-control>Background</kbd>.</p>
       <ul>
         <li><a href="#api-cls"><code>cls</code></a> takes away the sprites.</li>
         <li><a href="#api-spr"><code>spr</code></a> places a sprite.</li>
@@ -320,7 +320,7 @@ end</code></pre>
               <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>n</code></td><td>Which sprite tile to show, from <kbd>Art</kbd>, <kbd>Sprites</kbd></td><td>0 to 255</td><td>required</td></tr>
+              <tr><td><code>n</code></td><td>Which sprite tile to show, from <kbd data-control>Art</kbd>, <kbd data-control>Sprites</kbd></td><td>0 to 255</td><td>required</td></tr>
               <tr><td><code>x</code></td><td>Left edge in pixels. The camera's <code>x</code> is taken off it.</td><td>-32768 to 32767, after the camera is taken off</td><td>required</td></tr>
               <tr><td><code>y</code></td><td>Top edge in pixels. The camera's <code>y</code> is taken off it.</td><td>-32768 to 32767, after the camera is taken off</td><td>required</td></tr>
               <tr><td><code>palette</code></td><td>Which of the 8 sprite palettes colors it</td><td>0 to 7</td><td>0</td></tr>
@@ -411,7 +411,7 @@ function _draw() cls() spr(0, 92, 68, palette) end</code></pre>
             <tbody>
               <tr><td><code>x</code></td><td>The cell's column. A cell is 8 by 8 pixels.</td><td>0 to 31</td><td>required</td></tr>
               <tr><td><code>y</code></td><td>The cell's row</td><td>0 to 31</td><td>required</td></tr>
-              <tr><td><code>tile</code></td><td>Which background tile to put there, from <kbd>Art</kbd>, <kbd>Background</kbd></td><td>0 to 255</td><td>required</td></tr>
+              <tr><td><code>tile</code></td><td>Which background tile to put there, from <kbd data-control>Art</kbd>, <kbd data-control>Background</kbd></td><td>0 to 255</td><td>required</td></tr>
               <tr><td><code>palette</code></td><td>Which of the 8 background palettes colors it</td><td>0 to 7</td><td>0</td></tr>
             </tbody>
           </table>
@@ -539,7 +539,7 @@ return player</code></pre>
 
     <section id="examples">
       <h2>Examples</h2>
-      <p>Each example is a whole cart. They use the built-in demo's pictures: background tile 0 (the floor), background tile 1 (the wall), sprite tile 0 (the player) and sprite tile 1 (the player mid-step). The easiest way to try one: press <kbd>Carts</kbd>, pick <kbd>Built-in demo</kbd> and press <kbd>Edit</kbd>. Type a new name under Cart name, replace all the code with the example, then press <kbd>Run</kbd>, and <kbd>Save</kbd> to keep it. To use a new cart instead, draw those four tiles first, as in <a href="#first-cart">Your first cart</a>. The examples color the floor with background palette 2, the wall with background palette 4 and the player with sprite palette 7, as the demo does.</p>
+      <p>Each example is a whole cart. They use the built-in demo's pictures: background tile 0 (the floor), background tile 1 (the wall), sprite tile 0 (the player) and sprite tile 1 (the player mid-step). The easiest way to try one: press <kbd data-control>Carts</kbd>, pick <kbd data-control>Built-in demo</kbd> and press <kbd data-control>Edit</kbd>. Type a new name under Cart name, replace all the code with the example, then press <kbd data-control>Run</kbd>, and <kbd data-control>Save</kbd> to keep it. To use a new cart instead, draw those four tiles first, as in <a href="#first-cart">Your first cart</a>. The examples color the floor with background palette 2, the wall with background palette 4 and the player with sprite palette 7, as the demo does.</p>
 
       <section id="example-move">
         <h3>Move a sprite</h3>
@@ -736,7 +736,7 @@ end</code></pre>
 
       <section id="example-two-files">
         <h3>Two files</h3>
-        <p>As a cart grows, split it into files. Here <code>main.lua</code> builds the floor and runs the frame, and <code>player.lua</code> holds everything about the player. To add <code>player.lua</code>, press <kbd>New file</kbd> in the Code view and name it <code>player.lua</code>.</p>
+        <p>As a cart grows, split it into files. Here <code>main.lua</code> builds the floor and runs the frame, and <code>player.lua</code> holds everything about the player. To add <code>player.lua</code>, press <kbd data-control>New file</kbd> in the Code view and name it <code>player.lua</code>.</p>
 <pre tabindex="0" role="region" aria-label="main.lua for the two-file example" data-example="two-files" data-file="main.lua"><code>local player = require("player")
 
 function _init()
