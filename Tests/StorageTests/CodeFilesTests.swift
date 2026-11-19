@@ -131,3 +131,38 @@ private func names(_ cart: Cart) -> [String] {
     #expect(cart.removeCodeFile(named: "player.lua") == nil)
     #expect(names(cart) == ["main.lua", "enemy_2.lua"])
 }
+
+@Test func replacingCodeFilesPutsMainLuaFirstThenTheOthersInOrder() {
+    var cart = threeFileCart()
+    let problem = cart.replaceCodeFiles(with: [("player.lua", "return 2\n"), ("main.lua", "x = 1\n"), ("a.lua", "")])
+    #expect(problem == nil)
+    #expect(cart.codeFiles.map(\.name) == ["main.lua", "a.lua", "player.lua"])
+    #expect(cart.codeFiles.map(\.text) == ["x = 1\n", "", "return 2\n"])
+}
+
+@Test(arguments: [
+    ([("player.lua", "")], "an example needs exactly one main.lua"),
+    ([("main.lua", ""), ("main.lua", "")], "an example needs exactly one main.lua"),
+    ([("main.lua", ""), ("cart.json", "{}")], "cart.json: code file names end in .lua"),
+    ([("main.lua", ""), ("Player.lua", "")], "Player.lua: code file names use a–z, 0–9 and _, such as player.lua"),
+    ([("main.lua", ""), ("player.lua", ""), ("player.lua", "")], "player.lua: this cart already has it"),
+])
+func replacingCodeFilesWithABadSetIsRefusedAndChangesNothing(files: [(name: String, text: String)], problem: String) {
+    var cart = threeFileCart()
+    #expect(cart.replaceCodeFiles(with: files) == problem)
+    #expect(cart == threeFileCart())
+}
+
+@Test func replacingCodeFilesWithThirtyThreeFilesIsRefusedAndChangesNothing() {
+    var cart = threeFileCart()
+    let files = [("main.lua", "")] + (1...32).map { ("f\($0).lua", "") }
+    #expect(cart.replaceCodeFiles(with: files) == "f32.lua: a cart holds at most 32 code files")
+    #expect(cart == threeFileCart())
+}
+
+@Test func replacingCodeFilesLargerThanAnArchiveCanBeIsRefusedAndChangesNothing() {
+    var cart = threeFileCart()
+    let files = [("main.lua", String(repeating: "a", count: Cart.largestArchiveBytes)), ("player.lua", "a")]
+    #expect(cart.replaceCodeFiles(with: files) == "the code is larger than 8 MiB")
+    #expect(cart == threeFileCart())
+}

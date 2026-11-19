@@ -49,6 +49,26 @@ extension Cart {
         return nil
     }
 
+    public mutating func replaceCodeFiles(with files: [(name: String, text: String)]) -> String? {
+        let mainLuas = files.filter { $0.name == "main.lua" }
+        guard mainLuas.count == 1 else {
+            return "an example needs exactly one main.lua"
+        }
+        guard files.reduce(0, { $0 + $1.text.utf8.count }) <= Cart.largestArchiveBytes else {
+            return "the code is larger than 8 MiB"
+        }
+        var copy = self
+        copy.codeFiles = [CodeFile(name: "main.lua", text: mainLuas[0].text)]
+        for file in files where file.name != "main.lua" {
+            if let problem = copy.addCodeFile(named: file.name) {
+                return "\(file.name): \(problem)"
+            }
+            copy.replaceText(ofCodeFile: file.name, with: file.text)
+        }
+        self = copy
+        return nil
+    }
+
     public mutating func renameCodeFile(_ name: String, to newName: String) -> String? {
         if name == "main.lua" {
             return "the cart starts from main.lua"
