@@ -37,7 +37,9 @@ test("Set label saves the frame on screen as main palette indices in label.hex",
 test("a saved label shows on the shelf with the game's colors", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#cart-name")).toHaveValue("Demo");
-  const gameCenter = await page.evaluate(() => [...document.getElementById("screen").getContext("2d").getImageData(96, 72, 1, 1).data]);
+  const screenCenter = () => page.evaluate(() => [...document.getElementById("screen").getContext("2d").getImageData(96, 72, 1, 1).data]);
+  await expect.poll(async () => (await screenCenter())[3]).not.toBe(0);
+  const gameCenter = await screenCenter();
   await page.getByRole("button", { name: "Set label" }).click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator("#cart-status")).toHaveText("Saved Demo.");

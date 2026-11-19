@@ -157,7 +157,7 @@ test.describe("on desktop WebKit, where CodeMirror draws the selection", () => {
     expect(shown).not.toContain(activeLine);
 
     await page.keyboard.press("End");
-    expect(await backgroundOf(".cm-activeLine")).toBe(activeLine);
+    await expect.poll(() => backgroundOf(".cm-activeLine")).toBe(activeLine);
   });
 });
 

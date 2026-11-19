@@ -515,11 +515,11 @@ end</code></pre>
           <li>A required file runs inside the budget of whatever called <code>require</code>, usually the top of <code>main.lua</code> and <code>_init</code>.</li>
           <li>Renaming a file doesn't change the <code>require</code> calls that name it. Change them yourself.</li>
         </ul>
-<pre tabindex="0" role="region" aria-label="main.lua for the require example"><code>-- main.lua
+<pre tabindex="0" role="region" aria-label="main.lua for the require example" data-example="api-require" data-file="main.lua"><code>-- main.lua
 local player = require("player")
 function _update() player.update() end
 function _draw() cls() player.draw() end</code></pre>
-<pre tabindex="0" role="region" aria-label="player.lua for the require example"><code>-- player.lua
+<pre tabindex="0" role="region" aria-label="player.lua for the require example" data-example="api-require" data-file="player.lua"><code>-- player.lua
 local player = { x = 92, y = 68 }
 function player.update()
   if btn(1) then player.x = player.x + 1 end
@@ -539,7 +539,252 @@ return player</code></pre>
 
     <section id="examples">
       <h2>Examples</h2>
-      <p>Coming in this manual soon.</p>
+      <p>Each example is a whole cart. They use the built-in demo's pictures: background tile 0 (the floor), background tile 1 (the wall), sprite tile 0 (the player) and sprite tile 1 (the player mid-step). The easiest way to try one: press <kbd>Carts</kbd>, pick <kbd>Built-in demo</kbd> and press <kbd>Edit</kbd>. Type a new name under Cart name, replace all the code with the example, then press <kbd>Run</kbd>, and <kbd>Save</kbd> to keep it. To use a new cart instead, draw those four tiles first, as in <a href="#first-cart">Your first cart</a>. The examples color the floor with background palette 2, the wall with background palette 4 and the player with sprite palette 7, as the demo does.</p>
+
+      <section id="example-move">
+        <h3>Move a sprite</h3>
+        <p>The program from <a href="#first-cart">Your first cart</a>, finished: the sprite moves with the D-pad and can't leave the screen.</p>
+<pre tabindex="0" role="region" aria-label="Example: move a sprite" data-example="move"><code>local x, y = 92, 68
+function _update()
+  if btn(0) then x = x - 1 end
+  if btn(1) then x = x + 1 end
+  if btn(2) then y = y - 1 end
+  if btn(3) then y = y + 1 end
+  x = math.max(0, math.min(x, 184))
+  y = math.max(0, math.min(y, 136))
+end
+function _draw()
+  cls()
+  spr(0, x, y, 7)
+end</code></pre>
+        <h4>Lines worth noticing</h4>
+        <ul>
+          <li><code>local x, y</code> keeps the position to this file, as <a href="#lua">Lua in ten minutes</a> recommends.</li>
+          <li><code>math.max(0, math.min(x, 184))</code> keeps <code>x</code> between 0 and 184. The screen is 192 pixels wide and a sprite is 8, so 184 is the last place where the whole sprite shows. The screen is 144 high, so <code>y</code> stops at 136.</li>
+          <li><code>spr(0, x, y, 7)</code> colors the sprite with sprite palette 7, the demo's player colors.</li>
+        </ul>
+      </section>
+
+      <section id="example-animation">
+        <h3>Animation</h3>
+        <p>The player walks: while it moves, it switches between sprite tiles 0 and 1 every 8 frames, and it faces the way it last went.</p>
+<pre tabindex="0" role="region" aria-label="Example: animation" data-example="animation"><code>local x, y = 92, 68
+local t = 0
+local tile = 0
+local facing_left = false
+
+function _update()
+  local dx, dy = 0, 0
+  if btn(0) then dx = -1 end
+  if btn(1) then dx = 1 end
+  if btn(2) then dy = -1 end
+  if btn(3) then dy = 1 end
+  if dx ~= 0 then facing_left = dx &lt; 0 end
+  x = math.max(0, math.min(x + dx, 184))
+  y = math.max(0, math.min(y + dy, 136))
+  if dx ~= 0 or dy ~= 0 then
+    t = t + 1
+    tile = (t // 8) % 2
+  else
+    tile = 0
+  end
+end
+
+function _draw()
+  cls()
+  spr(tile, x, y, 7, facing_left)
+end</code></pre>
+        <h4>Lines worth noticing</h4>
+        <ul>
+          <li><code>t</code> counts the frames spent walking. <code>t // 8</code> goes up by one every 8 frames, and <code>% 2</code> turns that into 0, 1, 0, 1. So <code>tile</code> changes 7 or 8 times a second. <code>//</code> and <code>%</code> are in <a href="#lua">Lua in ten minutes</a>.</li>
+          <li>Standing still shows tile 0, so the player stops on both feet.</li>
+          <li><code>facing_left</code> changes only when <code>dx</code> isn't 0, so going up or down keeps the way the player faces. Passing it to <code>spr</code> mirrors the tile, so one picture faces both ways.</li>
+        </ul>
+      </section>
+
+      <section id="example-room">
+        <h3>A room with walls</h3>
+        <p>The cart builds a room that fills the screen, 24 by 18 cells, and the player can't walk through its walls. It slides along a wall when pressing against it at a slant.</p>
+<pre tabindex="0" role="region" aria-label="Example: a room with walls" data-example="room"><code>local floor, wall = 0, 1
+local x, y = 16, 16
+
+function _init()
+  for cy = 0, 17 do
+    for cx = 0, 23 do
+      local edge = cx == 0 or cy == 0 or cx == 23 or cy == 17
+      local inner = (cx == 8 and cy &lt; 12) or (cy == 10 and cx &gt; 14)
+      if edge or inner then
+        mset(cx, cy, wall, 4)
+      else
+        mset(cx, cy, floor, 2)
+      end
+    end
+  end
+end
+
+local function is_wall_at(px, py)
+  return mget(px // 8, py // 8) == wall
+end
+
+local function is_blocked(px, py)
+  return is_wall_at(px, py) or is_wall_at(px + 7, py)
+    or is_wall_at(px, py + 7) or is_wall_at(px + 7, py + 7)
+end
+
+function _update()
+  local dx, dy = 0, 0
+  if btn(0) then dx = -1 end
+  if btn(1) then dx = 1 end
+  if btn(2) then dy = -1 end
+  if btn(3) then dy = 1 end
+  if not is_blocked(x + dx, y) then x = x + dx end
+  if not is_blocked(x, y + dy) then y = y + dy end
+end
+
+function _draw()
+  cls()
+  spr(0, x, y, 7)
+end</code></pre>
+        <h4>Lines worth noticing</h4>
+        <ul>
+          <li><code>_init</code> runs once, so the map is built once. <code>mset(cx, cy, wall, 4)</code> puts the wall tile with background palette 4 in one cell.</li>
+          <li><code>is_wall_at</code> turns a pixel into a cell with <code>// 8</code> and asks <code>mget</code> what is there. <code>mget</code> gives the tile and its palette, and <code>==</code> compares only the tile.</li>
+          <li><code>is_blocked</code> checks all four corners of the sprite, <code>px + 7</code> being its right edge, so no part of it can enter a wall.</li>
+          <li>The cart tries the move across and the move down separately. When one is blocked, the other still happens, which is what lets the player slide along a wall.</li>
+        </ul>
+      </section>
+
+      <section id="example-camera">
+        <h3>A camera that follows the player</h3>
+        <p>The map is 32 by 32 cells, 256 pixels each way, bigger than the screen. The camera keeps the player in the middle of the screen and stops at the map's edges.</p>
+<pre tabindex="0" role="region" aria-label="Example: a camera that follows the player" data-example="camera"><code>local x, y = 88, 64
+
+local function clamp(value, low, high)
+  return math.max(low, math.min(value, high))
+end
+
+function _init()
+  for cy = 0, 31 do
+    for cx = 0, 31 do
+      local edge = cx == 0 or cy == 0 or cx == 31 or cy == 31
+      local pillar = cx % 6 == 3 and cy % 6 == 3
+      if edge or pillar then
+        mset(cx, cy, 1, 4)
+      else
+        mset(cx, cy, 0, 2)
+      end
+    end
+  end
+end
+
+function _update()
+  if btn(0) then x = x - 1 end
+  if btn(1) then x = x + 1 end
+  if btn(2) then y = y - 1 end
+  if btn(3) then y = y + 1 end
+  x = clamp(x, 8, 240)
+  y = clamp(y, 8, 240)
+end
+
+function _draw()
+  cls()
+  local cam_x = clamp(x + 4 - 96, 0, 64)
+  local cam_y = clamp(y + 4 - 72, 0, 112)
+  camera(cam_x, cam_y)
+  spr(0, x, y, 7)
+end</code></pre>
+        <h4>Lines worth noticing</h4>
+        <ul>
+          <li><code>x</code> and <code>y</code> are positions on the map, not on the screen. Clamping them to 8 and 240 keeps the player inside the border walls. The player walks over the pillars: <a href="#example-room">A room with walls</a> shows how to stop at them.</li>
+          <li><code>x + 4 - 96</code> puts the middle of the sprite (4 pixels in) at the middle of the screen (96 pixels across). The camera stops at 0 and at 64, which is the map's 256 pixels minus the screen's 192. Down, it stops at 112, 256 minus 144.</li>
+          <li><code>camera</code> comes before <code>spr</code>: only sprites placed after it are shifted, as <a href="#when-things-show">When things show</a> explains.</li>
+        </ul>
+      </section>
+
+      <section id="example-many-sprites">
+        <h3>Many sprites, and the limits</h3>
+        <p>This cart runs into the console's two sprite limits on purpose. It starts with 20 sprites in a row. Press → to add 8 and ← to take 8 away, up to 80.</p>
+<pre tabindex="0" role="region" aria-label="Example: many sprites" data-example="many-sprites"><code>local count = 20
+
+function _update()
+  if btnp(1) then count = count + 8 end
+  if btnp(0) then count = count - 8 end
+  count = math.max(0, math.min(count, 80))
+end
+
+function _draw()
+  cls()
+  for i = 0, count - 1 do
+    local column = i % 20
+    local row = i // 20
+    spr(0, 6 + column * 9, 20 + row * 12, 7)
+  end
+end</code></pre>
+        <p>What you see:</p>
+        <ul>
+          <li>Each row shows only 16 sprites, and its last 4 are missing. At most 16 sprites show on one scanline, one row of pixels across the screen, and the first 16 placed win. The rows are 12 pixels apart and a sprite is 8 high, so no two rows share a scanline and each row has its own 16.</li>
+          <li>The sprite table has 64 entries, filled in the order of the <code>spr</code> calls. The first three rows take 60, so the fourth row gets 4 and no more: once all 64 are used, more <code>spr</code> calls do nothing until the next <code>cls()</code>.</li>
+          <li>A sprite takes a table entry even when it is off the screen.</li>
+          <li>A sprite uses up one of a scanline's 16 if it covers that scanline and has any column on the screen, even a see-through one. The demo's sprite tile 0 has a see-through left column, so <code>spr(0, 191, y)</code> shows nothing but still counts on its rows. A sprite fully off the left or right edge, at <code>x</code> of -8 or less, or 192 or more, doesn't count.</li>
+        </ul>
+        <h4>Lines worth noticing</h4>
+        <ul>
+          <li><code>btnp</code> is true only on the frame a button goes down, so each press adds 8 once, however long it is held.</li>
+          <li><code>i % 20</code> is the column and <code>i // 20</code> the row, so the sprites fill the rows in order. The full rules are in <a href="#when-things-show">When things show</a>.</li>
+        </ul>
+      </section>
+
+      <section id="example-two-files">
+        <h3>Two files</h3>
+        <p>As a cart grows, split it into files. Here <code>main.lua</code> builds the floor and runs the frame, and <code>player.lua</code> holds everything about the player. To add <code>player.lua</code>, press <kbd>New file</kbd> in the Code view and name it <code>player.lua</code>.</p>
+<pre tabindex="0" role="region" aria-label="main.lua for the two-file example" data-example="two-files" data-file="main.lua"><code>local player = require("player")
+
+function _init()
+  for cy = 0, 17 do
+    for cx = 0, 23 do
+      mset(cx, cy, 0, 2)
+    end
+  end
+end
+
+function _update()
+  player.update()
+end
+
+function _draw()
+  cls()
+  player.draw()
+end</code></pre>
+<pre tabindex="0" role="region" aria-label="player.lua for the two-file example" data-example="two-files" data-file="player.lua"><code>local x, y = 92, 68
+local facing_left = false
+
+local player = {}
+
+function player.update()
+  if btn(0) then
+    x = x - 1
+    facing_left = true
+  end
+  if btn(1) then
+    x = x + 1
+    facing_left = false
+  end
+  if btn(2) then y = y - 1 end
+  if btn(3) then y = y + 1 end
+end
+
+function player.draw()
+  spr(0, x, y, 7, facing_left)
+end
+
+return player</code></pre>
+        <h4>Lines worth noticing</h4>
+        <ul>
+          <li><code>require("player")</code> takes the file's name without <code>.lua</code>. It runs <code>player.lua</code> once and gives back what that file returns. More is in <a href="#api-require"><code>require</code></a>.</li>
+          <li><code>x</code>, <code>y</code> and <code>facing_left</code> are <code>local</code> to <code>player.lua</code>: <code>main.lua</code> can't see or change them. Only the table <code>player</code>, which the file returns, is shared.</li>
+          <li><code>player.update</code> and <code>player.draw</code> are functions stored in that table, so <code>main.lua</code> calls them through the name it gave the result of <code>require</code>.</li>
+        </ul>
+      </section>
     </section>
 
     <section id="troubleshooting">
