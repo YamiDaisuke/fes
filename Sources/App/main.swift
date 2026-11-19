@@ -15,6 +15,7 @@ startSavedCarts()
 startExportAndImport()
 startCodeAndGameViews()
 startArtView()
+startHelpView()
 if string(from: JSObject.global.testCartMainLua) != nil {
     runCart()
 }

@@ -1,10 +1,11 @@
 html, body { margin: 0; height: 100%; background: var(--shell); }
 body { display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr); overflow: hidden; }
-#code-view, #game-view, #art-view, #shelf-view { grid-row: 3; }
+#code-view, #game-view, #art-view, #shelf-view, #help-view { grid-row: 3; }
 body:not([data-view="code"]) #code-view,
 body:not([data-view="game"]) #game-view,
 body:not([data-view="art"]) #art-view,
 body:not([data-view="shelf"]) #shelf-view,
+body:not([data-view="help"]) #help-view,
 body:not([data-view="game"]) #set-label,
 body[data-view="shelf"] #cart-save { display: none; }
 #toolbar {
@@ -207,6 +208,10 @@ body[data-crt="on"] #game-view[data-scanlines] #screen-crt {
   overflow-y: auto;
   padding: calc(2 * var(--u)) calc(2 * var(--u) + env(safe-area-inset-right)) calc(2 * var(--u) + env(safe-area-inset-bottom)) calc(2 * var(--u) + env(safe-area-inset-left));
 }
+#help-view {
+  padding: calc(2 * var(--u)) calc(2 * var(--u) + env(safe-area-inset-right)) calc(2 * var(--u) + env(safe-area-inset-bottom)) calc(2 * var(--u) + env(safe-area-inset-left));
+}
+#help-frame { display: block; box-sizing: border-box; width: 100%; height: 100%; border: var(--u) solid var(--ink); }
 #shelf-preview { display: flex; align-items: start; gap: calc(4 * var(--u)); }
 #shelf-preview-screen { flex: none; display: grid; background: var(--screen-off); }
 #shelf-preview-screen > * { grid-area: 1 / 1; }
