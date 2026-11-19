@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FES</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+  <meta name="theme-color" content="#cfc6e0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-view="shelf" data-led="off" data-crt="off" data-booting>
+  <div id="toolbar" class="plate">
+    <span class="led power-led" aria-hidden="true"></span>
+    <div class="switches" role="group" aria-label="View">
+      <button type="button" id="show-shelf" class="key key-nav" aria-pressed="true">Carts</button>
+      <button type="button" id="show-code" class="key key-nav" aria-pressed="false">Code</button>
+      <button type="button" id="show-art" class="key key-nav" aria-pressed="false">Art</button>
+      <button type="button" id="show-game" class="key key-nav" aria-pressed="false">Game</button>
+      <button type="button" id="show-help" class="key key-nav" aria-pressed="false">Help</button>
+    </div>
+    <button type="button" id="run" class="key key-go">Run</button>
+    <button type="button" id="cart-save" class="key key-go">Save</button>
+    <button type="button" id="set-label" class="key">Set label</button>
+    <p id="cart-status" class="readout" role="status"></p>
+  </div>
+  <div id="notices">
+    <p id="install-hint" class="tape" hidden>
+      <span>Safari can delete carts saved in a browser tab after 7 days without a visit. To keep them, add FES to your Home Screen: open Safari's Share menu, then choose Add to Home Screen. You can also export carts to Files as a backup.</span>
+      <button type="button" id="install-hint-dismiss" class="key">Not now</button>
+    </p>
+    <p id="update-notice" class="tape">
+      <span id="update-status" role="status"></span>
+      <button type="button" id="update-reload" class="key" hidden>Reload</button>
+    </p>
+  </div>
+  <div id="code-view">
+    <div id="code-file-bar">
+      <div id="code-cart-name">
+        <label for="cart-name">Cart name</label>
+        <input id="cart-name" class="field" autocomplete="off">
+      </div>
+      <div id="code-file-actions" role="group" aria-label="File actions">
+        <button type="button" id="code-file-new" class="key">New file</button>
+        <button type="button" id="code-file-rename" class="key">Rename</button>
+        <button type="button" id="code-file-delete" class="key key-stop">Delete</button>
+      </div>
+    </div>
+    <div id="code-files" role="tablist" aria-label="Code files"></div>
+    <div id="code-editor"></div>
+    <p id="code-error" role="status"></p>
+  </div>
+  <section id="shelf-view" aria-label="Carts">
+    <div id="shelf-preview" class="plate" aria-hidden="true">
+      <div id="shelf-preview-screen">
+        <span id="boot-logo">FES</span>
+        <canvas id="shelf-preview-label" width="192" height="144"></canvas>
+      </div>
+      <p id="shelf-preview-name" class="tape"></p>
+    </div>
+    <div id="shelf-actions" role="group" aria-label="Cart actions">
+      <button type="button" id="shelf-play" class="key key-go" disabled>Play</button>
+      <button type="button" id="shelf-edit" class="key key-nav" disabled>Edit</button>
+      <button type="button" id="shelf-duplicate" class="key" disabled>Duplicate</button>
+      <button type="button" id="shelf-export" class="key" disabled>Export</button>
+      <button type="button" id="shelf-delete" class="key key-stop" disabled>Delete</button>
+      <button type="button" id="shelf-new" class="key">New cart</button>
+      <button type="button" id="shelf-import" class="key">Import</button>
+      <input type="file" id="cart-import-file" hidden>
+    </div>
+    <ul id="shelf-list" role="list" aria-label="Saved carts"></ul>
+    <p id="shelf-empty" class="tape" hidden>No carts yet. Play the demo or make a New cart.</p>
+  </section>
+  <div id="art-view">
+    <div id="art-sheet-area"><canvas id="art-sheet" aria-hidden="true"></canvas></div>
+    <div id="art-edit-area"><canvas id="art-edit" aria-hidden="true"></canvas></div>
+    <section id="art-tools" class="plate" aria-label="Art tools">
+      <div id="art-tool" class="switches" role="group" aria-label="Tool">
+        <button type="button" class="key icon-key" data-tool="pencil" data-icon="pencil" aria-label="Pencil"></button>
+        <button type="button" class="key icon-key" data-tool="picker" data-icon="picker" aria-label="Picker"></button>
+        <button type="button" class="key icon-key" data-tool="fill" data-icon="fill" aria-label="Fill"></button>
+      </div>
+      <div id="art-block-size" class="switches" role="group" aria-label="Block size">
+        <button type="button" class="key" data-block-size="1" aria-label="1 by 1">1×1</button>
+        <button type="button" class="key" data-block-size="2" aria-label="2 by 2">2×2</button>
+        <button type="button" class="key" data-block-size="4" aria-label="4 by 4">4×4</button>
+      </div>
+      <div id="art-block" role="group" aria-label="Block">
+        <button type="button" class="key icon-key" id="art-flip-horizontal" data-icon="flip-horizontal" aria-label="Flip horizontally"></button>
+        <button type="button" class="key icon-key" id="art-flip-vertical" data-icon="flip-vertical" aria-label="Flip vertically"></button>
+        <button type="button" class="key icon-key" id="art-copy" data-icon="copy" aria-label="Copy"></button>
+        <button type="button" class="key icon-key" id="art-paste" data-icon="paste" aria-label="Paste" disabled></button>
+      </div>
+      <div id="art-history" role="group" aria-label="History">
+        <button type="button" class="key icon-key" id="art-undo" data-icon="undo" aria-label="Undo" aria-disabled="true"></button>
+        <button type="button" class="key icon-key" id="art-redo" data-icon="redo" aria-label="Redo" aria-disabled="true"></button>
+      </div>
+      <div id="art-import-keys" role="group" aria-label="Import">
+        <button type="button" class="key icon-key" id="art-import" data-icon="import" aria-label="Import sheet"></button>
+        <button type="button" class="key icon-key" id="art-import-colors" data-icon="import-colors" aria-label="Import sheet and colors"></button>
+      </div>
+      <input type="file" id="art-import-file" accept="image/png,image/jpeg" hidden>
+    </section>
+    <section id="art-selection" class="plate" aria-label="Art selection">
+      <div id="art-bank" class="switches" role="group" aria-label="Bank">
+        <button type="button" class="key" data-bank="background">Background</button>
+        <button type="button" class="key" data-bank="sprite">Sprites</button>
+      </div>
+      <button type="button" class="key icon-key" id="art-palettes-toggle" data-icon="palettes" aria-label="Palettes" aria-pressed="false"></button>
+      <div id="art-palette" class="switches" role="group" aria-label="Preview palette">
+        <button type="button" class="key" data-palette="0" aria-label="Palette 0">0</button>
+        <button type="button" class="key" data-palette="1" aria-label="Palette 1">1</button>
+        <button type="button" class="key" data-palette="2" aria-label="Palette 2">2</button>
+        <button type="button" class="key" data-palette="3" aria-label="Palette 3">3</button>
+        <button type="button" class="key" data-palette="4" aria-label="Palette 4">4</button>
+        <button type="button" class="key" data-palette="5" aria-label="Palette 5">5</button>
+        <button type="button" class="key" data-palette="6" aria-label="Palette 6">6</button>
+        <button type="button" class="key" data-palette="7" aria-label="Palette 7">7</button>
+      </div>
+      <div id="art-colors" class="swatches" role="group" aria-label="Color">
+        <button type="button" class="swatch" data-color="0" aria-label="Color 0"></button>
+        <button type="button" class="swatch" data-color="1" aria-label="Color 1"></button>
+        <button type="button" class="swatch" data-color="2" aria-label="Color 2"></button>
+        <button type="button" class="swatch" data-color="3" aria-label="Color 3"></button>
+        <button type="button" class="swatch" data-color="4" aria-label="Color 4"></button>
+        <button type="button" class="swatch" data-color="5" aria-label="Color 5"></button>
+        <button type="button" class="swatch" data-color="6" aria-label="Color 6"></button>
+        <button type="button" class="swatch" data-color="7" aria-label="Color 7"></button>
+      </div>
+      <div id="art-tile-control">
+        <label for="art-tile">Tile <span id="art-tile-number" aria-hidden="true">0</span></label>
+        <input type="range" class="fader" id="art-tile" min="0" max="255" value="0">
+      </div>
+      <div id="art-pixel" role="group" aria-label="Pixel">
+        <label for="art-pixel-column">Pixel column</label>
+        <input type="range" class="fader" id="art-pixel-column" min="0" max="7" value="0">
+        <label for="art-pixel-row">Pixel row</label>
+        <input type="range" class="fader" id="art-pixel-row" min="0" max="7" value="0">
+        <button type="button" class="key" id="art-pixel-apply">Paint pixel</button>
+      </div>
+    </section>
+    <section id="art-palettes" class="plate" aria-label="Palette editor">
+      <div id="art-entries-part">
+        <h2 id="art-palette-entries-heading">Background palettes</h2>
+        <div id="art-palette-entries" class="swatches" role="group" aria-labelledby="art-palette-entries-heading"></div>
+      </div>
+      <div id="art-main-edit">
+        <label for="art-main-color-picker" id="art-main-color-picker-label">Edit main color</label>
+        <input type="color" id="art-main-color-picker">
+        <button type="button" class="key" id="art-main-palette-reset">Reset main palette</button>
+      </div>
+      <div id="art-main-part">
+        <h2 id="art-main-colors-heading">Main palette</h2>
+        <p id="art-main-hint"></p>
+        <div id="art-main-colors" class="swatches" role="group" aria-labelledby="art-main-colors-heading" aria-describedby="art-main-hint"></div>
+      </div>
+    </section>
+    <dialog id="art-import-report" class="plate dialog" aria-labelledby="art-import-report-heading">
+      <h2 id="art-import-report-heading"></h2>
+      <p id="art-import-report-hint" hidden>JPEG changes colors slightly when it saves. Export the sheet from your art app as PNG and import that.</p>
+      <div id="art-import-report-body">
+        <canvas id="art-import-report-image" aria-hidden="true"></canvas>
+        <ul id="art-import-report-problems"></ul>
+      </div>
+      <form method="dialog"><button class="key" autofocus>Close</button></form>
+    </dialog>
+  </div>
+  <div id="game-view">
+    <div id="screen-slot">
+      <div id="bezel" class="plate">
+        <div id="screen-glass">
+          <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
+          <div id="screen-crt" aria-hidden="true"></div>
+        </div>
+        <pre id="cart-error" class="plate" role="alert"></pre>
+        <p id="bezel-strip"><span class="led power-led" aria-hidden="true"></span><button type="button" id="crt-toggle" class="key" aria-pressed="false" aria-label="CRT filter">CRT</button><span id="badge" aria-hidden="true">FES</span></p>
+      </div>
+    </div>
+    <div id="pad" role="group" aria-label="Controller">
+      <div id="dpad">
+        <div data-buttons="up left" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="up" aria-label="Up"></button>
+        <div data-buttons="up right" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="left" aria-label="Left"></button>
+        <div id="dpad-center"></div>
+        <button type="button" tabindex="-1" data-buttons="right" aria-label="Right"></button>
+        <div data-buttons="down left" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="down" aria-label="Down"></button>
+        <div data-buttons="down right" aria-hidden="true"></div>
+      </div>
+      <button type="button" tabindex="-1" data-buttons="select" class="shaped-key pill"><span></span>Select</button>
+      <button type="button" tabindex="-1" data-buttons="start" class="shaped-key pill"><span></span>Start</button>
+      <div id="face">
+        <button type="button" tabindex="-1" data-buttons="b" class="shaped-key"><span>B</span></button>
+        <button type="button" tabindex="-1" data-buttons="a" class="shaped-key"><span>A</span></button>
+      </div>
+    </div>
+  </div>
+  <div id="help-view">
+    <iframe id="help-frame" title="FES manual"></iframe>
+  </div>
+  <dialog id="ask" class="plate dialog" aria-labelledby="ask-question">
+    <form method="dialog">
+      <h2 id="ask-question"></h2>
+      <input type="text" id="ask-field" class="field" aria-labelledby="ask-question" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">
+      <p id="ask-keys"><button type="button" id="ask-cancel" class="key"></button><button type="submit" id="ask-confirm" class="key" value="confirm"></button></p>
+    </form>
+  </dialog>
+  <script type="module" src="boot.js"></script>
+</body>
+</html>

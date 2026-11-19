@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FES</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <meta name="theme-color" content="#000000">
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; }
+    body { display: grid; grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr); overflow: hidden; }
+    #code-view, #game-view, #art-view { grid-row: 3; }
+    body:not([data-view="code"]) #code-view,
+    body:not([data-view="game"]) #game-view,
+    body:not([data-view="art"]) #art-view,
+    body[data-view="code"] #show-code,
+    body[data-view="art"] #show-art { display: none; }
+    #toolbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: calc(4px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left));
+    }
+    #toolbar button { min-height: 44px; min-width: 88px; font: 16px system-ui, sans-serif; touch-action: manipulation; }
+    #notices p {
+      display: flex; align-items: center; gap: 8px; margin: 0;
+      padding: 4px calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left));
+      color: #fff; background: #223; font: 16px/1.4 system-ui, sans-serif;
+    }
+    #notices p[hidden] { display: none; }
+    #update-notice:has(#update-status:empty) { padding: 0; }
+    #notices button { flex: none; min-height: 44px; font: inherit; touch-action: manipulation; }
+    #code-view { display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr) 240px; }
+    #code-editor { grid-row: 1 / 3; min-height: 0; background: #fff; }
+    #code-error {
+      margin: 0; padding: 8px calc(8px + env(safe-area-inset-right)) 8px 8px;
+      color: #fff; background: #a00; font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+      max-height: 40vh; overflow: auto;
+    }
+    /* WebKit may not announce a live region that was display: none when its text arrived. */
+    #code-error:empty { padding: 0; }
+    .cm-editor { height: 100%; font-size: 16px; }
+    #game-view { position: relative; display: grid; place-items: center; }
+    canvas { image-rendering: pixelated; }
+    #pad {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      display: flex; justify-content: space-between; align-items: end;
+      padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+      pointer-events: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #pad > div { pointer-events: auto; }
+    #pad button {
+      border: 0; padding: 0; color: #fff; font: 600 16px system-ui, sans-serif;
+      background: rgb(255 255 255 / 0.25);
+    }
+    #dpad { display: grid; grid-template: repeat(3, 56px) / repeat(3, 56px); }
+    #dpad button { border-radius: 8px; }
+    #system { display: flex; gap: 16px; }
+    #system button { width: 88px; height: 32px; border-radius: 16px; }
+    #face { display: flex; gap: 16px; }
+    #face button { width: 72px; height: 72px; border-radius: 50%; }
+    #cart-error {
+      position: absolute; top: 0; left: 0; right: 0; margin: 0;
+      padding: 8px calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
+      color: #fff; background: rgb(0 0 0 / 0.75); font: 16px/1.4 monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+      max-height: 40vh; overflow: auto;
+    }
+    #cart-error:empty { display: none; }
+    #carts {
+      overflow: auto; padding: 8px calc(8px + env(safe-area-inset-right)) 8px 8px;
+      color: #fff; font: 16px system-ui, sans-serif;
+    }
+    #carts input { width: 100%; box-sizing: border-box; font: inherit; }
+    #cart-list { margin: 8px 0; padding: 0; list-style: none; }
+    #cart-list button { width: 100%; text-align: left; font: inherit; }
+    #cart-status { margin: 0; color: #fff; font: 16px system-ui, sans-serif; }
+    #art-view {
+      display: grid; gap: 8px;
+      grid-template: "sheet edit tools" minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1fr) 256px;
+      padding: 8px calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+    }
+    @media (orientation: portrait) {
+      #art-view { grid-template: "edit edit" minmax(0, 1fr) "sheet tools" minmax(0, 1fr) / minmax(0, 1fr) 256px; }
+    }
+    #art-sheet-area { grid-area: sheet; }
+    #art-edit-area { grid-area: edit; }
+    #art-sheet-area, #art-edit-area { display: grid; place-items: center; overflow: hidden; }
+    #art-sheet, #art-edit {
+      touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #art-tools { grid-area: tools; overflow: auto; color: #fff; font: 16px system-ui, sans-serif; }
+    #art-tools [role="group"] { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+    #art-tools button { min-width: 44px; min-height: 44px; font: inherit; touch-action: manipulation; }
+    #art-tools button[aria-pressed="true"] { color: #000; background: #ff0; font-weight: bold; }
+    #art-colors button { border: 2px solid #808080; }
+    #art-colors button[aria-pressed="true"] { outline: 3px solid #fff; outline-offset: -1px; }
+    #art-colors button.transparent { background: repeating-conic-gradient(#b0b0b0 0 25%, #808080 0 50%) 0 0 / 16px 16px; }
+    #art-tools input[type="range"] { display: block; width: 100%; min-height: 44px; }
+    #art-pixel { flex-direction: column; align-items: start; margin-top: 16px; }
+  </style>
+</head>
+<body data-view="game">
+  <div id="toolbar">
+    <button type="button" id="run">Run</button>
+    <button type="button" id="show-code">Code</button>
+    <button type="button" id="show-art">Art</button>
+    <button type="button" id="cart-save">Save</button>
+    <p id="cart-status" role="status"></p>
+  </div>
+  <div id="notices">
+    <p id="install-hint" hidden>
+      <span>Safari can delete carts saved in a browser tab after 7 days without a visit. To keep them, add FES to your Home Screen: open Safari's Share menu, then choose Add to Home Screen. You can also export carts to Files as a backup.</span>
+      <button type="button" id="install-hint-dismiss">Not now</button>
+    </p>
+    <p id="update-notice">
+      <span id="update-status" role="status"></span>
+      <button type="button" id="update-reload" hidden>Reload</button>
+    </p>
+  </div>
+  <div id="code-view">
+    <div id="code-editor"></div>
+    <p id="code-error" role="status"></p>
+    <section id="carts" aria-label="Carts">
+      <label for="cart-name">Cart name</label>
+      <input id="cart-name" autocomplete="off">
+      <button type="button" id="cart-export">Export</button>
+      <button type="button" id="cart-import">Import</button>
+      <input type="file" id="cart-import-file" hidden>
+      <ul id="cart-list" role="list"></ul>
+    </section>
+  </div>
+  <div id="art-view">
+    <div id="art-sheet-area"><canvas id="art-sheet" aria-hidden="true"></canvas></div>
+    <div id="art-edit-area"><canvas id="art-edit" aria-hidden="true"></canvas></div>
+    <section id="art-tools" aria-label="Art tools">
+      <div id="art-bank" role="group" aria-label="Bank">
+        <button type="button" data-bank="background">Background</button>
+        <button type="button" data-bank="sprite">Sprites</button>
+      </div>
+      <div id="art-palette" role="group" aria-label="Preview palette">
+        <button type="button" data-palette="0" aria-label="Palette 0">0</button>
+        <button type="button" data-palette="1" aria-label="Palette 1">1</button>
+        <button type="button" data-palette="2" aria-label="Palette 2">2</button>
+        <button type="button" data-palette="3" aria-label="Palette 3">3</button>
+        <button type="button" data-palette="4" aria-label="Palette 4">4</button>
+        <button type="button" data-palette="5" aria-label="Palette 5">5</button>
+        <button type="button" data-palette="6" aria-label="Palette 6">6</button>
+        <button type="button" data-palette="7" aria-label="Palette 7">7</button>
+      </div>
+      <div id="art-tool" role="group" aria-label="Tool">
+        <button type="button" data-tool="pencil">Pencil</button>
+        <button type="button" data-tool="picker">Picker</button>
+      </div>
+      <div id="art-colors" role="group" aria-label="Color">
+        <button type="button" data-color="0" aria-label="Color 0"></button>
+        <button type="button" data-color="1" aria-label="Color 1"></button>
+        <button type="button" data-color="2" aria-label="Color 2"></button>
+        <button type="button" data-color="3" aria-label="Color 3"></button>
+        <button type="button" data-color="4" aria-label="Color 4"></button>
+        <button type="button" data-color="5" aria-label="Color 5"></button>
+        <button type="button" data-color="6" aria-label="Color 6"></button>
+        <button type="button" data-color="7" aria-label="Color 7"></button>
+      </div>
+      <label for="art-tile">Tile <span id="art-tile-number" aria-hidden="true">0</span></label>
+      <input type="range" id="art-tile" min="0" max="255" value="0">
+      <div id="art-pixel" role="group" aria-label="Pixel">
+        <label for="art-pixel-column">Pixel column</label>
+        <input type="range" id="art-pixel-column" min="0" max="7" value="0">
+        <label for="art-pixel-row">Pixel row</label>
+        <input type="range" id="art-pixel-row" min="0" max="7" value="0">
+        <button type="button" id="art-pixel-apply">Paint pixel</button>
+      </div>
+    </section>
+  </div>
+  <div id="game-view">
+    <canvas id="screen" tabindex="-1" aria-label="FES screen"></canvas>
+    <pre id="cart-error" role="alert"></pre>
+    <div id="pad" role="group" aria-label="Controller">
+      <div id="dpad">
+        <div data-buttons="up left" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="up" aria-label="Up">↑</button>
+        <div data-buttons="up right" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="left" aria-label="Left">←</button>
+        <div></div>
+        <button type="button" tabindex="-1" data-buttons="right" aria-label="Right">→</button>
+        <div data-buttons="down left" aria-hidden="true"></div>
+        <button type="button" tabindex="-1" data-buttons="down" aria-label="Down">↓</button>
+        <div data-buttons="down right" aria-hidden="true"></div>
+      </div>
+      <div id="system">
+        <button type="button" tabindex="-1" data-buttons="select">Select</button>
+        <button type="button" tabindex="-1" data-buttons="start">Start</button>
+      </div>
+      <div id="face">
+        <button type="button" tabindex="-1" data-buttons="b">B</button>
+        <button type="button" tabindex="-1" data-buttons="a">A</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="boot.js"></script>
+</body>
+</html>

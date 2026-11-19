@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FES look</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    html, body { height: auto; overflow: auto; background: var(--shell); }
+    body { display: block; padding: calc(8 * var(--u)); color: var(--ink); font: var(--type-ui); }
+    h1, h2, h3, p, ul, label { margin: 0 0 calc(4 * var(--u)); font: inherit; }
+    h1, h2 { padding-top: calc(4 * var(--u)); text-transform: uppercase; }
+    ul { padding: 0; list-style: none; }
+    .row { display: flex; flex-wrap: wrap; align-items: start; gap: calc(4 * var(--u)); margin-bottom: calc(6 * var(--u)); }
+    #tokens { display: grid; grid-template-columns: repeat(auto-fill, calc(120 * var(--u))); gap: calc(2 * var(--u)); }
+    #tokens li { display: flex; align-items: center; gap: calc(4 * var(--u)); }
+    .chip { flex: none; width: calc(16 * var(--u)); height: calc(10 * var(--u)); border: var(--u) solid var(--ink); }
+    .pair { padding: var(--u) calc(4 * var(--u)); }
+    .wrap { overflow-wrap: anywhere; }
+    .ui-24 { font: calc(12 * var(--u)) / calc(15 * var(--u)) var(--font-ui); }
+    .code-22 { font: var(--type-code); }
+    .code-33 { font: 33px / 42px var(--font-code); }
+    #crisp-ui, #crisp-code { box-sizing: border-box; width: calc(200 * var(--u)); padding: calc(2 * var(--u)); color: var(--ink); background: var(--shell); }
+    #crisp-ui { height: calc(24 * var(--u)); font: var(--type-ui); }
+    #crisp-code { height: calc(32 * var(--u)); white-space: pre; font: var(--type-code); }
+  </style>
+</head>
+<body>
+  <h1>FES look</h1>
+
+  <h2>Tokens</h2>
+  <ul id="tokens"></ul>
+
+  <h2>Text on surfaces</h2>
+  <p class="pair" style="color: var(--ink); background: var(--shell)">ink on shell</p>
+  <p class="pair" style="color: var(--ink); background: var(--shell-light)">ink on shell-light</p>
+  <p class="pair" style="color: var(--ink); background: var(--mint)">ink on mint</p>
+  <p class="pair" style="color: var(--ink); background: var(--coral)">ink on coral</p>
+  <p class="pair" style="color: var(--ink); background: var(--butter)">ink on butter</p>
+  <p class="pair" style="color: var(--ink); background: var(--sky)">ink on sky</p>
+  <p class="pair" style="color: var(--ink); background: var(--pink)">ink on pink</p>
+  <p class="pair" style="color: var(--ink); background: var(--paper)">ink on paper</p>
+  <p class="pair" style="color: var(--readout-ink); background: var(--readout)">readout-ink on readout</p>
+
+  <h2>Type</h2>
+  <h3>Pixel Operator 8, 16 px</h3>
+  <p class="wrap"> !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</p>
+  <p>Saved "Built-in demo". Press Run to play it.</p>
+  <h3>Pixel Operator 8, 24 px</h3>
+  <p class="ui-24 wrap"> !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</p>
+  <p class="ui-24">Saved "Built-in demo". Press Run to play it.</p>
+  <h3>Departure Mono, 22 px</h3>
+  <p class="code-22 wrap"> !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</p>
+  <p class="code-22">function _draw() cls(1) end</p>
+  <h3>Departure Mono, 33 px</h3>
+  <p class="code-33 wrap"> !"#$%&amp;'()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</p>
+  <p class="code-33">function _draw() cls(1) end</p>
+
+  <h2>Crisp</h2>
+  <p id="crisp-ui">The quick brown fox jumps over the lazy dog. 0123456789</p>
+  <p id="crisp-code">local hit = x and 1 or 0<br>NAME = "FES " .. 8 * 8 + 7</p>
+
+  <h2>Keys</h2>
+  <div class="row">
+    <button type="button" class="key">Key</button>
+    <button type="button" class="key key-go">Run</button>
+    <button type="button" class="key key-stop">Delete</button>
+    <button type="button" class="key key-nav">Code</button>
+    <button type="button" class="key" data-held>Held</button>
+    <button type="button" class="key" disabled>Disabled</button>
+    <button type="button" class="key" aria-disabled="true">Aria-disabled</button>
+    <button type="button" class="key" aria-pressed="false">Toggle off</button>
+    <button type="button" class="key" aria-pressed="true">Toggle on</button>
+  </div>
+
+  <h2>Switch row</h2>
+  <div class="row">
+    <div class="switches" role="group" aria-label="Tool">
+      <button type="button" class="key icon-key" data-icon="pencil" aria-label="Pencil" aria-pressed="false"></button>
+      <button type="button" class="key icon-key" data-icon="picker" aria-label="Picker" aria-pressed="true"></button>
+      <button type="button" class="key icon-key" data-icon="fill" aria-label="Fill" aria-pressed="false"></button>
+    </div>
+  </div>
+
+  <h2>Icon keys</h2>
+  <div class="row">
+    <button type="button" class="key icon-key" data-icon="flip-horizontal" aria-label="Flip horizontally"></button>
+    <button type="button" class="key icon-key" data-icon="flip-vertical" aria-label="Flip vertically"></button>
+    <button type="button" class="key icon-key" data-icon="copy" aria-label="Copy"></button>
+    <button type="button" class="key icon-key" data-icon="paste" aria-label="Paste" disabled></button>
+    <button type="button" class="key icon-key" data-icon="undo" aria-label="Undo" aria-disabled="true"></button>
+    <button type="button" class="key icon-key" data-icon="redo" aria-label="Redo"></button>
+    <button type="button" class="key icon-key" data-icon="import" aria-label="Import sheet"></button>
+    <button type="button" class="key icon-key" data-icon="import-colors" aria-label="Import sheet and colors"></button>
+    <button type="button" class="key icon-key" data-icon="palettes" aria-label="Palettes" aria-pressed="true"></button>
+  </div>
+
+  <h2>Readout and LEDs</h2>
+  <p class="readout" role="status">Saved "Built-in demo"</p>
+  <div class="row">
+    <span><span class="led" aria-hidden="true"></span> Off</span>
+    <span><span class="led" data-state="on" aria-hidden="true"></span> On</span>
+    <span><span class="led" data-state="error" aria-hidden="true"></span> Error</span>
+  </div>
+
+  <h2>Plate</h2>
+  <div class="row">
+    <div class="plate screws">
+      <div class="row">
+        <button type="button" class="key key-go">Run</button>
+        <button type="button" class="key">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>Fields and fader</h2>
+  <div class="row">
+    <label>Empty <input type="text" class="field"></label>
+    <label>Name <input type="text" class="field" value="Built-in demo"></label>
+    <label>Size <input type="range" class="fader" min="1" max="4" value="2"></label>
+  </div>
+
+  <h2>Swatches</h2>
+  <div class="row">
+    <button type="button" class="swatch" style="background: #ff004d" aria-label="Color 1" aria-pressed="false"></button>
+    <button type="button" class="swatch" style="background: #29adff" aria-label="Color 2" aria-pressed="true"></button>
+    <button type="button" class="swatch transparent" aria-label="Transparent" aria-pressed="false"></button>
+  </div>
+
+  <h2>Tabs</h2>
+  <div class="row" role="tablist" aria-label="Files">
+    <button type="button" class="tab" role="tab" aria-selected="true">main.lua</button>
+    <button type="button" class="tab" role="tab" aria-selected="false">enemy.lua</button>
+  </div>
+
+  <h2>Tape</h2>
+  <div class="row"><p class="tape">Safari can delete carts after 7 days without a visit.</p></div>
+
+  <h2>Cartridges</h2>
+  <ul class="row">
+    <li><button type="button" class="cartridge" data-tone="mint" aria-pressed="false"><span class="cartridge-label" aria-hidden="true"></span><span class="tape cartridge-tape">Mint cart</span></button></li>
+    <li><button type="button" class="cartridge" data-tone="sky" aria-pressed="true"><span class="cartridge-label" aria-hidden="true"></span><span class="tape cartridge-tape">Selected</span></button></li>
+    <li><button type="button" class="cartridge" data-tone="coral" aria-pressed="false"><span class="cartridge-label" aria-hidden="true">No label yet</span><span class="tape cartridge-tape">No label yet</span></button></li>
+    <li><button type="button" class="cartridge" data-tone="shell" aria-pressed="false"><span class="cartridge-label" aria-hidden="true">Damaged cart</span><span class="tape cartridge-tape">Damaged cart</span></button></li>
+  </ul>
+
+  <h2>Dialog</h2>
+  <div class="row">
+    <button type="button" class="key" onclick="document.getElementById('demo-dialog').showModal()">Show dialog</button>
+  </div>
+  <dialog id="demo-dialog" class="plate dialog" aria-labelledby="demo-dialog-title">
+    <h2 id="demo-dialog-title">Delete cart?</h2>
+    <p>"Built-in demo" will be gone.</p>
+    <form method="dialog"><button class="key">Close</button></form>
+  </dialog>
+
+  <h2>Credits</h2>
+  <p>Pixel Operator 8 by Jayvee Enaguas (HarvettFox96), CC0 1.0</p>
+  <p>Departure Mono by Helena Zhang, SIL Open Font License 1.1</p>
+
+  <!-- A module script can run before style.css applies and read empty tokens; a classic one waits for it. -->
+  <script>
+    const names = ["ink", "shell", "shell-light", "shell-dark", "shell-deep", "well", "screen-off", "mint", "mint-dark", "coral", "coral-dark", "butter", "butter-dark", "sky", "sky-dark", "pink", "pink-dark", "readout", "readout-ink", "led-on", "led-error", "led-off", "paper", "code-screen", "code-text", "code-cursor", "code-gutter", "code-line-number", "code-active-line", "code-selection", "code-match", "code-comment", "code-keyword", "code-string", "code-number", "code-builtin"];
+    const root = getComputedStyle(document.documentElement);
+    for (const name of names) {
+      const item = document.createElement("li");
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.style.background = `var(--${name})`;
+      item.append(chip, `--${name} ${root.getPropertyValue(`--${name}`)}`);
+      document.getElementById("tokens").append(item);
+    }
+  </script>
+</body>
+</html>
