@@ -28,7 +28,7 @@ private func exampleFiles(from value: JSValue) -> [(name: String, text: String)]
     }
     var files: [(name: String, text: String)] = []
     for entry in array {
-        guard let name = string(from: entry.file), let text = string(from: entry.text) else {
+        guard let object = entry.object, let name = string(from: object.file), let text = string(from: object.text) else {
             return nil
         }
         files.append((name, text))

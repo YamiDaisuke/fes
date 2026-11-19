@@ -96,7 +96,7 @@ test("with unsaved edits the discard question comes first, and Cancel leaves the
   await expect(page.locator("#cart-name")).toHaveValue("Move a sprite");
 });
 
-test("a message from another origin is ignored, and the same message from the Help frame opens the example", async ({ page }) => {
+test("a message from another origin is ignored, and the same message from the app's origin opens the example", async ({ page }) => {
   await openApp(page);
   await showHelp(page);
 
@@ -117,6 +117,24 @@ test("a message that isn't a known example name is ignored", async ({ page }) =>
 
   await expectDemoStillInHelp(page);
   await expect(page.locator("#cart-error")).toHaveText("");
+});
+
+test("fesOpenExample refuses file lists whose entries aren't objects without crashing", async ({ page }) => {
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+  await openApp(page);
+  await showHelp(page);
+
+  await page.evaluate(() => {
+    fesOpenExample("x", [5]);
+    fesOpenExample("x", [null]);
+    fesOpenExample("x", new Array(2));
+  });
+
+  await expectDemoStillInHelp(page);
+  await page.getByRole("button", { name: "Code" }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-view", "code");
+  expect(pageErrors).toEqual([]);
 });
 
 test("the manual has one Open in FES key per example inside Help and none on its own", async ({ page }) => {
