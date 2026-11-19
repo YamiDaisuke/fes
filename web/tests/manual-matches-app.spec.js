@@ -21,11 +21,18 @@ test("every key the manual names exists in the app under that name", async ({ pa
   await openShelf(page);
   const missing = [];
   for (const name of names) {
-    if (askAnswers.has(name)) continue;
     if (await page.getByRole("button", { name, exact: true, includeHidden: true }).count() === 0) missing.push(name);
   }
 
   expect(missing).toEqual([]);
+});
+
+test("every ask answer the manual names is an answer the app asks with", async ({ page }) => {
+  await page.goto("/manual/");
+  const answers = await page.locator("kbd[data-answer]").allTextContents();
+  expect(answers.length).toBeGreaterThan(0);
+
+  expect(answers.filter((answer) => !askAnswers.has(answer))).toEqual([]);
 });
 
 test("the manual's palette diagram shows a new cart's main colors", async ({ page }) => {

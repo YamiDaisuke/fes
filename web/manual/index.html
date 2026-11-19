@@ -126,7 +126,7 @@ end</code></pre>
       <h3>Files and tabs</h3>
       <p>Every cart has <code>main.lua</code>, and FES starts the cart from it. A bigger cart can have more code files, each in its own tab above the editor.</p>
       <ul>
-        <li><kbd data-control>New file</kbd> asks <code>New code file name:</code>. Type a name and press <kbd data-control>Add</kbd>, or <kbd data-control>Cancel</kbd>. FES makes the name lowercase and adds <code>.lua</code>, so <code>Player</code> becomes <code>player.lua</code>.</li>
+        <li><kbd data-control>New file</kbd> asks <code>New code file name:</code>. Type a name and press <kbd data-answer>Add</kbd>, or <kbd data-answer>Cancel</kbd>. FES makes the name lowercase and adds <code>.lua</code>, so <code>Player</code> becomes <code>player.lua</code>.</li>
         <li>A name uses a–z, 0–9 and _, doesn't start with a digit, and is at most 32 characters before <code>.lua</code>. A cart holds at most 32 code files. Anything else is refused in the readout: <code>Can't add bad-name.lua: code file names use a–z, 0–9 and _, such as player.lua</code></li>
         <li><kbd data-control>Rename</kbd> and <kbd data-control>Delete</kbd> act on the file in the tab that is showing. They are disabled for <code>main.lua</code>, since the cart starts from it.</li>
         <li>Another file runs only when <a href="#api-require"><code>require</code></a> loads it. Renaming a file doesn't change the <code>require</code> calls that name it.</li>
@@ -317,7 +317,7 @@ stack traceback:
         <li>Import sheet and colors puts the picture's colors into the main palette from color 0, in the order they first appear, up to 64, and builds the bank's palettes from them. Its question warns that the other bank's tiles may change color too.</li>
         <li>In a sprite sheet, fully see-through pixels become color 0. A background sheet can't have see-through pixels, and half see-through pixels are refused in both.</li>
       </ul>
-      <p>When the picture fits, FES asks before replacing anything, for example <code>Replace all 256 sprite tiles with hero.png? Undo puts them back.</code> Press <kbd data-control>Replace</kbd>, and the readout says <code>Imported hero.png into the sprite tiles.</code></p>
+      <p>When the picture fits, FES asks before replacing anything, for example <code>Replace all 256 sprite tiles with hero.png? Undo puts them back.</code> Press <kbd data-answer>Replace</kbd>, and the readout says <code>Imported hero.png into the sprite tiles.</code></p>
       <p>When it doesn't, a report titled <code>Can't import hero.png</code> lists every problem and shows the picture with the problem tiles ringed in red. A problem with one tile names it by where it is in the picture:</p>
       <ul>
         <li><code>Tile at column 0, row 0 (from pixel 0, 0): 9 colors. A background tile can use 8.</code></li>
@@ -337,7 +337,7 @@ stack traceback:
         <li><kbd data-control>Delete</kbd> asks <code>Delete My game? This can't be undone. Export it first if you want a backup.</code> If you delete the open cart, the demo opens.</li>
       </ul>
       <p>The demo can't be duplicated, exported or deleted. To make your own copy, Edit it, type a new name under Cart name and Save.</p>
-      <p>Opening another cart, with Play, Edit or New cart, first asks <code>Discard unsaved changes to My game?</code> if the open cart has changes you haven't saved. <kbd data-control>Discard</kbd> throws them away, and <kbd data-control>Cancel</kbd> keeps them.</p>
+      <p>Opening another cart, with Play, Edit or New cart, first asks <code>Discard unsaved changes to My game?</code> if the open cart has changes you haven't saved. <kbd data-answer>Discard</kbd> throws them away, and <kbd data-answer>Cancel</kbd> keeps them.</p>
 
       <h3>Saving</h3>
       <p><kbd data-control>Save</kbd> keeps the open cart under the name in the Cart name field, and the readout says <code>Saved My game.</code> Change the name and Save to rename the cart. A name can't be empty or longer than 64 characters: <code>Can't save: the name is empty</code>.</p>
@@ -348,8 +348,8 @@ stack traceback:
       <h3>Unsaved changes after a restart</h3>
       <p>Every change you make writes a <dfn>recovery copy</dfn> of the open cart's unsaved changes into the browser's storage. If FES closes before you save, because you closed the tab, iPadOS stopped it, or a cart froze it, the next start asks <code>Restore unsaved changes to My game?</code></p>
       <ul>
-        <li><kbd data-control>Restore</kbd> opens the changes in Code. They are still unsaved, so Save them.</li>
-        <li><kbd data-control>Discard</kbd> deletes the recovery copy.</li>
+        <li><kbd data-answer>Restore</kbd> opens the changes in Code. They are still unsaved, so Save them.</li>
+        <li><kbd data-answer>Discard</kbd> deletes the recovery copy.</li>
       </ul>
       <p>There is only one recovery copy, for the open cart. It is not a backup: <a href="#keeping-carts-safe">Keeping your carts safe</a> is.</p>
     </section>
