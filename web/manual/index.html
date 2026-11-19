@@ -127,7 +127,7 @@ end</code></pre>
       <p>Every cart has <code>main.lua</code>, and FES starts the cart from it. A bigger cart can have more code files, each in its own tab above the editor.</p>
       <ul>
         <li><kbd data-control>New file</kbd> asks <code>New code file name:</code>. Type a name and press <kbd data-answer>Add</kbd>, or <kbd data-answer>Cancel</kbd>. FES makes the name lowercase and adds <code>.lua</code>, so <code>Player</code> becomes <code>player.lua</code>.</li>
-        <li>A name uses a–z, 0–9 and _, doesn't start with a digit, and is at most 32 characters before <code>.lua</code>. A cart holds at most 32 code files. Anything else is refused in the readout: <code>Can't add bad-name.lua: code file names use a–z, 0–9 and _, such as player.lua</code></li>
+        <li>A name uses a–z, 0–9 and _, doesn't start with a digit, and is at most 32 characters before <code>.lua</code>. A cart holds at most 32 code files. Anything else is refused in the readout with a message that says why, such as <code>Can't add bad-name.lua: code file names use a–z, 0–9 and _, such as player.lua</code></li>
         <li><kbd data-control>Rename</kbd> and <kbd data-control>Delete</kbd> act on the file in the tab that is showing. They are disabled for <code>main.lua</code>, since the cart starts from it.</li>
         <li>Another file runs only when <a href="#api-require"><code>require</code></a> loads it. Renaming a file doesn't change the <code>require</code> calls that name it.</li>
         <li>With a tab focused, ← and → move between the tabs, and Home and End go to the first and the last.</li>
@@ -294,7 +294,7 @@ stack traceback:
         </table>
       </div>
       <p>A <dfn>block</dfn> is the tiles you edit together, for a picture bigger than one tile. <kbd data-control="1 by 1">1×1</kbd>, <kbd data-control="2 by 2">2×2</kbd> and <kbd data-control="4 by 4">4×4</kbd> make it 1, 4 or 16 tiles. The block starts at the selected tile, moved left or up when it would run off the sheet. Paste pastes at the size you copied, with its top-left corner at the selected tile, moved to fit. You can copy in one bank and paste in the other.</p>
-      <p>Undo and Redo cover every art change: strokes, fills, flips, pastes, palette and main color changes, imports and resets. <kbd>⌘</kbd> <kbd>Z</kbd> and <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>Z</kbd> do the same in the Art view. The readout says what changed, such as <code>Undid pixel.</code> or <code>Nothing to undo.</code> Opening a cart, restoring one or making a new one starts a fresh history.</p>
+      <p>Undo and Redo cover every art change: strokes, fills, flips, pastes, palette and main color changes, imports and resets. <kbd>⌘</kbd> <kbd>Z</kbd> and <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>Z</kbd> do the same in the Art view. The readout says what changed, such as <code>Undid stroke.</code> or <code>Nothing to undo.</code> Opening a cart, restoring one or making a new one starts a fresh history.</p>
       <p>Without a touchscreen, choose a pixel with the Pixel column and Pixel row sliders and press <kbd data-control>Paint pixel</kbd>. With Picker or Fill chosen, that key says "Pick color" or "Fill region" instead.</p>
 
       <h3>The palette editor</h3>
@@ -1055,7 +1055,7 @@ return player</code></pre>
       <ul>
         <li>A cart shown on the shelf as "Damaged cart" says, when you select it, <code>This cart's cart.json is missing or can't be read, so it can only be deleted.</code></li>
         <li>Any other broken file shows when you Play or Edit the cart, such as <code>Can't load: sprites.tiles line 3: expected 128 digits, found 2</code></li>
-        <li>Import refuses a broken file with <code>Can't import my-game.fes: …</code>, and a file from a newer FES with <code>This cart was made with a newer FES (format 9); this FES reads format 4.</code></li>
+        <li>Import refuses a broken file with <code>Can't import my-game.fes: …</code>, and a file from a newer FES with <code>Can't import my-game.fes: cart.json: This cart was made with a newer FES (format 9); this FES reads format 4.</code></li>
       </ul>
       <p>What to do: import your last export of the cart, then delete the damaged one.</p>
 
