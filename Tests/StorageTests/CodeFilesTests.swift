@@ -141,8 +141,8 @@ private func names(_ cart: Cart) -> [String] {
 }
 
 @Test(arguments: [
-    ([("player.lua", "")], "an example needs exactly one main.lua"),
-    ([("main.lua", ""), ("main.lua", "")], "an example needs exactly one main.lua"),
+    ([("player.lua", "")], "a cart needs exactly one main.lua"),
+    ([("main.lua", ""), ("main.lua", "")], "a cart needs exactly one main.lua"),
     ([("main.lua", ""), ("cart.json", "{}")], "cart.json: code file names end in .lua"),
     ([("main.lua", ""), ("Player.lua", "")], "Player.lua: code file names use a–z, 0–9 and _, such as player.lua"),
     ([("main.lua", ""), ("player.lua", ""), ("player.lua", "")], "player.lua: this cart already has it"),
