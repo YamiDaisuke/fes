@@ -6,12 +6,16 @@ import * as files from "./files.js";
 import { createCodeEditor } from "./code-editor.js";
 import { createArtView } from "./art-view.js";
 import { startPWA } from "./pwa.js";
+import { startCRTSwitch } from "./crt.js";
 
 startPWA();
+startCRTSwitch();
 
 const canvas = document.getElementById("screen");
 const bezel = document.getElementById("bezel");
 const screenSlot = document.getElementById("screen-slot");
+const gameView = document.getElementById("game-view");
+const smallestScaleWithScanlines = 3;
 
 function fitCanvas() {
   const chromeWidth = bezel.offsetWidth - canvas.offsetWidth;
@@ -20,6 +24,8 @@ function fitCanvas() {
   const scale = Math.max(1, Math.floor(fit));
   canvas.style.width = `${canvas.width * scale}px`;
   canvas.style.height = `${canvas.height * scale}px`;
+  gameView.style.setProperty("--screen-scale", scale);
+  gameView.toggleAttribute("data-scanlines", scale >= smallestScaleWithScanlines);
 }
 
 globalThis.fesStorage = storage;

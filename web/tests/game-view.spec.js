@@ -7,6 +7,7 @@ const VIEWPORTS = [
   { width: 1133, height: 744, scale: 3, installHint: true },
   { width: 834, height: 1194, scale: 4, installHint: false },
   { width: 744, height: 1133, scale: 3, installHint: false },
+  { width: 600, height: 834, scale: 2, installHint: false },
 ];
 
 function intersects(a, b) {
@@ -18,10 +19,11 @@ function contains(outer, inner) {
 }
 
 for (const { width, height, scale, installHint } of VIEWPORTS) {
-  test(`at ${width}×${height}${installHint ? " with the install hint" : ""} the screen keeps a whole ${scale}× scale on whole pixels and the controller stays off it`, async ({ page }) => {
+  test(`at ${width}×${height}${installHint ? " with the install hint" : ""} the screen keeps a whole ${scale}× scale on whole pixels, the CRT overlay covers exactly the screen with scanlines ${scale >= 3 ? "on" : "off"}, and the controller stays off both`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await page.addInitScript((installHint) => {
       if (!installHint) localStorage.setItem("fes-install-hint-dismissed", String(Date.now()));
+      localStorage.setItem("fes-crt", "on");
       window.testCartMainLua = "function _draw() cls() end";
     }, installHint);
     await openPaused(page);
@@ -34,8 +36,12 @@ for (const { width, height, scale, installHint } of VIEWPORTS) {
         return { x, y, width, height };
       };
       return {
+        screenScale: getComputedStyle(document.getElementById("game-view")).getPropertyValue("--screen-scale"),
+        scanlines: document.getElementById("game-view").hasAttribute("data-scanlines"),
         bezel: box(document.getElementById("bezel")),
         screen: box(document.getElementById("screen")),
+        crtOverlay: box(document.getElementById("screen-crt")),
+        crtKey: box(document.getElementById("crt-toggle")),
         badge: box(document.getElementById("badge")),
         keys: [...document.querySelectorAll("#pad button[data-buttons]")].map((key) => ({ name: key.dataset.buttons, ...box(key) })),
         scrolls: document.scrollingElement.scrollHeight > innerHeight || document.scrollingElement.scrollWidth > innerWidth,
@@ -43,12 +49,17 @@ for (const { width, height, scale, installHint } of VIEWPORTS) {
     });
 
     expect(contains(boxes.bezel, boxes.screen)).toBe(true);
+    expect(boxes.crtOverlay).toEqual(boxes.screen);
+    expect(boxes.screenScale).toBe(String(scale));
+    expect(boxes.scanlines).toBe(scale >= 3);
     expect(boxes.scrolls).toBe(false);
+    expect(Math.min(boxes.crtKey.width, boxes.crtKey.height), "CRT key hit area").toBeGreaterThanOrEqual(44);
     for (const key of boxes.keys) {
       expect(intersects(key, boxes.bezel), `${key.name} overlaps the bezel`).toBe(false);
+      expect(intersects(key, boxes.crtKey), `${key.name} overlaps the CRT key`).toBe(false);
       expect(Math.min(key.width, key.height), `${key.name} hit area`).toBeGreaterThanOrEqual(44);
     }
-    for (const [name, box] of [["bezel", boxes.bezel], ["screen", boxes.screen], ["badge", boxes.badge], ...boxes.keys.map((key) => [key.name, key])]) {
+    for (const [name, box] of [["bezel", boxes.bezel], ["screen", boxes.screen], ["badge", boxes.badge], ["CRT key", boxes.crtKey], ...boxes.keys.map((key) => [key.name, key])]) {
       expect([box.x, box.y, box.width, box.height].every(Number.isInteger), `${name} sits on whole pixels: ${JSON.stringify(box)}`).toBe(true);
     }
   });

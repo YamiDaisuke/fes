@@ -507,6 +507,8 @@ Depends: T44 · **Ask the owner** (decision 6)
 
 **Accept.** Playwright: toggling sets `data-crt`, survives a reload, and with `localStorage` throwing the toggle still works for the visit; the canvas's pixels (`getImageData`) are identical with the filter on and off; the overlay's box equals the canvas's box at the three viewport sizes.
 
+As built, T51 departs from this sketch: the bezel gets no extra corner cut, the vignette already reads as curved glass; the stripes are one hard-stop gradient tiled per console pixel with whole-pixel bands, and the CRT key sits in the bezel strip between the power LED and the badge (decision 055).
+
 ---
 
 # M14 — The manual
