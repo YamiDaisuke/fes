@@ -43,10 +43,10 @@
       <h2>Your first cart</h2>
       <p>You will draw a small picture and move it around the screen with the arrow keys. A picture the console can move is called a <dfn>sprite</dfn>. Its picture is a <dfn>tile</dfn>: a square of 8 by 8 pixels.</p>
       <ol>
-        <li>Press <kbd>Carts</kbd>, then <kbd>New cart</kbd>. FES opens the new cart's code.</li>
-        <li>Press <kbd>Art</kbd>, then <kbd>Sprites</kbd>. The big square shows the tile picked on the sheet. Tap the first tile, top left on the sheet: that is tile 0. It is empty.</li>
+        <li>Press <kbd data-control>Carts</kbd>, then <kbd data-control>New cart</kbd>. FES opens the new cart's code.</li>
+        <li>Press <kbd data-control>Art</kbd>, then <kbd data-control>Sprites</kbd>. The big square shows the tile picked on the sheet. Tap the first tile, top left on the sheet: that is tile 0. It is empty.</li>
         <li>Pick any color except the first one, and draw on tile 0 with your finger. The first color is see-through for sprites, so a tile drawn only in it can't be seen.</li>
-        <li>Press <kbd>Code</kbd>. Replace everything in the editor with this program:
+        <li>Press <kbd data-control>Code</kbd>. Replace everything in the editor with this program:
 <pre tabindex="0" role="region" aria-label="Your first program"><code>x, y = 92, 68
 function _update()
   if btn(0) then x = x - 1 end
@@ -59,8 +59,8 @@ function _draw()
   spr(0, x, y)
 end</code></pre>
         </li>
-        <li>Press <kbd>Run</kbd>. Your drawing sits in the middle of the screen. Move it with the D-pad or the arrow keys.</li>
-        <li>Press <kbd>Save</kbd>. The cart now waits for you on the shelf, under <kbd>Carts</kbd>.</li>
+        <li>Press <kbd data-control>Run</kbd>. Your drawing sits in the middle of the screen. Move it with the D-pad or the arrow keys.</li>
+        <li>Press <kbd data-control>Save</kbd>. The cart now waits for you on the shelf, under <kbd data-control>Carts</kbd>.</li>
       </ol>
       <p>Here is what the program says. The first line makes two variables, <code>x</code> and <code>y</code>, for where the sprite is. FES calls <code>_update</code> 60 times a second: each <code>btn(n)</code> asks whether button <code>n</code> is held, and the sprite moves one pixel that way. Then FES calls <code>_draw</code>: <code>cls()</code> takes away the sprites placed in the last frame, so the sprite doesn't leave copies of itself behind, and <code>spr(0, x, y)</code> puts tile 0 at <code>x, y</code>. The button numbers are in <a href="#buttons">Buttons</a>.</p>
     </section>
@@ -112,22 +112,266 @@ end</code></pre>
 
     <section id="code-editor">
       <h2>The code editor</h2>
-      <p>Coming in this manual soon.</p>
+      <p>The keys along the top of FES are the same in every view.</p>
+      <ul>
+        <li><kbd data-control>Carts</kbd>, <kbd data-control>Code</kbd>, <kbd data-control>Art</kbd>, <kbd data-control>Game</kbd> and <kbd data-control>Help</kbd> switch between FES's views. Help shows this manual.</li>
+        <li><kbd data-control>Run</kbd> starts the open cart from the beginning and shows Game.</li>
+        <li><kbd data-control>Game</kbd> goes back to the running game without restarting it. If the open cart isn't the one running, because you just opened or restored it, Game runs it.</li>
+        <li><kbd data-control>Save</kbd> keeps the open cart on the shelf. It is hidden while the shelf shows. <kbd data-control>Set label</kbd> shows only in Game.</li>
+        <li>The dark strip is the <dfn>readout</dfn>: it shows FES's last message, such as <code>Saved My game.</code></li>
+        <li>The small light at the left is the power light. It is green while a cart runs, and red after an error stops it.</li>
+      </ul>
+      <p>Press <kbd data-control>Code</kbd> to write the open cart's program.</p>
+
+      <h3>Files and tabs</h3>
+      <p>Every cart has <code>main.lua</code>, and FES starts the cart from it. A bigger cart can have more code files, each in its own tab above the editor.</p>
+      <ul>
+        <li><kbd data-control>New file</kbd> asks <code>New code file name:</code>. Type a name and press <kbd data-answer>Add</kbd>, or <kbd data-answer>Cancel</kbd>. FES makes the name lowercase and adds <code>.lua</code>, so <code>Player</code> becomes <code>player.lua</code>.</li>
+        <li>A name uses a–z, 0–9 and _, doesn't start with a digit, and is at most 32 characters before <code>.lua</code>. A cart holds at most 32 code files. Anything else is refused in the readout with a message that says why, such as <code>Can't add bad-name.lua: code file names use a–z, 0–9 and _, such as player.lua</code></li>
+        <li><kbd data-control>Rename</kbd> and <kbd data-control>Delete</kbd> act on the file in the tab that is showing. They are disabled for <code>main.lua</code>, since the cart starts from it.</li>
+        <li>Another file runs only when <a href="#api-require"><code>require</code></a> loads it. Renaming a file doesn't change the <code>require</code> calls that name it.</li>
+        <li>With a tab focused, ← and → move between the tabs, and Home and End go to the first and the last.</li>
+      </ul>
+
+      <h3>Errors and where they point</h3>
+      <p>Half a second after you stop typing, FES checks the code for mistakes in how it is written, called <dfn>syntax errors</dfn>: the file you see first, then the others. The first one shows under the editor, and its line is marked at the left:</p>
+<pre tabindex="0" role="region" aria-label="A syntax error"><code>main.lua:3: 'end' expected (to close 'function' at line 1) near &lt;eof&gt;</code></pre>
+      <p><code>main.lua:3:</code> means the file <code>main.lua</code>, line 3. Here a <code>function</code> that starts on line 1 never ends: <code>&lt;eof&gt;</code> is the end of the file.</p>
+      <p>Other mistakes show only when the cart runs. Such an error stops the cart, the power light turns red, and Game shows the whole message with the <dfn>stack traceback</dfn>, the list of functions that were running:</p>
+<pre tabindex="0" role="region" aria-label="An error while the cart runs"><code>main.lua:5: attempt to call a nil value (global 'sprr')
+stack traceback:
+	main.lua:5: in function '_draw'</code></pre>
+      <p>Press <kbd data-control>Code</kbd> and FES opens the file the error names, puts the cursor on its line and shows the first line of the message under the editor. <a href="#troubleshooting">When something goes wrong</a> explains the messages you are most likely to meet.</p>
+
+      <h3>The keyboard</h3>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Code editor shortcuts">
+        <table>
+          <thead>
+            <tr><th scope="col">Keys</th><th scope="col">What they do</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><kbd>⌘</kbd> <kbd>Z</kbd></td><td>Undo. Each file keeps its own undo while the cart stays open.</td></tr>
+            <tr><td><kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>Z</kbd></td><td>Redo</td></tr>
+            <tr><td><kbd>Tab</kbd>, <kbd>⇧</kbd> <kbd>Tab</kbd></td><td>Indent and un-indent the line</td></tr>
+            <tr><td><kbd>Esc</kbd>, then <kbd>Tab</kbd></td><td>Leave the editor: Tab moves on to the next control instead of indenting</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>F</kbd></td><td>Find and replace</td></tr>
+            <tr><td><kbd>⌘</kbd> <kbd>/</kbd></td><td>Turn the line into a comment with <code>--</code>, or back</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Brackets and quotes close themselves. The game's keys, the arrows, Z, X, Enter and Shift, work only in Game (<a href="#buttons">Buttons</a>).</p>
     </section>
 
     <section id="drawing">
       <h2>Drawing</h2>
-      <p>Coming in this manual soon.</p>
+      <p>Press <kbd data-control>Art</kbd> to draw the cart's tiles and choose its colors. The <dfn>sheet</dfn> shows every tile of one bank. The big square shows the selected tile, large enough to draw on with your finger.</p>
+
+      <h3>Tiles and banks</h3>
+      <p>A cart has two <dfn>banks</dfn> of tiles: <kbd data-control>Background</kbd> for the map and <kbd data-control>Sprites</kbd> for sprites. Press one to show it. Each bank has 256 tiles, numbered 0 to 255, 16 to a row on the sheet: tile <code>n</code> is in column <code>n % 16</code> and row <code>n // 16</code>, so tile 17 is in column 1, row 1. Choose a tile by tapping it on the sheet, or with the Tile slider.</p>
+
+      <h3>Colors and palettes</h3>
+      <p>The console has one <dfn>main palette</dfn> of 64 colors. A tile doesn't store colors: each of its pixels stores a color number from 0 to 7. A palette turns those numbers into colors when the tile is drawn. There are 8 background palettes and 8 sprite palettes, each of 8 colors from the main palette, so one tile can be drawn in different colors.</p>
+      <figure>
+        <div class="palette-diagram" role="img" aria-label="The 64 colors of a new cart's main palette, in 8 rows of 8, numbered 0 to 63">
+          <span>0</span>
+          <span class="swatch" data-main-color="0" style="background: #000000"></span>
+          <span class="swatch" data-main-color="1" style="background: #4d30bf"></span>
+          <span class="swatch" data-main-color="2" style="background: #7d37b3"></span>
+          <span class="swatch" data-main-color="3" style="background: #c058cc"></span>
+          <span class="swatch" data-main-color="4" style="background: #f274d5"></span>
+          <span class="swatch" data-main-color="5" style="background: #b324b3"></span>
+          <span class="swatch" data-main-color="6" style="background: #cc3da8"></span>
+          <span class="swatch" data-main-color="7" style="background: #d96ca4"></span>
+          <span>8</span>
+          <span class="swatch" data-main-color="8" style="background: #e391a8"></span>
+          <span class="swatch" data-main-color="9" style="background: #e6acac"></span>
+          <span class="swatch" data-main-color="10" style="background: #690a41"></span>
+          <span class="swatch" data-main-color="11" style="background: #a11040"></span>
+          <span class="swatch" data-main-color="12" style="background: #d91c2c"></span>
+          <span class="swatch" data-main-color="13" style="background: #f05e41"></span>
+          <span class="swatch" data-main-color="14" style="background: #f2a66f"></span>
+          <span class="swatch" data-main-color="15" style="background: #402b27"></span>
+          <span>16</span>
+          <span class="swatch" data-main-color="16" style="background: #614035"></span>
+          <span class="swatch" data-main-color="17" style="background: #855841"></span>
+          <span class="swatch" data-main-color="18" style="background: #9c6d4c"></span>
+          <span class="swatch" data-main-color="19" style="background: #b09071"></span>
+          <span class="swatch" data-main-color="20" style="background: #803921"></span>
+          <span class="swatch" data-main-color="21" style="background: #ad5123"></span>
+          <span class="swatch" data-main-color="22" style="background: #d46c22"></span>
+          <span class="swatch" data-main-color="23" style="background: #e68729"></span>
+          <span>24</span>
+          <span class="swatch" data-main-color="24" style="background: #eda33b"></span>
+          <span class="swatch" data-main-color="25" style="background: #996028"></span>
+          <span class="swatch" data-main-color="26" style="background: #ab7427"></span>
+          <span class="swatch" data-main-color="27" style="background: #c79228"></span>
+          <span class="swatch" data-main-color="28" style="background: #e0af1b"></span>
+          <span class="swatch" data-main-color="29" style="background: #deca6f"></span>
+          <span class="swatch" data-main-color="30" style="background: #4b5e26"></span>
+          <span class="swatch" data-main-color="31" style="background: #677d1f"></span>
+          <span>32</span>
+          <span class="swatch" data-main-color="32" style="background: #879c1f"></span>
+          <span class="swatch" data-main-color="33" style="background: #b3c215"></span>
+          <span class="swatch" data-main-color="34" style="background: #e3e354"></span>
+          <span class="swatch" data-main-color="35" style="background: #186644"></span>
+          <span class="swatch" data-main-color="36" style="background: #248539"></span>
+          <span class="swatch" data-main-color="37" style="background: #47a33c"></span>
+          <span class="swatch" data-main-color="38" style="background: #5dc418"></span>
+          <span class="swatch" data-main-color="39" style="background: #a7e638"></span>
+          <span>40</span>
+          <span class="swatch" data-main-color="40" style="background: #0d7185"></span>
+          <span class="swatch" data-main-color="41" style="background: #28a195"></span>
+          <span class="swatch" data-main-color="42" style="background: #49b893"></span>
+          <span class="swatch" data-main-color="43" style="background: #72cf97"></span>
+          <span class="swatch" data-main-color="44" style="background: #9fe3a9"></span>
+          <span class="swatch" data-main-color="45" style="background: #203d80"></span>
+          <span class="swatch" data-main-color="46" style="background: #284e80"></span>
+          <span class="swatch" data-main-color="47" style="background: #367399"></span>
+          <span>48</span>
+          <span class="swatch" data-main-color="48" style="background: #599eb3"></span>
+          <span class="swatch" data-main-color="49" style="background: #69bbbf"></span>
+          <span class="swatch" data-main-color="50" style="background: #222a73"></span>
+          <span class="swatch" data-main-color="51" style="background: #38388c"></span>
+          <span class="swatch" data-main-color="52" style="background: #524d99"></span>
+          <span class="swatch" data-main-color="53" style="background: #776bb3"></span>
+          <span class="swatch" data-main-color="54" style="background: #9e8fcc"></span>
+          <span class="swatch" data-main-color="55" style="background: #525f66"></span>
+          <span>56</span>
+          <span class="swatch" data-main-color="56" style="background: #6c7d80"></span>
+          <span class="swatch" data-main-color="57" style="background: #95a6a2"></span>
+          <span class="swatch" data-main-color="58" style="background: #c2ccca"></span>
+          <span class="swatch" data-main-color="59" style="background: #e1f2e9"></span>
+          <span class="swatch" data-main-color="60" style="background: #171826"></span>
+          <span class="swatch" data-main-color="61" style="background: #333840"></span>
+          <span class="swatch" data-main-color="62" style="background: #cca78f"></span>
+          <span class="swatch" data-main-color="63" style="background: #f7c1ba"></span>
+        </div>
+        <div class="palette-diagram" role="img" aria-label="Background palette 2 of a new cart: its colors 0 to 7 are main colors 16 to 23">
+          <span></span>
+          <span>0</span>
+          <span>1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+          <span>5</span>
+          <span>6</span>
+          <span>7</span>
+          <span></span>
+          <span class="swatch" data-main-color="16" style="background: #614035"></span>
+          <span class="swatch" data-main-color="17" style="background: #855841"></span>
+          <span class="swatch" data-main-color="18" style="background: #9c6d4c"></span>
+          <span class="swatch" data-main-color="19" style="background: #b09071"></span>
+          <span class="swatch" data-main-color="20" style="background: #803921"></span>
+          <span class="swatch" data-main-color="21" style="background: #ad5123"></span>
+          <span class="swatch" data-main-color="22" style="background: #d46c22"></span>
+          <span class="swatch" data-main-color="23" style="background: #e68729"></span>
+        </div>
+        <figcaption>Above, the main palette of a new cart: each row starts with the number of its first color. Below, background palette 2 of a new cart. Its colors 0 to 7 are main colors 16 to 23, the third row above: in a new cart, color <code>i</code> of palette <code>p</code> is main color <code>8 * p + i</code>.</figcaption>
+      </figure>
+      <p>The 8 color swatches in the Art view are colors 0 to 7, the colors you draw with. The drawing color starts at 1. In Sprites, color 0 is see-through and shows as a checkerboard.</p>
+      <p>The keys <kbd data-control="Palette 0">0</kbd> to <kbd data-control="Palette 7">7</kbd> choose the palette the editor shows the tiles in. They change only what you see here: the game chooses each tile's palette when it draws it, with the <code>palette</code> of <a href="#api-spr"><code>spr</code></a> and <a href="#api-mset"><code>mset</code></a>. Try it in the <kbd data-control>Built-in demo</kbd>: pressing A while it runs changes the player's palette.</p>
+
+      <h3>Tools</h3>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Art tools">
+        <table>
+          <thead>
+            <tr><th scope="col">Key</th><th scope="col">Name</th><th scope="col">What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="key icon-key" data-icon="pencil" aria-hidden="true"></span></td><td><kbd data-control>Pencil</kbd></td><td>Draws in the chosen color.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="picker" aria-hidden="true"></span></td><td><kbd data-control>Picker</kbd></td><td>Takes the color of the pixel you tap, then goes back to Pencil.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="fill" aria-hidden="true"></span></td><td><kbd data-control>Fill</kbd></td><td>Fills the pixels of the same color that touch the one you tap, up, down, left and right. It stays inside the big square.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="flip-horizontal" aria-hidden="true"></span></td><td><kbd data-control>Flip horizontally</kbd></td><td>Mirrors the block left to right.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="flip-vertical" aria-hidden="true"></span></td><td><kbd data-control>Flip vertically</kbd></td><td>Mirrors the block top to bottom.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="copy" aria-hidden="true"></span></td><td><kbd data-control>Copy</kbd></td><td>Copies the block.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="paste" aria-hidden="true"></span></td><td><kbd data-control>Paste</kbd></td><td>Pastes what you copied. It is disabled until you copy something.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="undo" aria-hidden="true"></span></td><td><kbd data-control>Undo</kbd></td><td>Takes back the last art change.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="redo" aria-hidden="true"></span></td><td><kbd data-control>Redo</kbd></td><td>Puts back what Undo took back.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="import" aria-hidden="true"></span></td><td><kbd data-control>Import sheet</kbd></td><td>Replaces the bank's tiles with a picture (Importing a sheet, below).</td></tr>
+            <tr><td><span class="key icon-key" data-icon="import-colors" aria-hidden="true"></span></td><td><kbd data-control>Import sheet and colors</kbd></td><td>The same, and takes the picture's colors into the main palette.</td></tr>
+            <tr><td><span class="key icon-key" data-icon="palettes" aria-hidden="true"></span></td><td><kbd data-control>Palettes</kbd></td><td>Shows the palette editor in place of the sheet and the big square. Press it again to go back.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A <dfn>block</dfn> is the tiles you edit together, for a picture bigger than one tile. <kbd data-control="1 by 1">1×1</kbd>, <kbd data-control="2 by 2">2×2</kbd> and <kbd data-control="4 by 4">4×4</kbd> make it 1, 4 or 16 tiles. The block starts at the selected tile, moved left or up when it would run off the sheet. Paste pastes at the size you copied, with its top-left corner at the selected tile, moved to fit. You can copy in one bank and paste in the other.</p>
+      <p>Undo and Redo cover every art change: strokes, fills, flips, pastes, palette and main color changes, imports and resets. <kbd>⌘</kbd> <kbd>Z</kbd> and <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>Z</kbd> do the same in the Art view. The readout says what changed, such as <code>Undid stroke.</code> or <code>Nothing to undo.</code> Opening a cart, restoring one or making a new one starts a fresh history.</p>
+      <p>Without a touchscreen, choose a pixel with the Pixel column and Pixel row sliders and press <kbd data-control>Paint pixel</kbd>. With Picker or Fill chosen, that key says "Pick color" or "Fill region" instead.</p>
+
+      <h3>The palette editor</h3>
+      <p><kbd data-control>Palettes</kbd> shows the palette editor for the bank you are in.</p>
+      <ul>
+        <li>"Background palettes", or "Sprite palettes", shows the bank's 8 palettes as 8 rows of 8 colors. Tap one to choose that palette and color.</li>
+        <li>Under "Main palette", tap one of the 64 colors to put it in the color you chose.</li>
+        <li>The "Edit main color" field opens iPadOS's color picker and changes that main color itself. Every palette that uses it changes, in both banks.</li>
+        <li><kbd data-control>Reset main palette</kbd> puts back the 64 colors a new cart starts with. It is disabled while nothing has changed.</li>
+        <li>Sprite color 0 can't be changed. The editor says <code>Sprite color 0 is always transparent.</code></li>
+      </ul>
+      <p>The starting colors are the palette "Z64" by Jehkoba, from <a href="https://lospec.com/palette-list/z64" target="_blank" rel="noopener">Lospec</a>.</p>
+
+      <h3>Importing a sheet</h3>
+      <p>You can draw a sheet in another app and bring it in. <kbd data-control>Import sheet</kbd> and <kbd data-control>Import sheet and colors</kbd> each open a file chooser.</p>
+      <ul>
+        <li>The picture is a PNG or JPEG of at most 1 MiB. Both sides are multiples of 8, and at most 128 pixels.</li>
+        <li>It replaces <em>all</em> 256 tiles of the bank you are in. Tiles outside the picture become empty.</li>
+        <li>Import sheet keeps the main palette. Every color of the picture must already be in it, and each tile's colors must all be in one of the bank's 8 palettes.</li>
+        <li>Import sheet and colors puts the picture's colors into the main palette from color 0, in the order they first appear, up to 64, and builds the bank's palettes from them. Its question warns that the other bank's tiles may change color too.</li>
+        <li>In a sprite sheet, fully see-through pixels become color 0. A background sheet can't have see-through pixels, and half see-through pixels are refused in both.</li>
+      </ul>
+      <p>When the picture fits, FES asks before replacing anything, for example <code>Replace all 256 sprite tiles with hero.png? Undo puts them back.</code> Press <kbd data-answer>Replace</kbd>, and the readout says <code>Imported hero.png into the sprite tiles.</code></p>
+      <p>When it doesn't, a report titled <code>Can't import hero.png</code> lists every problem and shows the picture with the problem tiles ringed in red. A problem with one tile names it by where it is in the picture:</p>
+      <ul>
+        <li><code>Tile at column 0, row 0 (from pixel 0, 0): 9 colors. A background tile can use 8.</code></li>
+        <li><code>The image is 136 × 8 pixels. A sheet is at most 128 × 128.</code></li>
+      </ul>
+      <p>For a JPEG, the report adds <code>JPEG changes colors slightly when it saves. Export the sheet from your art app as PNG and import that.</code> Press <kbd data-control>Close</kbd> to close it.</p>
     </section>
 
     <section id="carts">
       <h2>Carts</h2>
-      <p>Coming in this manual soon.</p>
+      <p>Press <kbd data-control>Carts</kbd> to see the <dfn>shelf</dfn>: the <kbd data-control>Built-in demo</kbd> first, then your saved carts, each with its label. Select one to see its label on the big screen.</p>
+      <ul>
+        <li><kbd data-control>Play</kbd> opens it and runs it. <kbd data-control>Edit</kbd> opens it in Code.</li>
+        <li>With a keyboard, ← and → move along the shelf, Z (A) plays and X (B) edits.</li>
+        <li><kbd data-control>New cart</kbd> opens a new cart named "New cart", with a short program to start from and blank art.</li>
+        <li><kbd data-control>Duplicate</kbd> saves a copy of the selected cart named "… copy". It copies the cart as last saved, without changes you haven't saved.</li>
+        <li><kbd data-control>Delete</kbd> asks <code>Delete My game? This can't be undone. Export it first if you want a backup.</code> If you delete the open cart, the demo opens.</li>
+      </ul>
+      <p>The demo can't be duplicated, exported or deleted. To make your own copy, Edit it, type a new name under Cart name and Save.</p>
+      <p>Opening another cart, with Play, Edit or New cart, first asks <code>Discard unsaved changes to My game?</code> if the open cart has changes you haven't saved. <kbd data-answer>Discard</kbd> throws them away, and <kbd data-answer>Cancel</kbd> keeps them.</p>
+
+      <h3>Saving</h3>
+      <p><kbd data-control>Save</kbd> keeps the open cart under the name in the Cart name field, and the readout says <code>Saved My game.</code> Change the name and Save to rename the cart. A name can't be empty or longer than 64 characters: <code>Can't save: the name is empty</code>.</p>
+
+      <h3>Labels</h3>
+      <p>A cart's <dfn>label</dfn> is the picture on its cartridge. Run the cart, and when the screen shows what you want, press <kbd data-control>Set label</kbd>. The readout says <code>Label set. Save to keep it.</code></p>
+
+      <h3>Unsaved changes after a restart</h3>
+      <p>Every change you make writes a <dfn>recovery copy</dfn> of the open cart's unsaved changes into the browser's storage. If FES closes before you save, because you closed the tab, iPadOS stopped it, or a cart froze it, the next start asks <code>Restore unsaved changes to My game?</code></p>
+      <ul>
+        <li><kbd data-answer>Restore</kbd> opens the changes in Code. They are still unsaved, so Save them.</li>
+        <li><kbd data-answer>Discard</kbd> deletes the recovery copy.</li>
+      </ul>
+      <p>There is only one recovery copy, for the open cart. It is not a backup: <a href="#keeping-carts-safe">Keeping your carts safe</a> is.</p>
     </section>
 
     <section id="keeping-carts-safe">
       <h2>Keeping your carts safe</h2>
-      <p>Coming in this manual soon.</p>
+      <p>Your carts live in FES's storage in Safari, on this iPad. Nothing copies them anywhere else.</p>
+
+      <h3>Add FES to your Home Screen</h3>
+      <p>Safari deletes a website's stored data after 7 days of using Safari without visiting that site, and your carts are that data. FES on the Home Screen doesn't count Safari's days: WebKit, Safari's engine, says Home Screen web apps "have their own counter of days of use", and it doesn't expect their data to be deleted (<a href="https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/" target="_blank" rel="noopener">WebKit's post</a>).</p>
+      <p>To add FES, open Safari's Share menu, then choose Add to Home Screen. The note about this at the top of FES goes away for 7 days when you press <kbd data-control>Not now</kbd>.</p>
+      <p>FES on the Home Screen keeps its own carts, apart from the ones in Safari. To move carts there, Export them in Safari and Import them in the Home Screen FES.</p>
+
+      <h3>Export and import</h3>
+      <ul>
+        <li><kbd data-control>Export</kbd> on the shelf writes the selected cart to a <code>.fes</code> file, as it was last saved, so Save first. In the Home Screen FES it opens the Share sheet: choose Save to Files. In a Safari tab, Safari downloads the file. The readout says <code>Exported My game.fes.</code></li>
+        <li><kbd data-control>Import</kbd> on the shelf opens Files. The cart you choose is added as a new cart, even if one has the same name: <code>Imported My game as a new cart.</code></li>
+      </ul>
+      <p>Export your carts now and then, and keep the files in iCloud Drive or on another device.</p>
+
+      <h3>What is in a <code>.fes</code></h3>
+      <p>A <code>.fes</code> file is a zip of text files, so you can unzip it and read them: <code>cart.json</code> with the cart's name, <code>main.lua</code> and the other code files, <code>background.tiles</code>, <code>sprites.tiles</code>, <code>palettes.pal</code>, <code>main-palette.hex</code>, <code>map.map</code>, and <code>label.hex</code> when the cart has a label. FES doesn't read a zip made by Files' Compress: <code>… is compressed; FES reads .fes files it exported</code>.</p>
     </section>
 
     <section id="lua">
@@ -218,7 +462,7 @@ end</code></pre>
     <section id="api">
       <h2>API reference</h2>
       <p>The API is the set of functions your cart calls to work the console: to place sprites, read the buttons, change the map and move the camera. It works the other way too: FES calls your cart's <code>_init</code> once when the cart starts, then <code>_update</code> and <code>_draw</code> every frame.</p>
-      <p>The examples show sprite tile 0 and background tiles 0 and 1. A new cart's tiles are empty, so draw on those three first, as in <a href="#first-cart">Your first cart</a>: sprite tile 0 under <kbd>Art</kbd>, <kbd>Sprites</kbd>, and background tiles 0 and 1 under <kbd>Art</kbd>, <kbd>Background</kbd>.</p>
+      <p>The examples show sprite tile 0 and background tiles 0 and 1. A new cart's tiles are empty, so draw on those three first, as in <a href="#first-cart">Your first cart</a>: sprite tile 0 under <kbd data-control>Art</kbd>, <kbd data-control>Sprites</kbd>, and background tiles 0 and 1 under <kbd data-control>Art</kbd>, <kbd data-control>Background</kbd>.</p>
       <ul>
         <li><a href="#api-cls"><code>cls</code></a> takes away the sprites.</li>
         <li><a href="#api-spr"><code>spr</code></a> places a sprite.</li>
@@ -320,7 +564,7 @@ end</code></pre>
               <tr><th scope="col">Name</th><th scope="col">Meaning</th><th scope="col">Range</th><th scope="col">Default</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>n</code></td><td>Which sprite tile to show, from <kbd>Art</kbd>, <kbd>Sprites</kbd></td><td>0 to 255</td><td>required</td></tr>
+              <tr><td><code>n</code></td><td>Which sprite tile to show, from <kbd data-control>Art</kbd>, <kbd data-control>Sprites</kbd></td><td>0 to 255</td><td>required</td></tr>
               <tr><td><code>x</code></td><td>Left edge in pixels. The camera's <code>x</code> is taken off it.</td><td>-32768 to 32767, after the camera is taken off</td><td>required</td></tr>
               <tr><td><code>y</code></td><td>Top edge in pixels. The camera's <code>y</code> is taken off it.</td><td>-32768 to 32767, after the camera is taken off</td><td>required</td></tr>
               <tr><td><code>palette</code></td><td>Which of the 8 sprite palettes colors it</td><td>0 to 7</td><td>0</td></tr>
@@ -411,7 +655,7 @@ function _draw() cls() spr(0, 92, 68, palette) end</code></pre>
             <tbody>
               <tr><td><code>x</code></td><td>The cell's column. A cell is 8 by 8 pixels.</td><td>0 to 31</td><td>required</td></tr>
               <tr><td><code>y</code></td><td>The cell's row</td><td>0 to 31</td><td>required</td></tr>
-              <tr><td><code>tile</code></td><td>Which background tile to put there, from <kbd>Art</kbd>, <kbd>Background</kbd></td><td>0 to 255</td><td>required</td></tr>
+              <tr><td><code>tile</code></td><td>Which background tile to put there, from <kbd data-control>Art</kbd>, <kbd data-control>Background</kbd></td><td>0 to 255</td><td>required</td></tr>
               <tr><td><code>palette</code></td><td>Which of the 8 background palettes colors it</td><td>0 to 7</td><td>0</td></tr>
             </tbody>
           </table>
@@ -539,7 +783,7 @@ return player</code></pre>
 
     <section id="examples">
       <h2>Examples</h2>
-      <p>Each example is a whole cart. They use the built-in demo's pictures: background tile 0 (the floor), background tile 1 (the wall), sprite tile 0 (the player) and sprite tile 1 (the player mid-step). The easiest way to try one: press <kbd>Carts</kbd>, pick <kbd>Built-in demo</kbd> and press <kbd>Edit</kbd>. Type a new name under Cart name, replace all the code with the example, then press <kbd>Run</kbd>, and <kbd>Save</kbd> to keep it. To use a new cart instead, draw those four tiles first, as in <a href="#first-cart">Your first cart</a>. The examples color the floor with background palette 2, the wall with background palette 4 and the player with sprite palette 7, as the demo does.</p>
+      <p>Each example is a whole cart. They use the built-in demo's pictures: background tile 0 (the floor), background tile 1 (the wall), sprite tile 0 (the player) and sprite tile 1 (the player mid-step). The easiest way to try one: press <kbd data-control>Carts</kbd>, pick <kbd data-control>Built-in demo</kbd> and press <kbd data-control>Edit</kbd>. Type a new name under Cart name, replace all the code with the example, then press <kbd data-control>Run</kbd>, and <kbd data-control>Save</kbd> to keep it. To use a new cart instead, draw those four tiles first, as in <a href="#first-cart">Your first cart</a>. The examples color the floor with background palette 2, the wall with background palette 4 and the player with sprite palette 7, as the demo does.</p>
 
       <section id="example-move">
         <h3>Move a sprite</h3>
@@ -736,7 +980,7 @@ end</code></pre>
 
       <section id="example-two-files">
         <h3>Two files</h3>
-        <p>As a cart grows, split it into files. Here <code>main.lua</code> builds the floor and runs the frame, and <code>player.lua</code> holds everything about the player. To add <code>player.lua</code>, press <kbd>New file</kbd> in the Code view and name it <code>player.lua</code>.</p>
+        <p>As a cart grows, split it into files. Here <code>main.lua</code> builds the floor and runs the frame, and <code>player.lua</code> holds everything about the player. To add <code>player.lua</code>, press <kbd data-control>New file</kbd> in the Code view and name it <code>player.lua</code>.</p>
 <pre tabindex="0" role="region" aria-label="main.lua for the two-file example" data-example="two-files" data-file="main.lua"><code>local player = require("player")
 
 function _init()
@@ -789,12 +1033,39 @@ return player</code></pre>
 
     <section id="troubleshooting">
       <h2>When something goes wrong</h2>
-      <p>Coming in this manual soon.</p>
+      <p>An error stops the cart and shows its message on the screen. <code>main.lua:4:</code> at the start means the file <code>main.lua</code>, line 4, and Code takes you there (<a href="#code-editor">The code editor</a>). These are the messages you are most likely to meet.</p>
+
+      <h3><code>CPU budget exceeded</code></h3>
+      <p><code>main.lua:2: CPU budget exceeded</code> means the cart did too much work in one frame, usually in a loop that never ends. Look at the loop on that line and check that it stops. Sometimes the message has no line. The limits are in <a href="#budgets-and-errors">Budgets and errors</a>.</p>
+
+      <h3><code>memory budget exceeded</code></h3>
+      <p>The cart's values took more memory than it is allowed. It comes without a line. Usually a table grows every frame and nothing ever empties it: look for <code>t[#t + 1] = …</code> in <code>_update</code> or <code>_draw</code>.</p>
+
+      <h3><code>attempt to call a nil value</code></h3>
+      <p><code>main.lua:5: attempt to call a nil value (global 'sprr')</code> means the cart called a function that doesn't exist. Check the spelling, and the case: <code>Spr</code> isn't <code>spr</code>. A function from another file needs <a href="#api-require"><code>require</code></a> first. A function in a table shows as <code>(field 'update')</code>.</p>
+
+      <h3><code>module … not found</code></h3>
+      <p><code>main.lua:1: module 'plyer' not found: this cart has no file plyer.lua</code> means <code>require</code> names a file the cart doesn't have. Check the name, and that you added the file. Write <code>require("player")</code>, without <code>.lua</code>. <code>require("main")</code> gives <code>module 'main' can't be required: the cart starts from main.lua</code>.</p>
+
+      <h3>A syntax error</h3>
+      <p><code>main.lua:3: 'end' expected (to close 'function' at line 1) near &lt;eof&gt;</code> shows under the code before the cart runs. Something isn't written the way Lua expects, here a missing <code>end</code>. The line number is where Lua noticed, which can be after the real mistake.</p>
+
+      <h3>A damaged cart</h3>
+      <p>A cart file that can't be read is damaged. A save that was cut off partway can cause it.</p>
+      <ul>
+        <li>A cart shown on the shelf as "Damaged cart" says, when you select it, <code>This cart's cart.json is missing or can't be read, so it can only be deleted.</code></li>
+        <li>Any other broken file shows when you Play or Edit the cart, such as <code>Can't load: sprites.tiles line 3: expected 128 digits, found 2</code></li>
+        <li>Import refuses a broken file with <code>Can't import my-game.fes: …</code>, and a file from a newer FES with <code>Can't import my-game.fes: cart.json: This cart was made with a newer FES (format 9); this FES reads format 4.</code></li>
+      </ul>
+      <p>What to do: import your last export of the cart, then delete the damaged one.</p>
+
+      <h3><code>Saving is unavailable (Private Browsing?)</code></h3>
+      <p>FES says this when it starts if it can't use the browser's storage, usually because the tab is in Private Browsing. Save and Import are disabled, so nothing you make can be kept. Open FES in a normal tab or from the Home Screen.</p>
     </section>
 
     <section id="coming">
       <h2>What's coming</h2>
-      <p>Coming in this manual soon.</p>
+      <p>FES is still growing. A map editor will let you draw the map instead of placing every tile with <code>mset</code>, and the map will get more layers. Sound will bring effects and music. History will keep snapshots of a cart, so you can go back to an earlier one and compare what changed.</p>
     </section>
   </main>
 </body>
